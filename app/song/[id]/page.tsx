@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Song } from '@/data/songs';
+import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase'; // 引入雲端連線
 
 const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
@@ -34,70 +36,79 @@ export default function SongPage() {
   const router = useRouter();
   const songId = params.id as string;
   
-  // 狀態管理
   const [song, setSong] = useState<Song | null>(null);
   const [targetKey, setTargetKey] = useState("C");
   const [isEditing, setIsEditing] = useState(false);
   const [fontSize, setFontSize] = useState(22);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // 編輯表單的暫存狀態
   const [editTitle, setEditTitle] = useState("");
   const [editKey, setEditKey] = useState("C");
   const [editEditor, setEditEditor] = useState("");
   const [editContent, setEditContent] = useState("");
 
-  // 網頁載入時去 LocalStorage 抓資料
+  // 網頁載入時去 Firebase 抓這首歌的資料
   useEffect(() => {
-    const saved = localStorage.getItem('guitar_songs');
-    if (saved) {
-      const allSongs: Song[] = JSON.parse(saved);
-      const foundSong = allSongs.find(s => s.id === songId);
-      if (foundSong) {
-        setSong(foundSong);
-        setTargetKey(foundSong.originalKey);
-        // 初始化編輯表單
-        setEditTitle(foundSong.title);
-        setEditKey(foundSong.originalKey);
-        setEditEditor(foundSong.editor || "");
-        setEditContent(foundSong.content);
-      }
-    }
-  }, [songId]);
-
-  // 儲存修改內容
-  const handleSave = () => {
-    const saved = localStorage.getItem('guitar_songs');
-    if (saved && song) {
-      const allSongs: Song[] = JSON.parse(saved);
-      const updatedSongs = allSongs.map(s => {
-        if (s.id === song.id) {
-          return { ...s, title: editTitle, originalKey: editKey, editor: editEditor, content: editContent };
+    const fetchSong = async () => {
+      try {
+        const docRef = doc(db, "songs", songId);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          const foundSong = docSnap.data() as Song;
+          setSong(foundSong);
+          setTargetKey(foundSong.originalKey);
+          setEditTitle(foundSong.title);
+          setEditKey(foundSong.originalKey);
+          setEditEditor(foundSong.editor || "");
+          setEditContent(foundSong.content);
+        } else {
+          alert("找不到這首詩歌！");
+          router.push('/');
         }
-        return s;
-      });
-      localStorage.setItem('guitar_songs', JSON.stringify(updatedSongs));
+      } catch (error) {
+        console.error("讀取失敗:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchSong();
+  }, [songId, router]);
+
+  // 儲存修改內容到 Firebase
+  const handleSave = async () => {
+    if (!song) return;
+    const updatedSong = { ...song, title: editTitle, originalKey: editKey, editor: editEditor, content: editContent };
+    
+    try {
+      // 寫入雲端
+      await setDoc(doc(db, "songs", song.id), updatedSong);
       
-      // 更新畫面的狀態
-      setSong({ ...song, title: editTitle, originalKey: editKey, editor: editEditor, content: editContent });
-      setTargetKey(editKey); // 存檔後自動回到新設定的原調
+      setSong(updatedSong);
+      setTargetKey(editKey);
       setIsEditing(false);
+      alert("儲存成功！");
+    } catch (error) {
+      console.error("儲存失敗:", error);
+      alert("儲存失敗，請重試！");
     }
   };
 
-  // 刪除歌曲
-  const handleDelete = () => {
-    if (confirm("確定要刪除這首歌嗎？刪除後無法復原喔！")) {
-      const saved = localStorage.getItem('guitar_songs');
-      if (saved) {
-        const allSongs: Song[] = JSON.parse(saved);
-        const updatedSongs = allSongs.filter(s => s.id !== songId);
-        localStorage.setItem('guitar_songs', JSON.stringify(updatedSongs));
-        router.push('/'); // 刪除後跳回首頁
+  // 從 Firebase 刪除歌曲
+  const handleDelete = async () => {
+    if (confirm("確定要刪除這首歌嗎？刪除後全世界都看不到囉！")) {
+      try {
+        await deleteDoc(doc(db, "songs", songId));
+        router.push('/');
+      } catch (error) {
+        console.error("刪除失敗:", error);
+        alert("刪除失敗，請重試！");
       }
     }
   };
 
-  if (!song) return <div className="p-8 text-center text-xl">載入中...</div>;
+  if (isLoading) return <div className="p-8 text-center text-xl font-bold text-gray-500">雲端讀譜中...</div>;
+  if (!song) return null;
 
   const originalIndex = NOTES.indexOf(song.originalKey);
   const targetIndex = NOTES.indexOf(targetKey);
@@ -130,13 +141,9 @@ export default function SongPage() {
   return (
     <main className="min-h-screen p-4 md:p-8 max-w-5xl mx-auto bg-white text-gray-800">
       <div className="mb-6 flex justify-between items-center">
-        <Link href="/" className="text-blue-600 hover:text-blue-800 font-bold flex items-center gap-2">
-          ← 回到歌單目錄
-        </Link>
+        <Link href="/" className="text-blue-600 hover:text-blue-800 font-bold flex items-center gap-2">← 回到歌單目錄</Link>
         {isEditing && (
-          <button onClick={handleDelete} className="text-red-500 hover:text-red-700 font-bold text-sm">
-            🗑️ 刪除此歌曲
-          </button>
+          <button onClick={handleDelete} className="text-red-500 hover:text-red-700 font-bold text-sm">🗑️ 刪除此歌曲</button>
         )}
       </div>
 
@@ -148,7 +155,7 @@ export default function SongPage() {
         
         {isEditing ? (
           <button onClick={handleSave} className="px-6 py-3 rounded-lg font-bold text-white transition-colors shadow-md w-full md:w-auto bg-green-500 hover:bg-green-600">
-            💾 儲存所有變更
+            💾 儲存並上傳雲端
           </button>
         ) : (
           <button onClick={() => setIsEditing(true)} className="px-6 py-3 rounded-lg font-bold text-white transition-colors shadow-md w-full md:w-auto bg-blue-500 hover:bg-blue-600">
@@ -180,7 +187,6 @@ export default function SongPage() {
       <div className="bg-[#fdfbf7] p-4 md:p-8 rounded-xl border border-amber-100 shadow-inner min-h-[600px] overflow-hidden">
         {isEditing ? (
           <div className="space-y-6">
-            {/* 編輯上方面板：歌名、原調、編輯者 */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-4 rounded border border-gray-300 shadow-sm">
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1">歌名：</label>
@@ -198,7 +204,6 @@ export default function SongPage() {
               </div>
             </div>
             
-            {/* 編輯下方面板：歌詞與和弦 */}
             <textarea
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
