@@ -115,22 +115,32 @@ export default function SongPage() {
   const steps = targetIndex - originalIndex;
 
   const renderPreview = (text: string) => {
-    const tokens = text.split(/(\s+)/);
+    // ✨ 神奇的切割邏輯升級：不僅用空白鍵切，還加入了常見的小節線、括號、標點符號 (包含全形與半形)
+    const tokens = text.split(/(\s+|[|()[\]{}<>,.:;~\-｜（）【】《》，。：；～]+)/);
+
     return (
       <div className="overflow-x-auto pb-6">
-        <div className="w-max min-w-full font-mono leading-relaxed text-gray-800 whitespace-pre tracking-wide transition-all duration-200" style={{ fontSize: `${fontSize}px` }}>
-          {tokens.map((token, i) => {
+        <div 
+          className="w-max min-w-full font-mono leading-relaxed text-gray-800 whitespace-pre tracking-wide transition-all duration-200" 
+          style={{ fontSize: `${fontSize}px` }}
+        >
+          {/* 加入 filter(Boolean) 讓程式不會去渲染多餘的空字串，提升效能 */}
+          {tokens.filter(Boolean).map((token, i) => {
             if (isChord(token)) {
               const newChord = transposeChord(token, steps);
               return (
                 <span key={i} className="relative inline-block">
                   <span className="opacity-0 select-none">{newChord}</span>
-                  <span className="absolute left-0 text-blue-600 font-bold tracking-normal" style={{ fontSize: '0.75em', bottom: '0.1em' }}>
+                  <span 
+                    className="absolute left-0 text-blue-600 font-bold tracking-normal" 
+                    style={{ fontSize: '0.75em', bottom: '0.1em' }}
+                  >
                     {newChord}
                   </span>
                 </span>
               );
             }
+            // 如果切出來的是 | 或是 [，因為不是和弦，就會走到這裡變成一般灰黑色文字
             return <span key={i}>{token}</span>;
           })}
         </div>
