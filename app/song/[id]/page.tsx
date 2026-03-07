@@ -9,8 +9,18 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 
 const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
+// 🌟 新增：降記號翻譯機 (把降記號轉成系統認得的升記號)
+const FLAT_TO_SHARP: Record<string, string> = {
+  'Db': 'C#',
+  'Eb': 'D#',
+  'Gb': 'F#',
+  'Ab': 'G#',
+  'Bb': 'A#'
+};
+
 function isChord(str: string) {
   if (!str || str.trim() === '') return false;
+  // 支援各種常見的和弦後綴，包含降記號
   const regex = /^[CDEFGAB][#b]?(m|min|maj|M|dim|aug|sus|add|#|b|\d)*(?:\/[CDEFGAB][#b]?)?$/;
   return regex.test(str);
 }
@@ -21,10 +31,18 @@ function transposeChord(chord: string, steps: number) {
   const transposeNote = (note: string) => {
     const match = note.match(/^([CDEFGAB][#b]?)(.*)$/);
     if (!match) return note; 
-    const baseNote = match[1];
+    
+    let baseNote = match[1];
     const modifier = match[2];
+
+    // 🌟 關鍵修正：如果是 Bb 等降記號，先翻譯成 A# 等升記號
+    if (FLAT_TO_SHARP[baseNote]) {
+      baseNote = FLAT_TO_SHARP[baseNote];
+    }
+
     const currentIndex = NOTES.indexOf(baseNote);
     if (currentIndex === -1) return note;
+    
     let newIndex = (currentIndex + steps) % 12;
     if (newIndex < 0) newIndex += 12;
     return NOTES[newIndex] + modifier;
@@ -43,15 +61,12 @@ export default function SongPage() {
   const [fontSize, setFontSize] = useState(22);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 權限與會員狀態
   const [user, setUser] = useState<User | null>(null);
-
   const [editTitle, setEditTitle] = useState("");
   const [editKey, setEditKey] = useState("C");
   const [editEditor, setEditEditor] = useState("");
   const [editContent, setEditContent] = useState("");
 
-  // 監聽登入狀態
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -131,7 +146,7 @@ export default function SongPage() {
               return (
                 <span key={i} className="relative inline-block">
                   <span className="opacity-0 select-none">{newChord}</span>
-                  <span className="absolute left-0 text-blue-600 font-bold tracking-normal" style={{ fontSize: '0.75em', bottom: '0.1em' }}>
+                  <span className="absolute left-0 text-sky-500 font-bold tracking-normal" style={{ fontSize: '0.75em', bottom: '0.1em' }}>
                     {newChord}
                   </span>
                 </span>
@@ -144,79 +159,80 @@ export default function SongPage() {
     );
   };
 
-  // 🔐 權限判斷：如果這首歌沒有主人(系統預設曲)，或者主人就是現在登入的人，才可以編輯
   const canEdit = !song.ownerId || (user && user.uid === song.ownerId);
 
   return (
-    <main className="min-h-screen p-4 md:p-8 max-w-5xl mx-auto bg-white text-gray-800">
-      <div className="mb-6 flex justify-between items-center">
-        <Link href="/" className="text-blue-600 hover:text-blue-800 font-bold flex items-center gap-2">← 回到歌單目錄</Link>
+    <main className="min-h-screen p-4 md:p-8 max-w-5xl mx-auto bg-gray-50 text-gray-800 font-sans">
+      <div className="mb-6 flex justify-between items-center bg-white p-4 rounded-2xl shadow-[4px_4px_0_rgba(0,0,0,1)] border-2 border-gray-950">
+        <Link href="/" className="text-gray-950 hover:text-sky-500 font-black flex items-center gap-2 transition-colors">← 回到歌單目錄</Link>
         {isEditing && (
-          <button onClick={handleDelete} className="text-red-500 hover:text-red-700 font-bold text-sm">🗑️ 刪除此歌曲</button>
+          <button onClick={handleDelete} className="text-red-500 hover:text-red-700 font-bold text-sm bg-red-50 px-3 py-1 rounded-full border border-red-200">🗑️ 刪除此歌曲</button>
         )}
       </div>
 
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 bg-white p-6 md:p-8 rounded-3xl shadow-[6px_6px_0_rgba(0,0,0,1)] border-4 border-gray-950">
         <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{song.title}</h1>
-          {song.editor && <p className="text-gray-500 font-medium">編輯者：{song.editor}</p>}
+          <h1 className="text-3xl md:text-5xl font-black text-gray-950 mb-3 tracking-tight">{song.title}</h1>
+          {song.editor && <p className="inline-block px-3 py-1 bg-gray-950 text-white rounded-lg text-sm font-bold">編輯者：{song.editor}</p>}
         </div>
         
-        {/* 🔐 這裡套用權限鎖，有權限才顯示按鈕，沒權限顯示鎖頭 */}
         {canEdit ? (
           isEditing ? (
-            <button onClick={handleSave} className="px-6 py-3 rounded-lg font-bold text-white transition-colors shadow-md w-full md:w-auto bg-green-500 hover:bg-green-600">
+            <button onClick={handleSave} className="w-full md:w-auto px-6 py-4 rounded-2xl font-black text-gray-950 bg-green-400 hover:bg-green-500 border-2 border-gray-950 shadow-[4px_4px_0_rgba(0,0,0,1)] transform hover:-translate-y-1 active:translate-y-0 transition-all text-lg flex items-center justify-center gap-2">
               💾 儲存並上傳雲端
             </button>
           ) : (
-            <button onClick={() => setIsEditing(true)} className="px-6 py-3 rounded-lg font-bold text-white transition-colors shadow-md w-full md:w-auto bg-blue-500 hover:bg-blue-600">
-              ✏️ 編輯歌曲資訊與樂譜
+            <button onClick={() => setIsEditing(true)} className="w-full md:w-auto px-6 py-4 rounded-2xl font-black text-gray-950 bg-yellow-400 hover:bg-yellow-500 border-2 border-gray-950 shadow-[4px_4px_0_rgba(0,0,0,1)] transform hover:-translate-y-1 active:translate-y-0 transition-all text-lg flex items-center justify-center gap-2">
+              ✏️ 編輯樂譜
             </button>
           )
         ) : (
-          <div className="px-4 py-2 bg-gray-100 text-gray-500 rounded-lg text-sm font-medium border border-gray-200">
+          <div className="px-5 py-3 bg-gray-100 text-gray-500 rounded-xl text-sm font-bold border-2 border-gray-300">
             🔒 僅建立者可編輯
           </div>
         )}
       </div>
 
       {!isEditing && (
-        <div className="mb-8 flex flex-wrap items-center justify-start gap-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-          <div className="flex items-center gap-3">
-            <label className="font-medium text-gray-700 text-lg">調性：</label>
-            <select value={targetKey} onChange={(e) => setTargetKey(e.target.value)} className="border border-gray-300 rounded-md px-4 py-2 text-xl font-bold bg-white">
+        <div className="mb-8 flex flex-wrap items-center justify-start gap-4 md:gap-6 p-4 md:p-6 bg-white rounded-3xl border-4 border-gray-950 shadow-[4px_4px_0_rgba(0,0,0,1)]">
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <label className="font-black text-gray-950 text-lg">選擇調性：</label>
+            <select value={targetKey} onChange={(e) => setTargetKey(e.target.value)} className="flex-1 md:flex-none border-2 border-gray-950 rounded-xl px-4 py-2 text-xl font-bold bg-gray-50 focus:ring-4 focus:ring-sky-400 focus:outline-none transition-all cursor-pointer">
               {NOTES.map((note) => <option key={note} value={note}>{note} 調</option>)}
             </select>
           </div>
-          <div className="w-px h-8 bg-gray-300 hidden md:block"></div>
-          <div className="flex items-center gap-3">
-            <label className="font-medium text-gray-700 text-lg">字體：</label>
-            <div className="flex items-center bg-white border border-gray-300 rounded-md overflow-hidden shadow-sm">
-              <button onClick={() => setFontSize(prev => Math.max(12, prev - 2))} className="px-4 py-2 hover:bg-gray-100 active:bg-gray-200 font-bold text-xl text-gray-700 transition-colors">－</button>
-              <span className="px-4 py-2 border-l border-r border-gray-300 font-mono text-lg min-w-[3rem] text-center text-gray-600">{fontSize}</span>
-              <button onClick={() => setFontSize(prev => Math.min(48, prev + 2))} className="px-4 py-2 hover:bg-gray-100 active:bg-gray-200 font-bold text-xl text-gray-700 transition-colors">＋</button>
+          <div className="w-full md:w-px h-px md:h-10 bg-gray-200"></div>
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <label className="font-black text-gray-950 text-lg">字體大小：</label>
+            <div className="flex-1 md:flex-none flex items-center bg-gray-50 border-2 border-gray-950 rounded-xl overflow-hidden">
+              <button onClick={() => setFontSize(prev => Math.max(12, prev - 2))} className="px-5 py-2 hover:bg-gray-200 active:bg-gray-300 font-black text-xl text-gray-950 transition-colors border-r-2 border-gray-950">－</button>
+              <span className="px-5 py-2 font-black text-lg min-w-[3.5rem] text-center text-gray-950">{fontSize}</span>
+              <button onClick={() => setFontSize(prev => Math.min(48, prev + 2))} className="px-5 py-2 hover:bg-gray-200 active:bg-gray-300 font-black text-xl text-gray-950 transition-colors border-l-2 border-gray-950">＋</button>
             </div>
           </div>
         </div>
       )}
 
-      <div className="bg-[#fdfbf7] p-4 md:p-8 rounded-xl border border-amber-100 shadow-inner min-h-[600px] overflow-hidden">
+      <div className="bg-[#fdfbf7] p-4 md:p-8 rounded-3xl border-4 border-gray-950 shadow-[6px_6px_0_rgba(0,0,0,1)] min-h-[600px] overflow-hidden relative">
+        {/* 小裝飾 */}
+        <div className="absolute top-4 right-4 text-4xl opacity-20 pointer-events-none select-none">🎸</div>
+        
         {isEditing ? (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-4 rounded border border-gray-300 shadow-sm">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-5 rounded-2xl border-2 border-gray-950">
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">歌名：</label>
-                <input type="text" value={editTitle} onChange={e => setEditTitle(e.target.value)} className="w-full border border-gray-300 rounded px-3 py-2" />
+                <label className="block text-sm font-black text-gray-950 mb-2">🎵 歌名：</label>
+                <input type="text" value={editTitle} onChange={e => setEditTitle(e.target.value)} className="w-full border-2 border-gray-950 rounded-xl px-4 py-2 font-bold focus:ring-4 focus:ring-yellow-400 focus:outline-none" />
               </div>
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">原調：</label>
-                <select value={editKey} onChange={e => setEditKey(e.target.value)} className="w-full border border-gray-300 rounded px-3 py-2">
+                <label className="block text-sm font-black text-gray-950 mb-2">🎯 原調：</label>
+                <select value={editKey} onChange={e => setEditKey(e.target.value)} className="w-full border-2 border-gray-950 rounded-xl px-4 py-2 font-bold focus:ring-4 focus:ring-yellow-400 focus:outline-none bg-white">
                   {NOTES.map(note => <option key={note} value={note}>{note}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">編輯者：</label>
-                <input type="text" value={editEditor} onChange={e => setEditEditor(e.target.value)} placeholder="例如: 小明" className="w-full border border-gray-300 rounded px-3 py-2" />
+                <label className="block text-sm font-black text-gray-950 mb-2">👤 編輯者：</label>
+                <input type="text" value={editEditor} onChange={e => setEditEditor(e.target.value)} placeholder="例如: 烏鴉Lin" className="w-full border-2 border-gray-950 rounded-xl px-4 py-2 font-bold focus:ring-4 focus:ring-yellow-400 focus:outline-none" />
               </div>
             </div>
             
@@ -224,7 +240,7 @@ export default function SongPage() {
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
               style={{ fontSize: `${fontSize}px` }}
-              className="w-full h-[500px] p-4 bg-gray-900 text-gray-100 font-mono leading-relaxed rounded border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-pre overflow-x-auto"
+              className="w-full h-[500px] p-6 bg-gray-950 text-sky-300 font-mono leading-relaxed rounded-2xl border-4 border-gray-950 focus:outline-none focus:ring-4 focus:ring-yellow-400 whitespace-pre overflow-x-auto selection:bg-sky-900 shadow-[inset_0_4px_10px_rgba(0,0,0,0.5)]"
               placeholder="請直接打字，用空白鍵將和弦對齊在歌詞上方..."
               spellCheck="false"
             />
