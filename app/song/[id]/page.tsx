@@ -12,6 +12,14 @@ const SHARP_NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#',
 const FLAT_NOTES  = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
 const FLAT_KEYS = ['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb']; 
 
+// 🌟 YouTube 網址解析器：能把網址轉成影片 ID
+function getYouTubeId(url: string) {
+  if (!url) return null;
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
+}
+
 function getNoteIndex(note: string) {
   const idx = SHARP_NOTES.indexOf(note);
   return idx !== -1 ? idx : FLAT_NOTES.indexOf(note);
@@ -64,6 +72,7 @@ export default function SongPage() {
   const [editKey, setEditKey] = useState("C");
   const [editEditor, setEditEditor] = useState("");
   const [editContent, setEditContent] = useState("");
+  const [editYoutubeUrl, setEditYoutubeUrl] = useState(""); // 🌟 新增 YouTube 編輯狀態
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -86,6 +95,7 @@ export default function SongPage() {
           setEditKey(foundSong.originalKey);
           setEditEditor(foundSong.editor || "");
           setEditContent(foundSong.content);
+          setEditYoutubeUrl(foundSong.youtubeUrl || ""); // 🌟 讀取 YouTube 網址
         } else {
           alert("找不到這首詩歌！");
           router.push('/');
@@ -101,7 +111,14 @@ export default function SongPage() {
 
   const handleSave = async () => {
     if (!song) return;
-    const updatedSong = { ...song, title: editTitle, originalKey: editKey, editor: editEditor, content: editContent };
+    const updatedSong = { 
+      ...song, 
+      title: editTitle, 
+      originalKey: editKey, 
+      editor: editEditor, 
+      content: editContent,
+      youtubeUrl: editYoutubeUrl // 🌟 存檔時把 YouTube 網址存進去
+    };
     try {
       await setDoc(doc(db, "songs", song.id), updatedSong);
       setSong(updatedSong);
@@ -133,7 +150,6 @@ export default function SongPage() {
   const targetIndex = getNoteIndex(targetKey);
   const steps = targetIndex - originalIndex;
 
-  // 🌟 雙引擎渲染器
   const renderPreview = (text: string) => {
     const lines = text.split('\n');
 
@@ -141,12 +157,9 @@ export default function SongPage() {
       <div className="overflow-x-auto pb-6">
         <div className="w-max min-w-full font-mono leading-relaxed text-gray-800 tracking-wide transition-all duration-200" style={{ fontSize: `${fontSize}px` }}>
           {lines.map((line, lineIndex) => {
-            
-            // 判斷這行有沒有使用 [和弦] 的寫法
             const hasBrackets = /\[.*?\]/.test(line);
 
             if (hasBrackets) {
-              // 引擎一：標籤寫法 (ChordPro)
               const parts = line.split(/\[(.*?)\]/);
               return (
                 <div key={lineIndex} className="whitespace-pre-wrap mt-5 mb-1 min-h-[1.5em]">
@@ -167,7 +180,6 @@ export default function SongPage() {
                 </div>
               );
             } else {
-              // 引擎二：傳統對齊寫法
               const tokens = line.split(/(\s+|[|()[\]{}<>,.:;~\-｜（）【】《》，。：；～]+)/);
               return (
                 <div key={lineIndex} className="whitespace-pre min-h-[1.5em]">
@@ -248,25 +260,53 @@ export default function SongPage() {
         </div>
       )}
 
+      {/* 🌟 閱讀模式下，如果有 YouTube 網址就顯示播放器 */}
+      {!isEditing && song.youtubeUrl && getYouTubeId(song.youtubeUrl) && (
+        <div className="mb-8 aspect-video w-full max-w-3xl mx-auto rounded-3xl overflow-hidden shadow-[6px_6px_0_rgba(0,0,0,1)] border-4 border-gray-950 bg-gray-950">
+          <iframe
+            width="100%"
+            height="100%"
+            src={`https://www.youtube.com/embed/${getYouTubeId(song.youtubeUrl)}`}
+            title="YouTube Reference"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          ></iframe>
+        </div>
+      )}
+
       <div className="bg-[#fdfbf7] p-4 md:p-8 rounded-3xl border-4 border-gray-950 shadow-[6px_6px_0_rgba(0,0,0,1)] min-h-[600px] overflow-hidden relative">
         <div className="absolute top-4 right-4 text-4xl opacity-20 pointer-events-none select-none">🎸</div>
         
         {isEditing ? (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-5 rounded-2xl border-2 border-gray-950">
-              <div>
-                <label className="block text-sm font-black text-gray-950 mb-2">🎵 歌名：</label>
-                <input type="text" value={editTitle} onChange={e => setEditTitle(e.target.value)} className="w-full border-2 border-gray-950 rounded-xl px-4 py-2 font-bold focus:ring-4 focus:ring-yellow-400 focus:outline-none" />
+            <div className="bg-white p-5 rounded-2xl border-2 border-gray-950 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-black text-gray-950 mb-2">🎵 歌名：</label>
+                  <input type="text" value={editTitle} onChange={e => setEditTitle(e.target.value)} className="w-full border-2 border-gray-950 rounded-xl px-4 py-2 font-bold focus:ring-4 focus:ring-yellow-400 focus:outline-none" />
+                </div>
+                <div>
+                  <label className="block text-sm font-black text-gray-950 mb-2">🎯 原調：</label>
+                  <select value={editKey} onChange={e => setEditKey(e.target.value)} className="w-full border-2 border-gray-950 rounded-xl px-4 py-2 font-bold focus:ring-4 focus:ring-yellow-400 focus:outline-none bg-white">
+                    {ALL_KEYS.map(note => <option key={note} value={note}>{note}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-black text-gray-950 mb-2">👤 編輯者：</label>
+                  <input type="text" value={editEditor} onChange={e => setEditEditor(e.target.value)} placeholder="例如: 烏鴉Lin" className="w-full border-2 border-gray-950 rounded-xl px-4 py-2 font-bold focus:ring-4 focus:ring-yellow-400 focus:outline-none" />
+                </div>
               </div>
+              
+              {/* 🌟 新增的 YouTube 網址輸入框 */}
               <div>
-                <label className="block text-sm font-black text-gray-950 mb-2">🎯 原調：</label>
-                <select value={editKey} onChange={e => setEditKey(e.target.value)} className="w-full border-2 border-gray-950 rounded-xl px-4 py-2 font-bold focus:ring-4 focus:ring-yellow-400 focus:outline-none bg-white">
-                  {ALL_KEYS.map(note => <option key={note} value={note}>{note}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-black text-gray-950 mb-2">👤 編輯者：</label>
-                <input type="text" value={editEditor} onChange={e => setEditEditor(e.target.value)} placeholder="例如: 烏鴉Lin" className="w-full border-2 border-gray-950 rounded-xl px-4 py-2 font-bold focus:ring-4 focus:ring-yellow-400 focus:outline-none" />
+                <label className="block text-sm font-black text-gray-950 mb-2">📺 YouTube 參考影片網址 (選填)：</label>
+                <input 
+                  type="text" 
+                  value={editYoutubeUrl} 
+                  onChange={e => setEditYoutubeUrl(e.target.value)} 
+                  placeholder="例如: https://www.youtube.com/watch?v=..." 
+                  className="w-full border-2 border-gray-950 rounded-xl px-4 py-2 font-bold focus:ring-4 focus:ring-sky-400 focus:outline-none" 
+                />
               </div>
             </div>
             

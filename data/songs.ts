@@ -4,11 +4,11 @@ export interface Song {
   originalKey: string;
   editor: string;
   content: string;
-  ownerId?: string; // 新增：紀錄是哪個使用者的 ID 建立的
-  ownerEmail?: string; // 新增：紀錄建立者的 Email
+  ownerId?: string;
+  ownerEmail?: string;
+  youtubeUrl?: string; // 🌟 新增這行：用來存 YouTube 網址 (選填)
 }
 
-// ... 底下的 initialSongList 保持原樣不變 ...
   
   export const initialSongList: Song[] = [
     {
