@@ -18,7 +18,7 @@ export default function Home() {
   
   const router = useRouter();
 
-  // 監聽登入狀態
+  // 1. 監聽登入狀態
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -26,7 +26,7 @@ export default function Home() {
     return () => unsubscribe();
   }, []);
 
-  // 讀取歌單
+  // 2. 只抓取歌單 (絕對不會去抓舊的 Logo)
   useEffect(() => {
     const fetchSongs = async () => {
       try {
@@ -50,14 +50,14 @@ export default function Home() {
     fetchSongs();
   }, []);
 
-  // 登入與登出
+  // 3. 登入與登出
   const handleLogin = async () => {
     try { await signInWithPopup(auth, googleProvider); } 
     catch (error) { alert("登入失敗，請重試！"); }
   };
   const handleLogout = async () => { await signOut(auth); };
 
-  // 新增歌曲
+  // 4. 新增歌曲
   const handleCreateNewSong = async () => {
     if (!user) { alert("請先登入才能新增詩歌喔！"); return; }
     const newId = `song-${Date.now()}`; 
@@ -84,7 +84,7 @@ export default function Home() {
       <header className="flex justify-between items-center mb-12">
         <div className="flex items-center gap-3">
           
-          {/* 🌟 你的專屬 Logo 圖片 */}
+          {/* 🌟 你的專屬烏鴉 Logo 圖片 */}
           <div className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-md overflow-hidden bg-blue-50 border-2 border-white">
             <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
           </div>
@@ -132,15 +132,17 @@ export default function Home() {
           <ul className="divide-y divide-gray-100">
             {filteredSongs.map((song) => (
               <li key={song.id}>
-                <Link href={`/song/${song.id}`} className="flex items-center justify-between p-5 hover:bg-blue-50 transition-colors group">
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-700 mb-1">{song.title}</h3>
-                    <div className="flex gap-2">
-                      <span className="inline-block px-2 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded">Key: {song.originalKey}</span>
-                      {song.editor && <span className="inline-block px-2 py-1 bg-green-50 text-green-700 text-xs font-semibold rounded border border-green-100">{song.editor}</span>}
+                <Link href={`/song/${song.id}`} className="flex items-center justify-between p-5 hover:bg-blue-50 transition-colors group cursor-pointer block">
+                  <div className="flex justify-between items-center w-full">
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-700 mb-1">{song.title}</h3>
+                      <div className="flex gap-2">
+                        <span className="inline-block px-2 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded">Key: {song.originalKey}</span>
+                        {song.editor && <span className="inline-block px-2 py-1 bg-green-50 text-green-700 text-xs font-semibold rounded border border-green-100">{song.editor}</span>}
+                      </div>
                     </div>
+                    <span className="text-gray-300 group-hover:text-blue-500 text-2xl font-light">→</span>
                   </div>
-                  <span className="text-gray-300 group-hover:text-blue-500 text-2xl font-light">→</span>
                 </Link>
               </li>
             ))}
