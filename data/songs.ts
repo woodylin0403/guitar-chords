@@ -1,10 +1,14 @@
 export interface Song {
-    id: string;
-    title: string;
-    originalKey: string;
-    editor: string;
-    content: string;
-  }
+  id: string;
+  title: string;
+  originalKey: string;
+  editor: string;
+  content: string;
+  ownerId?: string; // 新增：紀錄是哪個使用者的 ID 建立的
+  ownerEmail?: string; // 新增：紀錄建立者的 Email
+}
+
+// ... 底下的 initialSongList 保持原樣不變 ...
   
   export const initialSongList: Song[] = [
     {
