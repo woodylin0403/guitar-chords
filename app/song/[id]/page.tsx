@@ -7,45 +7,47 @@ import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 
-const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+// 🌟 樂理大腦設定區
+const ALL_KEYS = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
+const SHARP_NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+const FLAT_NOTES  = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+const FLAT_KEYS = ['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb']; // 遇到這些調，優先使用降記號
 
-// 🌟 新增：降記號翻譯機 (把降記號轉成系統認得的升記號)
-const FLAT_TO_SHARP: Record<string, string> = {
-  'Db': 'C#',
-  'Eb': 'D#',
-  'Gb': 'F#',
-  'Ab': 'G#',
-  'Bb': 'A#'
-};
+// 把任何音符精準轉成 0-11 的數字
+function getNoteIndex(note: string) {
+  const idx = SHARP_NOTES.indexOf(note);
+  return idx !== -1 ? idx : FLAT_NOTES.indexOf(note);
+}
 
 function isChord(str: string) {
   if (!str || str.trim() === '') return false;
-  // 支援各種常見的和弦後綴，包含降記號
   const regex = /^[CDEFGAB][#b]?(m|min|maj|M|dim|aug|sus|add|#|b|\d)*(?:\/[CDEFGAB][#b]?)?$/;
   return regex.test(str);
 }
 
-function transposeChord(chord: string, steps: number) {
+// 🌟 升級版轉調核心：會根據「目標調性」決定要顯示升還降
+function transposeChord(chord: string, steps: number, targetKey: string) {
   if (!chord) return chord;
+  const useFlats = FLAT_KEYS.includes(targetKey);
+  const outputScale = useFlats ? FLAT_NOTES : SHARP_NOTES;
+
   const parts = chord.split('/');
   const transposeNote = (note: string) => {
     const match = note.match(/^([CDEFGAB][#b]?)(.*)$/);
     if (!match) return note; 
-    
-    let baseNote = match[1];
+    const baseNote = match[1];
     const modifier = match[2];
 
-    // 🌟 關鍵修正：如果是 Bb 等降記號，先翻譯成 A# 等升記號
-    if (FLAT_TO_SHARP[baseNote]) {
-      baseNote = FLAT_TO_SHARP[baseNote];
-    }
-
-    const currentIndex = NOTES.indexOf(baseNote);
+    const currentIndex = getNoteIndex(baseNote);
     if (currentIndex === -1) return note;
     
     let newIndex = (currentIndex + steps) % 12;
     if (newIndex < 0) newIndex += 12;
-    return NOTES[newIndex] + modifier;
+
+    // 樂理特例優化：C 調的 bVII 和弦在流行樂中極常出現，應記為 Bb 而非 A#
+    if (targetKey === 'C' && newIndex === 10) return 'Bb' + modifier;
+
+    return outputScale[newIndex] + modifier;
   };
   return parts.map(transposeNote).join('/');
 }
@@ -131,8 +133,9 @@ export default function SongPage() {
   if (isLoading) return <div className="p-8 text-center text-xl font-bold text-gray-500">雲端讀譜中...</div>;
   if (!song) return null;
 
-  const originalIndex = NOTES.indexOf(song.originalKey);
-  const targetIndex = NOTES.indexOf(targetKey);
+  // 🌟 改用新的 getNoteIndex 來計算級距
+  const originalIndex = getNoteIndex(song.originalKey);
+  const targetIndex = getNoteIndex(targetKey);
   const steps = targetIndex - originalIndex;
 
   const renderPreview = (text: string) => {
@@ -142,7 +145,8 @@ export default function SongPage() {
         <div className="w-max min-w-full font-mono leading-relaxed text-gray-800 whitespace-pre tracking-wide transition-all duration-200" style={{ fontSize: `${fontSize}px` }}>
           {tokens.filter(Boolean).map((token, i) => {
             if (isChord(token)) {
-              const newChord = transposeChord(token, steps);
+              // 🌟 轉調時把「目前的目標調性(targetKey)」傳進去當參考
+              const newChord = transposeChord(token, steps, targetKey);
               return (
                 <span key={i} className="relative inline-block">
                   <span className="opacity-0 select-none">{newChord}</span>
@@ -198,7 +202,8 @@ export default function SongPage() {
           <div className="flex items-center gap-3 w-full md:w-auto">
             <label className="font-black text-gray-950 text-lg">選擇調性：</label>
             <select value={targetKey} onChange={(e) => setTargetKey(e.target.value)} className="flex-1 md:flex-none border-2 border-gray-950 rounded-xl px-4 py-2 text-xl font-bold bg-gray-50 focus:ring-4 focus:ring-sky-400 focus:outline-none transition-all cursor-pointer">
-              {NOTES.map((note) => <option key={note} value={note}>{note} 調</option>)}
+              {/* 🌟 選單換成 ALL_KEYS，支援降記號調性 */}
+              {ALL_KEYS.map((note) => <option key={note} value={note}>{note} 調</option>)}
             </select>
           </div>
           <div className="w-full md:w-px h-px md:h-10 bg-gray-200"></div>
@@ -214,7 +219,6 @@ export default function SongPage() {
       )}
 
       <div className="bg-[#fdfbf7] p-4 md:p-8 rounded-3xl border-4 border-gray-950 shadow-[6px_6px_0_rgba(0,0,0,1)] min-h-[600px] overflow-hidden relative">
-        {/* 小裝飾 */}
         <div className="absolute top-4 right-4 text-4xl opacity-20 pointer-events-none select-none">🎸</div>
         
         {isEditing ? (
@@ -227,7 +231,8 @@ export default function SongPage() {
               <div>
                 <label className="block text-sm font-black text-gray-950 mb-2">🎯 原調：</label>
                 <select value={editKey} onChange={e => setEditKey(e.target.value)} className="w-full border-2 border-gray-950 rounded-xl px-4 py-2 font-bold focus:ring-4 focus:ring-yellow-400 focus:outline-none bg-white">
-                  {NOTES.map(note => <option key={note} value={note}>{note}</option>)}
+                  {/* 🌟 編輯時的選單也同步升級 */}
+                  {ALL_KEYS.map(note => <option key={note} value={note}>{note}</option>)}
                 </select>
               </div>
               <div>
