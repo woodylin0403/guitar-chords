@@ -7,13 +7,11 @@ import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 
-// 🌟 樂理大腦設定區
 const ALL_KEYS = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
 const SHARP_NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const FLAT_NOTES  = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
-const FLAT_KEYS = ['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb']; // 遇到這些調，優先使用降記號
+const FLAT_KEYS = ['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb']; 
 
-// 把任何音符精準轉成 0-11 的數字
 function getNoteIndex(note: string) {
   const idx = SHARP_NOTES.indexOf(note);
   return idx !== -1 ? idx : FLAT_NOTES.indexOf(note);
@@ -25,7 +23,6 @@ function isChord(str: string) {
   return regex.test(str);
 }
 
-// 🌟 升級版轉調核心：會根據「目標調性」決定要顯示升還降
 function transposeChord(chord: string, steps: number, targetKey: string) {
   if (!chord) return chord;
   const useFlats = FLAT_KEYS.includes(targetKey);
@@ -44,7 +41,6 @@ function transposeChord(chord: string, steps: number, targetKey: string) {
     let newIndex = (currentIndex + steps) % 12;
     if (newIndex < 0) newIndex += 12;
 
-    // 樂理特例優化：C 調的 bVII 和弦在流行樂中極常出現，應記為 Bb 而非 A#
     if (targetKey === 'C' && newIndex === 10) return 'Bb' + modifier;
 
     return outputScale[newIndex] + modifier;
@@ -133,30 +129,65 @@ export default function SongPage() {
   if (isLoading) return <div className="p-8 text-center text-xl font-bold text-gray-500">雲端讀譜中...</div>;
   if (!song) return null;
 
-  // 🌟 改用新的 getNoteIndex 來計算級距
   const originalIndex = getNoteIndex(song.originalKey);
   const targetIndex = getNoteIndex(targetKey);
   const steps = targetIndex - originalIndex;
 
+  // 🌟 雙引擎渲染器
   const renderPreview = (text: string) => {
-    const tokens = text.split(/(\s+|[|()[\]{}<>,.:;~\-｜（）【】《》，。：；～]+)/);
+    const lines = text.split('\n');
+
     return (
       <div className="overflow-x-auto pb-6">
-        <div className="w-max min-w-full font-mono leading-relaxed text-gray-800 whitespace-pre tracking-wide transition-all duration-200" style={{ fontSize: `${fontSize}px` }}>
-          {tokens.filter(Boolean).map((token, i) => {
-            if (isChord(token)) {
-              // 🌟 轉調時把「目前的目標調性(targetKey)」傳進去當參考
-              const newChord = transposeChord(token, steps, targetKey);
+        <div className="w-max min-w-full font-mono leading-relaxed text-gray-800 tracking-wide transition-all duration-200" style={{ fontSize: `${fontSize}px` }}>
+          {lines.map((line, lineIndex) => {
+            
+            // 判斷這行有沒有使用 [和弦] 的寫法
+            const hasBrackets = /\[.*?\]/.test(line);
+
+            if (hasBrackets) {
+              // 引擎一：標籤寫法 (ChordPro)
+              const parts = line.split(/\[(.*?)\]/);
               return (
-                <span key={i} className="relative inline-block">
-                  <span className="opacity-0 select-none">{newChord}</span>
-                  <span className="absolute left-0 text-sky-500 font-bold tracking-normal" style={{ fontSize: '0.75em', bottom: '0.1em' }}>
-                    {newChord}
-                  </span>
-                </span>
+                <div key={lineIndex} className="whitespace-pre-wrap mt-5 mb-1 min-h-[1.5em]">
+                  {parts.map((part, i) => {
+                    if (i % 2 === 0) {
+                      return <span key={i}>{part}</span>;
+                    } else {
+                      const newChord = transposeChord(part, steps, targetKey);
+                      return (
+                        <span key={i} className="relative inline-block">
+                          <span className="absolute left-0 text-sky-500 font-bold tracking-normal" style={{ fontSize: '0.75em', bottom: '85%' }}>
+                            {newChord}
+                          </span>
+                        </span>
+                      );
+                    }
+                  })}
+                </div>
+              );
+            } else {
+              // 引擎二：傳統對齊寫法
+              const tokens = line.split(/(\s+|[|()[\]{}<>,.:;~\-｜（）【】《》，。：；～]+)/);
+              return (
+                <div key={lineIndex} className="whitespace-pre min-h-[1.5em]">
+                  {tokens.filter(Boolean).map((token, i) => {
+                    if (isChord(token)) {
+                      const newChord = transposeChord(token, steps, targetKey);
+                      return (
+                        <span key={i} className="relative inline-block">
+                          <span className="opacity-0 select-none">{newChord}</span>
+                          <span className="absolute left-0 text-sky-500 font-bold tracking-normal" style={{ fontSize: '0.75em', bottom: '0.1em' }}>
+                            {newChord}
+                          </span>
+                        </span>
+                      );
+                    }
+                    return <span key={i}>{token}</span>;
+                  })}
+                </div>
               );
             }
-            return <span key={i}>{token}</span>;
           })}
         </div>
       </div>
@@ -202,7 +233,6 @@ export default function SongPage() {
           <div className="flex items-center gap-3 w-full md:w-auto">
             <label className="font-black text-gray-950 text-lg">選擇調性：</label>
             <select value={targetKey} onChange={(e) => setTargetKey(e.target.value)} className="flex-1 md:flex-none border-2 border-gray-950 rounded-xl px-4 py-2 text-xl font-bold bg-gray-50 focus:ring-4 focus:ring-sky-400 focus:outline-none transition-all cursor-pointer">
-              {/* 🌟 選單換成 ALL_KEYS，支援降記號調性 */}
               {ALL_KEYS.map((note) => <option key={note} value={note}>{note} 調</option>)}
             </select>
           </div>
@@ -231,7 +261,6 @@ export default function SongPage() {
               <div>
                 <label className="block text-sm font-black text-gray-950 mb-2">🎯 原調：</label>
                 <select value={editKey} onChange={e => setEditKey(e.target.value)} className="w-full border-2 border-gray-950 rounded-xl px-4 py-2 font-bold focus:ring-4 focus:ring-yellow-400 focus:outline-none bg-white">
-                  {/* 🌟 編輯時的選單也同步升級 */}
                   {ALL_KEYS.map(note => <option key={note} value={note}>{note}</option>)}
                 </select>
               </div>
@@ -246,7 +275,7 @@ export default function SongPage() {
               onChange={(e) => setEditContent(e.target.value)}
               style={{ fontSize: `${fontSize}px` }}
               className="w-full h-[500px] p-6 bg-gray-950 text-sky-300 font-mono leading-relaxed rounded-2xl border-4 border-gray-950 focus:outline-none focus:ring-4 focus:ring-yellow-400 whitespace-pre overflow-x-auto selection:bg-sky-900 shadow-[inset_0_4px_10px_rgba(0,0,0,0.5)]"
-              placeholder="請直接打字，用空白鍵將和弦對齊在歌詞上方..."
+              placeholder="支援兩種寫法：&#10;1. 傳統對齊：用空白鍵將和弦對齊在歌詞上方&#10;2. 標籤寫法：在歌詞中插入 [和弦]，例如: 今[C]十架山上[G]羔羊"
               spellCheck="false"
             />
           </div>
