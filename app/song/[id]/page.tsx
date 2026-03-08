@@ -7,12 +7,19 @@ import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 
-const ALL_KEYS = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
+// 🌟 樂理大腦升級：加入所有小調
+const MAJOR_KEYS = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
+const MINOR_KEYS = ['Cm', 'C#m', 'Dm', 'Ebm', 'Em', 'Fm', 'F#m', 'Gm', 'G#m', 'Am', 'Bbm', 'Bm'];
+const ALL_KEYS = [...MAJOR_KEYS, ...MINOR_KEYS];
+
 const SHARP_NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const FLAT_NOTES  = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
-const FLAT_KEYS = ['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb']; 
+// 🌟 這些大調與小調，優先使用降記號
+const FLAT_KEYS = ['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Dm', 'Gm', 'Cm', 'Fm', 'Bbm', 'Ebm']; 
 
-// 🌟 YouTube 網址解析器：能把網址轉成影片 ID
+// 常用拍號選單
+const TIME_SIGNATURES = ['4/4', '3/4', '2/4', '6/8', '9/8', '12/8', '2/2', '6/4'];
+
 function getYouTubeId(url: string) {
   if (!url) return null;
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
@@ -29,6 +36,11 @@ function isChord(str: string) {
   if (!str || str.trim() === '') return false;
   const regex = /^[CDEFGAB][#b]?(m|min|maj|M|dim|aug|sus|add|#|b|\d)*(?:\/[CDEFGAB][#b]?)?$/;
   return regex.test(str);
+}
+
+// 取得調性的「根音」(把後面的 m 拿掉，例如 Am -> A)
+function getRootNote(key: string) {
+  return key.replace('m', '');
 }
 
 function transposeChord(chord: string, steps: number, targetKey: string) {
@@ -49,7 +61,7 @@ function transposeChord(chord: string, steps: number, targetKey: string) {
     let newIndex = (currentIndex + steps) % 12;
     if (newIndex < 0) newIndex += 12;
 
-    if (targetKey === 'C' && newIndex === 10) return 'Bb' + modifier;
+    if (getRootNote(targetKey) === 'C' && newIndex === 10) return 'Bb' + modifier;
 
     return outputScale[newIndex] + modifier;
   };
@@ -70,9 +82,10 @@ export default function SongPage() {
   const [user, setUser] = useState<User | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editKey, setEditKey] = useState("C");
-  const [editEditor, setEditEditor] = useState("");
+  const [editTimeSignature, setEditTimeSignature] = useState("4/4"); // 🌟 拍號狀態
+  const [editEditor, setEditEditor] = useState("烏鴉Lin"); // 🌟 預設編輯者
   const [editContent, setEditContent] = useState("");
-  const [editYoutubeUrl, setEditYoutubeUrl] = useState(""); // 🌟 新增 YouTube 編輯狀態
+  const [editYoutubeUrl, setEditYoutubeUrl] = useState("");
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -93,9 +106,11 @@ export default function SongPage() {
           setTargetKey(foundSong.originalKey);
           setEditTitle(foundSong.title);
           setEditKey(foundSong.originalKey);
-          setEditEditor(foundSong.editor || "");
+          setEditTimeSignature(foundSong.timeSignature || "4/4");
+          // 🌟 如果資料庫本來就有編輯者，就用原來的；否則預設烏鴉Lin
+          setEditEditor(foundSong.editor || "烏鴉Lin"); 
           setEditContent(foundSong.content);
-          setEditYoutubeUrl(foundSong.youtubeUrl || ""); // 🌟 讀取 YouTube 網址
+          setEditYoutubeUrl(foundSong.youtubeUrl || "");
         } else {
           alert("找不到這首詩歌！");
           router.push('/');
@@ -115,9 +130,10 @@ export default function SongPage() {
       ...song, 
       title: editTitle, 
       originalKey: editKey, 
+      timeSignature: editTimeSignature, // 🌟 存檔時加入拍號
       editor: editEditor, 
       content: editContent,
-      youtubeUrl: editYoutubeUrl // 🌟 存檔時把 YouTube 網址存進去
+      youtubeUrl: editYoutubeUrl 
     };
     try {
       await setDoc(doc(db, "songs", song.id), updatedSong);
@@ -146,8 +162,9 @@ export default function SongPage() {
   if (isLoading) return <div className="p-8 text-center text-xl font-bold text-gray-500">雲端讀譜中...</div>;
   if (!song) return null;
 
-  const originalIndex = getNoteIndex(song.originalKey);
-  const targetIndex = getNoteIndex(targetKey);
+  // 🌟 小調轉調核心邏輯：只拿根音來算級距
+  const originalIndex = getNoteIndex(getRootNote(song.originalKey));
+  const targetIndex = getNoteIndex(getRootNote(targetKey));
   const steps = targetIndex - originalIndex;
 
   const renderPreview = (text: string) => {
@@ -220,7 +237,16 @@ export default function SongPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 bg-white p-6 md:p-8 rounded-3xl shadow-[6px_6px_0_rgba(0,0,0,1)] border-4 border-gray-950">
         <div>
           <h1 className="text-3xl md:text-5xl font-black text-gray-950 mb-3 tracking-tight">{song.title}</h1>
-          {song.editor && <p className="inline-block px-3 py-1 bg-gray-950 text-white rounded-lg text-sm font-bold">編輯者：{song.editor}</p>}
+          <div className="flex items-center gap-3">
+            {song.editor && <span className="inline-block px-3 py-1 bg-gray-950 text-white rounded-lg text-sm font-bold">編輯者：{song.editor}</span>}
+            
+            {/* 🌟 閱讀模式：顯示拍號 */}
+            {!isEditing && song.timeSignature && (
+              <span className="inline-block px-3 py-1 bg-white text-gray-950 border-2 border-gray-950 rounded-lg text-sm font-black shadow-[2px_2px_0_rgba(0,0,0,1)]">
+                拍號：{song.timeSignature}
+              </span>
+            )}
+          </div>
         </div>
         
         {canEdit ? (
@@ -260,7 +286,6 @@ export default function SongPage() {
         </div>
       )}
 
-      {/* 🌟 閱讀模式下，如果有 YouTube 網址就顯示播放器 */}
       {!isEditing && song.youtubeUrl && getYouTubeId(song.youtubeUrl) && (
         <div className="mb-8 aspect-video w-full max-w-3xl mx-auto rounded-3xl overflow-hidden shadow-[6px_6px_0_rgba(0,0,0,1)] border-4 border-gray-950 bg-gray-950">
           <iframe
@@ -280,33 +305,46 @@ export default function SongPage() {
         {isEditing ? (
           <div className="space-y-6">
             <div className="bg-white p-5 rounded-2xl border-2 border-gray-950 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                
+                <div className="col-span-1 md:col-span-2">
                   <label className="block text-sm font-black text-gray-950 mb-2">🎵 歌名：</label>
                   <input type="text" value={editTitle} onChange={e => setEditTitle(e.target.value)} className="w-full border-2 border-gray-950 rounded-xl px-4 py-2 font-bold focus:ring-4 focus:ring-yellow-400 focus:outline-none" />
                 </div>
+                
                 <div>
                   <label className="block text-sm font-black text-gray-950 mb-2">🎯 原調：</label>
                   <select value={editKey} onChange={e => setEditKey(e.target.value)} className="w-full border-2 border-gray-950 rounded-xl px-4 py-2 font-bold focus:ring-4 focus:ring-yellow-400 focus:outline-none bg-white">
                     {ALL_KEYS.map(note => <option key={note} value={note}>{note}</option>)}
                   </select>
                 </div>
+
+                {/* 🌟 編輯模式：新增拍號下拉選單 */}
                 <div>
-                  <label className="block text-sm font-black text-gray-950 mb-2">👤 編輯者：</label>
-                  <input type="text" value={editEditor} onChange={e => setEditEditor(e.target.value)} placeholder="例如: 烏鴉Lin" className="w-full border-2 border-gray-950 rounded-xl px-4 py-2 font-bold focus:ring-4 focus:ring-yellow-400 focus:outline-none" />
+                  <label className="block text-sm font-black text-gray-950 mb-2">⏱️ 拍號：</label>
+                  <select value={editTimeSignature} onChange={e => setEditTimeSignature(e.target.value)} className="w-full border-2 border-gray-950 rounded-xl px-4 py-2 font-bold focus:ring-4 focus:ring-yellow-400 focus:outline-none bg-white">
+                    {TIME_SIGNATURES.map(ts => <option key={ts} value={ts}>{ts}</option>)}
+                  </select>
                 </div>
+
               </div>
               
-              {/* 🌟 新增的 YouTube 網址輸入框 */}
-              <div>
-                <label className="block text-sm font-black text-gray-950 mb-2">📺 YouTube 參考影片網址 (選填)：</label>
-                <input 
-                  type="text" 
-                  value={editYoutubeUrl} 
-                  onChange={e => setEditYoutubeUrl(e.target.value)} 
-                  placeholder="例如: https://www.youtube.com/watch?v=..." 
-                  className="w-full border-2 border-gray-950 rounded-xl px-4 py-2 font-bold focus:ring-4 focus:ring-sky-400 focus:outline-none" 
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-black text-gray-950 mb-2">👤 編輯者：</label>
+                  <input type="text" value={editEditor} onChange={e => setEditEditor(e.target.value)} className="w-full border-2 border-gray-950 rounded-xl px-4 py-2 font-bold focus:ring-4 focus:ring-yellow-400 focus:outline-none" />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-black text-gray-950 mb-2">📺 YouTube 參考影片網址 (選填)：</label>
+                  <input 
+                    type="text" 
+                    value={editYoutubeUrl} 
+                    onChange={e => setEditYoutubeUrl(e.target.value)} 
+                    placeholder="例如: https://www.youtube.com/watch?v=..." 
+                    className="w-full border-2 border-gray-950 rounded-xl px-4 py-2 font-bold focus:ring-4 focus:ring-sky-400 focus:outline-none" 
+                  />
+                </div>
               </div>
             </div>
             

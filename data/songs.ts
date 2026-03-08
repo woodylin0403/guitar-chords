@@ -2,12 +2,15 @@ export interface Song {
   id: string;
   title: string;
   originalKey: string;
+  timeSignature?: string; // 🌟 新增拍號欄位
   editor: string;
   content: string;
   ownerId?: string;
   ownerEmail?: string;
-  youtubeUrl?: string; // 🌟 新增這行：用來存 YouTube 網址 (選填)
+  youtubeUrl?: string;
 }
+
+// ... 底下的 initialSongList 保持原樣不變 ...
 
   
   export const initialSongList: Song[] = [
