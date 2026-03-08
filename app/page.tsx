@@ -7,6 +7,7 @@ import { collection, getDocs, doc, setDoc } from 'firebase/firestore';
 import { db, auth, googleProvider } from '@/lib/firebase';
 import { signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
 
+// 🌟 將調性分為大調與小調，給予不同的視覺顏色
 const MAJOR_KEYS = [
   { note: 'C', color: 'bg-sky-400 text-gray-950' },
   { note: 'D', color: 'bg-green-400 text-gray-950' },
@@ -15,6 +16,16 @@ const MAJOR_KEYS = [
   { note: 'G', color: 'bg-rose-400 text-white' },
   { note: 'A', color: 'bg-purple-400 text-white' },
   { note: 'B', color: 'bg-pink-400 text-white' },
+];
+
+const MINOR_KEYS = [
+  { note: 'Cm', color: 'bg-sky-100 text-sky-900' },
+  { note: 'Dm', color: 'bg-green-100 text-green-900' },
+  { note: 'Em', color: 'bg-yellow-100 text-yellow-900' },
+  { note: 'Fm', color: 'bg-orange-100 text-orange-900' },
+  { note: 'Gm', color: 'bg-rose-100 text-rose-900' },
+  { note: 'Am', color: 'bg-purple-100 text-purple-900' },
+  { note: 'Bm', color: 'bg-pink-100 text-pink-900' },
 ];
 
 export default function Home() {
@@ -66,9 +77,14 @@ export default function Home() {
     if (!user) { alert("請先登入才能新增詩歌喔！"); return; }
     const newId = `song-${Date.now()}`; 
     const newSong: Song = {
-      id: newId, title: "新詩歌 (請點擊進入編輯)", originalKey: "C",
-      editor: user.displayName || "匿名", content: "C\n請在此輸入歌詞與和弦...",
-      ownerId: user.uid, ownerEmail: user.email || ""
+      id: newId, 
+      title: "新詩歌 (請點擊進入編輯)", 
+      originalKey: "C",
+      timeSignature: "4/4", // 預設拍號
+      editor: user.displayName || "烏鴉Lin", 
+      content: "[C]請在此輸入歌詞與和弦...",
+      ownerId: user.uid, 
+      ownerEmail: user.email || ""
     };
     await setDoc(doc(db, "songs", newId), newSong);
     router.push(`/song/${newId}`);
@@ -76,7 +92,8 @@ export default function Home() {
 
   const filteredSongs = songs.filter(song => {
     const matchSearch = song.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchKey = selectedKey ? song.originalKey.startsWith(selectedKey) : true;
+    // 🌟 升級為精準比對：C 就只找 C，不會找到 Cm
+    const matchKey = selectedKey ? song.originalKey === selectedKey : true;
     return matchSearch && matchKey;
   });
 
@@ -85,10 +102,8 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gray-50 text-gray-800 font-sans">
       
-      {/* 🌟 Hero 區塊：優化手機版內距 */}
       <div className="bg-gradient-to-br from-cyan-400 via-sky-300 to-white pt-8 pb-10 md:pt-10 md:pb-12 px-4 md:px-8 border-b-4 border-gray-950 shadow-[0_4px_0_rgba(0,0,0,1)] md:shadow-[0_8px_0_rgba(0,0,0,1)]">
         
-        {/* 🌟 頂部導覽列：手機版改為上下堆疊置中 (flex-col) */}
         <header className="flex flex-col md:flex-row justify-between items-center mb-8 md:mb-10 max-w-7xl mx-auto gap-5 md:gap-0">
           
           <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4 text-center md:text-left">
@@ -96,7 +111,6 @@ export default function Home() {
               <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
             </div>
             <div>
-              {/* 標題在手機上稍微縮小，避免斷行 */}
               <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-gray-950 mt-1 md:mt-0">
                 <span className="text-gray-950">老詩歌</span><span className="text-orange-600">吉他譜</span>
               </h1>
@@ -119,7 +133,6 @@ export default function Home() {
           </div>
         </header>
 
-        {/* 🌟 搜尋列：手機版高度與陰影縮小 */}
         <div className="max-w-3xl mx-auto relative z-10 w-full">
           <input 
             type="text" 
@@ -133,31 +146,55 @@ export default function Home() {
 
       <div className="max-w-7xl mx-auto px-4 md:px-8 pt-8 md:pt-12 pb-16 bg-gray-50">
         
-        {/* 🌟 7 大調分類：手機版間距變小，避免太擁擠 */}
-        <div className="mb-10 md:mb-14 p-4 md:p-6 bg-white rounded-3xl border-4 border-gray-950 shadow-[4px_4px_0_rgba(0,0,0,1)] md:shadow-[6px_6px_0_rgba(0,0,0,1)]">
-          <h2 className="text-base md:text-lg font-black text-gray-950 mb-3 md:mb-5 tracking-wide flex items-center gap-2">
-            <span className="text-2xl md:text-3xl">🎯</span> 依據原調分類
-          </h2>
-          <div className="grid grid-cols-4 md:grid-cols-8 gap-2 md:gap-4">
+        {/* 🌟 大調與小調分類區塊 */}
+        <div className="mb-10 md:mb-14 p-5 md:p-8 bg-white rounded-3xl border-4 border-gray-950 shadow-[4px_4px_0_rgba(0,0,0,1)] md:shadow-[6px_6px_0_rgba(0,0,0,1)]">
+          <div className="flex flex-col md:flex-row md:items-center justify-between mb-5 gap-4">
+            <h2 className="text-lg md:text-xl font-black text-gray-950 tracking-wide flex items-center gap-2">
+              <span className="text-2xl md:text-3xl">🎯</span> 依據原調分類
+            </h2>
             <button 
               onClick={() => setSelectedKey(null)} 
-              className={`px-2 py-2 md:px-4 md:py-3 rounded-xl md:rounded-2xl font-black text-sm md:text-lg transition-all border-2 border-gray-950 ${selectedKey === null ? 'bg-gray-950 text-white shadow-none' : 'bg-white text-gray-600 shadow-[2px_2px_0_rgba(0,0,0,1)]'}`}
+              className={`px-6 py-2 rounded-2xl font-black text-base transition-all border-2 border-gray-950 self-start md:self-auto ${selectedKey === null ? 'bg-gray-950 text-white shadow-none' : 'bg-white text-gray-600 shadow-[2px_2px_0_rgba(0,0,0,1)] hover:-translate-y-0.5'}`}
             >
-              All
+              All 全部顯示
             </button>
-            {MAJOR_KEYS.map(key => (
-              <button 
-                key={key.note} 
-                onClick={() => setSelectedKey(key.note)} 
-                className={`px-2 py-2 md:px-4 md:py-3 rounded-xl md:rounded-2xl font-black text-base md:text-xl transition-all border-2 border-gray-950 ${selectedKey === key.note ? key.color + ' shadow-[2px_2px_0_rgba(0,0,0,1)]' : 'bg-white text-gray-700 shadow-[2px_2px_0_rgba(0,0,0,1)]'}`}
-              >
-                {key.note}
-              </button>
-            ))}
+          </div>
+
+          <div className="space-y-6">
+            {/* 大調 */}
+            <div>
+              <p className="text-sm font-bold text-gray-400 mb-2 uppercase tracking-widest">大調 Major</p>
+              <div className="flex flex-wrap gap-2 md:gap-3">
+                {MAJOR_KEYS.map(key => (
+                  <button 
+                    key={key.note} 
+                    onClick={() => setSelectedKey(key.note)} 
+                    className={`px-4 py-2 md:px-5 md:py-2.5 rounded-xl md:rounded-2xl font-black text-base md:text-lg transition-all transform hover:-translate-y-0.5 active:translate-y-0 border-2 border-gray-950 ${selectedKey === key.note ? key.color + ' shadow-[2px_2px_0_rgba(0,0,0,1)]' : 'bg-white text-gray-700 shadow-[2px_2px_0_rgba(0,0,0,1)]'}`}
+                  >
+                    {key.note}
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            {/* 小調 */}
+            <div>
+              <p className="text-sm font-bold text-gray-400 mb-2 uppercase tracking-widest">小調 Minor</p>
+              <div className="flex flex-wrap gap-2 md:gap-3">
+                {MINOR_KEYS.map(key => (
+                  <button 
+                    key={key.note} 
+                    onClick={() => setSelectedKey(key.note)} 
+                    className={`px-4 py-2 md:px-5 md:py-2.5 rounded-xl md:rounded-2xl font-bold text-sm md:text-base transition-all transform hover:-translate-y-0.5 active:translate-y-0 border-2 border-gray-950 ${selectedKey === key.note ? key.color + ' shadow-[2px_2px_0_rgba(0,0,0,1)]' : 'bg-white text-gray-600 shadow-[2px_2px_0_rgba(0,0,0,1)]'}`}
+                  >
+                    {key.note}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* 🌟 標題與新增按鈕：手機版改為上下排列 */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 md:mb-8 gap-4">
           <h2 className="text-2xl md:text-3xl font-black text-gray-950 tracking-tight flex items-center gap-2">
             <span className="text-sky-500">
@@ -176,7 +213,7 @@ export default function Home() {
           )}
         </div>
 
-        {/* 歌曲卡片 */}
+        {/* 🌟 歌曲卡片：加入拍號標籤 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 min-h-[300px]">
           {filteredSongs.length > 0 ? (
             filteredSongs.map((song) => (
@@ -185,12 +222,21 @@ export default function Home() {
                   <div className="bg-white p-5 md:p-6 h-full rounded-2xl md:rounded-3xl border-2 border-gray-100 shadow-[2px_2px_15px_rgba(0,0,0,0.05)] transition-all duration-300 group-hover:border-gray-950 group-hover:shadow-[4px_4px_0_#FFDE69] relative overflow-hidden flex flex-col">
                     
                     <div className="flex justify-between items-start mb-6">
-                      <h3 className="text-xl md:text-2xl font-extrabold text-gray-900 group-hover:text-gray-950 tracking-tight leading-tight flex-1">
+                      <h3 className="text-xl md:text-2xl font-extrabold text-gray-900 group-hover:text-gray-950 tracking-tight leading-tight flex-1 pr-2">
                         {song.title}
                       </h3>
-                      <span className="text-white group-hover:text-gray-950 bg-gray-950 group-hover:bg-[#FFDE69] text-xs md:text-sm px-2 py-1 md:px-3 rounded-full font-black border-2 border-gray-950 transition-all ml-3 shrink-0">
-                        Key: {song.originalKey}
-                      </span>
+                      
+                      {/* 🌟 右上角的標籤區塊：調性與拍號 */}
+                      <div className="flex flex-col items-end gap-2 shrink-0">
+                        <span className="text-white group-hover:text-gray-950 bg-gray-950 group-hover:bg-[#FFDE69] text-xs md:text-sm px-2 py-1 md:px-3 rounded-full font-black border-2 border-gray-950 transition-all">
+                          Key: {song.originalKey}
+                        </span>
+                        {song.timeSignature && (
+                          <span className="text-gray-950 bg-gray-100 group-hover:bg-white text-xs px-2 py-1 rounded-lg font-bold border-2 border-gray-950 transition-all flex items-center gap-1 shadow-[1px_1px_0_rgba(0,0,0,1)]">
+                            ⏱ {song.timeSignature}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     
                     <div className="flex justify-between items-center mt-auto pt-2">
