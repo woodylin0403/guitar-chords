@@ -3,11 +3,11 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { initialSongList, Song } from '@/data/songs';
+import { importSongs } from '@/data/importSongs'; // 🌟 引入剛剛建立的資料包
 import { collection, getDocs, doc, setDoc } from 'firebase/firestore';
 import { db, auth, googleProvider } from '@/lib/firebase';
 import { signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
 
-// 🌟 將調性分為大調與小調，給予不同的視覺顏色
 const MAJOR_KEYS = [
   { note: 'C', color: 'bg-sky-400 text-gray-950' },
   { note: 'D', color: 'bg-green-400 text-gray-950' },
@@ -34,6 +34,7 @@ export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const [isImporting, setIsImporting] = useState(false); // 匯入狀態
   
   const router = useRouter();
 
@@ -44,26 +45,29 @@ export default function Home() {
     return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    const fetchSongs = async () => {
-      try {
-        const querySnapshot = await getDocs(collection(db, "songs"));
-        if (querySnapshot.empty) {
-          for (const song of initialSongList) {
-            await setDoc(doc(db, "songs", song.id), song);
-          }
-          setSongs(initialSongList);
-        } else {
-          const songsData: Song[] = [];
-          querySnapshot.forEach((doc) => songsData.push(doc.data() as Song));
-          setSongs(songsData);
+  const fetchSongs = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "songs"));
+      if (querySnapshot.empty) {
+        for (const song of initialSongList) {
+          await setDoc(doc(db, "songs", song.id), song);
         }
-      } catch (error) {
-        console.error("讀取資料失敗：", error);
-      } finally {
-        setIsLoading(false);
+        setSongs(initialSongList);
+      } else {
+        const songsData: Song[] = [];
+        querySnapshot.forEach((doc) => songsData.push(doc.data() as Song));
+        // 按標題排序，讓數字開頭的乖乖排好
+        songsData.sort((a, b) => a.title.localeCompare(b.title, 'zh-Hant', { numeric: true }));
+        setSongs(songsData);
       }
-    };
+    } catch (error) {
+      console.error("讀取資料失敗：", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchSongs();
   }, []);
 
@@ -80,7 +84,7 @@ export default function Home() {
       id: newId, 
       title: "新詩歌 (請點擊進入編輯)", 
       originalKey: "C",
-      timeSignature: "4/4", // 預設拍號
+      timeSignature: "4/4",
       editor: user.displayName || "烏鴉Lin", 
       content: "[C]請在此輸入歌詞與和弦...",
       ownerId: user.uid, 
@@ -90,9 +94,41 @@ export default function Home() {
     router.push(`/song/${newId}`);
   };
 
+  // 🌟 魔法按鈕功能：一鍵批次匯入
+  const handleBatchImport = async () => {
+    if (!user) { alert("請先登入才能匯入喔！"); return; }
+    if (!confirm("準備好施展魔法，匯入這批詩歌了嗎？\n請確認你已經在 importSongs.ts 放好資料了！")) return;
+    
+    setIsImporting(true);
+    try {
+      let count = 0;
+      for (const song of importSongs) {
+        const newId = `imported-${Date.now()}-${count}`;
+        const newSong: Song = {
+          id: newId,
+          title: song.title,
+          originalKey: song.originalKey,
+          timeSignature: song.timeSignature || "4/4",
+          editor: song.editor,
+          content: song.content,
+          ownerId: user.uid,
+          ownerEmail: user.email || ""
+        };
+        await setDoc(doc(db, "songs", newId), newSong);
+        count++;
+      }
+      alert(`🎉 太神啦！成功匯入了 ${count} 首詩歌！`);
+      await fetchSongs(); // 重新抓取資料更新畫面
+    } catch (error) {
+      console.error(error);
+      alert("匯入失敗，請看終端機錯誤訊息！");
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   const filteredSongs = songs.filter(song => {
     const matchSearch = song.title.toLowerCase().includes(searchQuery.toLowerCase());
-    // 🌟 升級為精準比對：C 就只找 C，不會找到 Cm
     const matchKey = selectedKey ? song.originalKey === selectedKey : true;
     return matchSearch && matchKey;
   });
@@ -146,7 +182,6 @@ export default function Home() {
 
       <div className="max-w-7xl mx-auto px-4 md:px-8 pt-8 md:pt-12 pb-16 bg-gray-50">
         
-        {/* 🌟 大調與小調分類區塊 */}
         <div className="mb-10 md:mb-14 p-5 md:p-8 bg-white rounded-3xl border-4 border-gray-950 shadow-[4px_4px_0_rgba(0,0,0,1)] md:shadow-[6px_6px_0_rgba(0,0,0,1)]">
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-5 gap-4">
             <h2 className="text-lg md:text-xl font-black text-gray-950 tracking-wide flex items-center gap-2">
@@ -161,7 +196,6 @@ export default function Home() {
           </div>
 
           <div className="space-y-6">
-            {/* 大調 */}
             <div>
               <p className="text-sm font-bold text-gray-400 mb-2 uppercase tracking-widest">大調 Major</p>
               <div className="flex flex-wrap gap-2 md:gap-3">
@@ -177,7 +211,6 @@ export default function Home() {
               </div>
             </div>
             
-            {/* 小調 */}
             <div>
               <p className="text-sm font-bold text-gray-400 mb-2 uppercase tracking-widest">小調 Minor</p>
               <div className="flex flex-wrap gap-2 md:gap-3">
@@ -203,17 +236,30 @@ export default function Home() {
             <span>詩歌</span>
             <span className="text-xs md:text-sm font-medium text-gray-400 bg-gray-100 p-1.5 md:p-2 rounded-full border border-gray-200">共 {filteredSongs.length} 首</span>
           </h2>
-          {user && (
-            <button 
-              onClick={handleCreateNewSong} 
-              className="w-full sm:w-auto justify-center bg-yellow-400 hover:bg-yellow-500 text-gray-950 font-black py-3 px-6 md:px-8 rounded-full shadow-[4px_4px_0_rgba(0,0,0,1)] border-2 border-gray-950 transition-all flex items-center gap-2 text-lg md:text-xl"
-            >
-              ＋ 我要寫新歌
-            </button>
-          )}
+          
+          <div className="flex gap-2 w-full sm:w-auto">
+            {/* 🌟 只有站長登入才看得到的隱藏魔法按鈕 */}
+            {user && (
+              <button 
+                onClick={handleBatchImport} 
+                disabled={isImporting}
+                className="justify-center bg-purple-500 hover:bg-purple-600 text-white font-black py-3 px-4 md:px-6 rounded-full shadow-[4px_4px_0_rgba(0,0,0,1)] border-2 border-gray-950 transition-all flex items-center gap-2 text-base md:text-xl"
+              >
+                {isImporting ? "⌛ 匯入中..." : "🚀 批次匯入"}
+              </button>
+            )}
+
+            {user && (
+              <button 
+                onClick={handleCreateNewSong} 
+                className="flex-1 sm:flex-none justify-center bg-yellow-400 hover:bg-yellow-500 text-gray-950 font-black py-3 px-6 md:px-8 rounded-full shadow-[4px_4px_0_rgba(0,0,0,1)] border-2 border-gray-950 transition-all flex items-center gap-2 text-lg md:text-xl"
+              >
+                ＋ 我要寫新歌
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* 🌟 歌曲卡片：加入拍號標籤 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 min-h-[300px]">
           {filteredSongs.length > 0 ? (
             filteredSongs.map((song) => (
@@ -226,7 +272,6 @@ export default function Home() {
                         {song.title}
                       </h3>
                       
-                      {/* 🌟 右上角的標籤區塊：調性與拍號 */}
                       <div className="flex flex-col items-end gap-2 shrink-0">
                         <span className="text-white group-hover:text-gray-950 bg-gray-950 group-hover:bg-[#FFDE69] text-xs md:text-sm px-2 py-1 md:px-3 rounded-full font-black border-2 border-gray-950 transition-all">
                           Key: {song.originalKey}

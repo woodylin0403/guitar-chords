@@ -7,17 +7,14 @@ import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 
-// 🌟 樂理大腦升級：加入所有小調
 const MAJOR_KEYS = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
 const MINOR_KEYS = ['Cm', 'C#m', 'Dm', 'Ebm', 'Em', 'Fm', 'F#m', 'Gm', 'G#m', 'Am', 'Bbm', 'Bm'];
 const ALL_KEYS = [...MAJOR_KEYS, ...MINOR_KEYS];
 
 const SHARP_NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const FLAT_NOTES  = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
-// 🌟 這些大調與小調，優先使用降記號
 const FLAT_KEYS = ['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Dm', 'Gm', 'Cm', 'Fm', 'Bbm', 'Ebm']; 
 
-// 常用拍號選單
 const TIME_SIGNATURES = ['4/4', '3/4', '2/4', '6/8', '9/8', '12/8', '2/2', '6/4'];
 
 function getYouTubeId(url: string) {
@@ -38,7 +35,6 @@ function isChord(str: string) {
   return regex.test(str);
 }
 
-// 取得調性的「根音」(把後面的 m 拿掉，例如 Am -> A)
 function getRootNote(key: string) {
   return key.replace('m', '');
 }
@@ -82,8 +78,8 @@ export default function SongPage() {
   const [user, setUser] = useState<User | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editKey, setEditKey] = useState("C");
-  const [editTimeSignature, setEditTimeSignature] = useState("4/4"); // 🌟 拍號狀態
-  const [editEditor, setEditEditor] = useState("烏鴉Lin"); // 🌟 預設編輯者
+  const [editTimeSignature, setEditTimeSignature] = useState("4/4");
+  const [editEditor, setEditEditor] = useState("烏鴉Lin"); 
   const [editContent, setEditContent] = useState("");
   const [editYoutubeUrl, setEditYoutubeUrl] = useState("");
 
@@ -107,7 +103,6 @@ export default function SongPage() {
           setEditTitle(foundSong.title);
           setEditKey(foundSong.originalKey);
           setEditTimeSignature(foundSong.timeSignature || "4/4");
-          // 🌟 如果資料庫本來就有編輯者，就用原來的；否則預設烏鴉Lin
           setEditEditor(foundSong.editor || "烏鴉Lin"); 
           setEditContent(foundSong.content);
           setEditYoutubeUrl(foundSong.youtubeUrl || "");
@@ -130,7 +125,7 @@ export default function SongPage() {
       ...song, 
       title: editTitle, 
       originalKey: editKey, 
-      timeSignature: editTimeSignature, // 🌟 存檔時加入拍號
+      timeSignature: editTimeSignature,
       editor: editEditor, 
       content: editContent,
       youtubeUrl: editYoutubeUrl 
@@ -162,11 +157,11 @@ export default function SongPage() {
   if (isLoading) return <div className="p-8 text-center text-xl font-bold text-gray-500">雲端讀譜中...</div>;
   if (!song) return null;
 
-  // 🌟 小調轉調核心邏輯：只拿根音來算級距
   const originalIndex = getNoteIndex(getRootNote(song.originalKey));
   const targetIndex = getNoteIndex(getRootNote(targetKey));
   const steps = targetIndex - originalIndex;
 
+  // 🌟 排版終極完美版雙引擎渲染器
   const renderPreview = (text: string) => {
     const lines = text.split('\n');
 
@@ -177,38 +172,49 @@ export default function SongPage() {
             const hasBrackets = /\[.*?\]/.test(line);
 
             if (hasBrackets) {
+              // 🌟 引擎一：標籤寫法 (防彈積木排版)
               const parts = line.split(/\[(.*?)\]/);
+              const elements = [];
+              for (let i = 0; i < parts.length; i += 2) {
+                const lyric = parts[i];
+                const chord = i > 0 ? parts[i - 1] : null;
+
+                if (!chord && !lyric) continue;
+
+                // 💡 核心魔法：如果沒有歌詞（連續和弦或句尾）
+                const isLyricEmpty = lyric === '';
+
+                elements.push(
+                  // 如果底下沒歌詞，就強迫加上 mr-4 (右邊距)，把下一個和弦遠遠推開
+                  <div key={i} className={`flex flex-col justify-end ${isLyricEmpty ? 'mr-4' : ''}`}>
+                    
+                    {/* 上半部：和弦積木。加上 pr-1 讓和弦右邊有微小呼吸空間，不會死死貼著下個字 */}
+                    <span className="text-sky-500 font-bold pr-1" style={{ fontSize: '0.85em', minHeight: '1.25em' }}>
+                      {chord ? transposeChord(chord, steps, targetKey) : ''}
+                    </span>
+                    
+                    {/* 下半部：歌詞積木。如果是空的，塞一個半形空白維持高度 */}
+                    <span className="whitespace-pre" style={{ minHeight: '1.25em' }}>
+                      {isLyricEmpty ? ' ' : lyric}
+                    </span>
+                  </div>
+                );
+              }
               return (
-                <div key={lineIndex} className="whitespace-pre-wrap mt-5 mb-1 min-h-[1.5em]">
-                  {parts.map((part, i) => {
-                    if (i % 2 === 0) {
-                      return <span key={i}>{part}</span>;
-                    } else {
-                      const newChord = transposeChord(part, steps, targetKey);
-                      return (
-                        <span key={i} className="relative inline-block">
-                          <span className="absolute left-0 text-sky-500 font-bold tracking-normal" style={{ fontSize: '0.75em', bottom: '85%' }}>
-                            {newChord}
-                          </span>
-                        </span>
-                      );
-                    }
-                  })}
+                <div key={lineIndex} className="flex items-end mb-2">
+                  {elements}
                 </div>
               );
             } else {
+              // 🌟 引擎二：傳統對齊寫法
               const tokens = line.split(/(\s+|[|()[\]{}<>,.:;~\-｜（）【】《》，。：；～]+)/);
               return (
-                <div key={lineIndex} className="whitespace-pre min-h-[1.5em]">
+                <div key={lineIndex} className="whitespace-pre mb-1" style={{ minHeight: '1.5em' }}>
                   {tokens.filter(Boolean).map((token, i) => {
                     if (isChord(token)) {
-                      const newChord = transposeChord(token, steps, targetKey);
                       return (
-                        <span key={i} className="relative inline-block">
-                          <span className="opacity-0 select-none">{newChord}</span>
-                          <span className="absolute left-0 text-sky-500 font-bold tracking-normal" style={{ fontSize: '0.75em', bottom: '0.1em' }}>
-                            {newChord}
-                          </span>
+                        <span key={i} className="text-sky-500 font-bold">
+                          {transposeChord(token, steps, targetKey)}
                         </span>
                       );
                     }
@@ -239,11 +245,9 @@ export default function SongPage() {
           <h1 className="text-3xl md:text-5xl font-black text-gray-950 mb-3 tracking-tight">{song.title}</h1>
           <div className="flex items-center gap-3">
             {song.editor && <span className="inline-block px-3 py-1 bg-gray-950 text-white rounded-lg text-sm font-bold">編輯者：{song.editor}</span>}
-            
-            {/* 🌟 閱讀模式：顯示拍號 */}
             {!isEditing && song.timeSignature && (
               <span className="inline-block px-3 py-1 bg-white text-gray-950 border-2 border-gray-950 rounded-lg text-sm font-black shadow-[2px_2px_0_rgba(0,0,0,1)]">
-                拍號：{song.timeSignature}
+                ⏱ {song.timeSignature}
               </span>
             )}
           </div>
@@ -306,35 +310,28 @@ export default function SongPage() {
           <div className="space-y-6">
             <div className="bg-white p-5 rounded-2xl border-2 border-gray-950 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                
                 <div className="col-span-1 md:col-span-2">
                   <label className="block text-sm font-black text-gray-950 mb-2">🎵 歌名：</label>
                   <input type="text" value={editTitle} onChange={e => setEditTitle(e.target.value)} className="w-full border-2 border-gray-950 rounded-xl px-4 py-2 font-bold focus:ring-4 focus:ring-yellow-400 focus:outline-none" />
                 </div>
-                
                 <div>
                   <label className="block text-sm font-black text-gray-950 mb-2">🎯 原調：</label>
                   <select value={editKey} onChange={e => setEditKey(e.target.value)} className="w-full border-2 border-gray-950 rounded-xl px-4 py-2 font-bold focus:ring-4 focus:ring-yellow-400 focus:outline-none bg-white">
                     {ALL_KEYS.map(note => <option key={note} value={note}>{note}</option>)}
                   </select>
                 </div>
-
-                {/* 🌟 編輯模式：新增拍號下拉選單 */}
                 <div>
                   <label className="block text-sm font-black text-gray-950 mb-2">⏱️ 拍號：</label>
                   <select value={editTimeSignature} onChange={e => setEditTimeSignature(e.target.value)} className="w-full border-2 border-gray-950 rounded-xl px-4 py-2 font-bold focus:ring-4 focus:ring-yellow-400 focus:outline-none bg-white">
                     {TIME_SIGNATURES.map(ts => <option key={ts} value={ts}>{ts}</option>)}
                   </select>
                 </div>
-
               </div>
-              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-black text-gray-950 mb-2">👤 編輯者：</label>
                   <input type="text" value={editEditor} onChange={e => setEditEditor(e.target.value)} className="w-full border-2 border-gray-950 rounded-xl px-4 py-2 font-bold focus:ring-4 focus:ring-yellow-400 focus:outline-none" />
                 </div>
-                
                 <div>
                   <label className="block text-sm font-black text-gray-950 mb-2">📺 YouTube 參考影片網址 (選填)：</label>
                   <input 
