@@ -133,6 +133,7 @@ export default function Home() {
     <main className="min-h-screen bg-[#FDFBF7] text-stone-800 font-sans selection:bg-stone-200">
       
       {/* 頂部導覽 */}
+      {/* 頂部導覽 */}
       <nav className="flex justify-between items-center max-w-5xl mx-auto px-6 py-8">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-full overflow-hidden shadow-sm border border-stone-200">
@@ -142,7 +143,18 @@ export default function Home() {
             老詩歌<span className="text-stone-400 font-light">吉他譜</span>
           </h1>
         </div>
-        <div>
+        
+        <div className="flex items-center gap-6">
+          {/* 🌟 新增的聯絡站長按鈕 */}
+          <a 
+            href="mailto:你的信箱@gmail.com?subject=老詩歌吉他譜-問題與回饋" 
+            className="text-sm font-medium text-stone-400 hover:text-stone-800 transition-colors flex items-center gap-1"
+          >
+            ✉️ 聯絡站長
+          </a>
+
+          <div className="w-px h-4 bg-stone-300"></div>
+
           {user ? (
             <div className="flex items-center gap-4 text-sm font-medium text-stone-600">
               <span>{user.displayName}</span>
