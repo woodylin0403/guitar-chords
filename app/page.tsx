@@ -50,6 +50,10 @@ export default function Home() {
   
   const router = useRouter();
 
+  // 🔒 站長專屬安全鎖：請在這裡填寫你的 Google 信箱
+  const adminEmail = "coolcrow0403@gmail.com"; 
+  const isAdmin = user?.email === adminEmail;
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -96,7 +100,7 @@ export default function Home() {
       title: "新詩歌 (請點擊進入編輯)", 
       originalKey: "C",
       timeSignature: "4/4",
-      editor: user.displayName || "烏鴉Lin", 
+      editor: user.displayName || "站長", 
       content: "[C]請在此輸入歌詞與和弦...",
       ownerId: user.uid, 
       ownerEmail: user.email || ""
@@ -106,9 +110,9 @@ export default function Home() {
   };
 
   const handleBatchImport = async () => {
-    if (!user) { alert("請先登入才能匯入喔！"); return; }
+    // 雙重防護：不只按鈕隱藏，點擊功能也鎖死
+    if (!isAdmin) { alert("⛔ 權限不足！只有站長可以執行批次匯入喔！"); return; }
     
-    // 🌟 在按下按鈕後的確認視窗，再次提醒即將匯入的內容
     const firstSongTitle = importSongs.length > 0 ? importSongs[0].title : "未知歌曲";
     if (!confirm(`準備好施展魔法了嗎？\n\n系統偵測到準備匯入：\n「${firstSongTitle}」... 等共 ${importSongs.length} 首歌。\n\n確定要寫入雲端嗎？`)) return;
     
@@ -252,14 +256,15 @@ export default function Home() {
           
           <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto items-start sm:items-center">
             
-            {/* 🌟 匯入預覽雷達區塊 */}
-            {user && importSongs && importSongs.length > 0 && (
+            {/* 🌟 雷達現在只有 isAdmin (站長本人) 才看得到 */}
+            {isAdmin && importSongs && importSongs.length > 0 && (
               <div className="hidden lg:flex items-center text-sm font-bold text-gray-600 bg-white px-4 py-2.5 rounded-2xl border-2 border-dashed border-gray-300 shadow-[2px_2px_0_rgba(0,0,0,0.05)]">
                 📌 暫存區：{importSongs[0].title} ...等 {importSongs.length} 首
               </div>
             )}
 
-            {user && (
+            {/* 🌟 按鈕現在只有 isAdmin (站長本人) 才看得到 */}
+            {isAdmin && (
               <button 
                 onClick={handleBatchImport} 
                 disabled={isImporting}
