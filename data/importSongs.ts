@@ -1,72 +1,72 @@
 export const importSongs = [
     {
-      title: "31. 我要向高山舉目",
+      title: "41. 讚美之泉",
       originalKey: "D",
       timeSignature: "4/4",
       editor: "烏鴉Lin",
-      content: "[D]我要向高山舉[F#m]目 [G]我的幫助從何而[A7]來\n[D]我的幫助從耶和[F#m]華而來 [G]祂是創造[A7]天地的[D]主\n[D]祂必不叫你的腳[F#m]搖動 [G]保護你的必不睡[A7]覺\n[D]保護你的是耶和[F#m]華 [G]耶和華在[A7]你右邊蔭[D]庇你"
+      content: "[D]從天父[A]而來的[Bm]愛和恩[F#m]典\n[G]把我們[D]冰冷的[Em]心溶[A7]化\n[D]讓我們[A]獻出每[Bm]個微[F#m]笑\n[G]化成別[A7]人心中[D]的暖[D7]和\n[G]讓讚美[A7]從四處[F#m]響[Bm]起\n[G]讓音符[A7]在空中[D]飛[D7]舞\n[G]讓我們[A7]的心歸[F#m]向[Bm]神\n[Em]開始[A7]高聲讚[D]美"
     },
     {
-      title: "32. 我的心，你要稱頌耶和華",
+      title: "42. 認識祢真好",
       originalKey: "D",
       timeSignature: "4/4",
       editor: "烏鴉Lin",
-      content: "[D]我的心 你要稱頌[F#m]耶和華 [G]不可忘記[A7]祂的一切[D]恩惠\n[D]祂赦免你的一[F#m]切罪孽 [G]醫治你的[A7]一切疾[D]病\n[G]祂救贖你的命[D]脫離死亡 [G]以仁愛慈悲為你[D]的冠冕\n[D]我的心 [A7]你要稱頌耶和[D]華"
+      content: "[D]如同朝[A]露中的[Bm]小[F#m]草 [G]體會到[D]神豐盛[Em]的創[A7]造\n[D]認識你[A]真好 [Bm]知道有[F#m]你 [G]生命才[A7]會有盼[D]望 [D7]\n[G]認識你[A7]真好 [F#m]認識你[Bm]真好 [G]今生今[E7]世我不再[A7]尋找\n[G]認識你[A7]真好 [F#m]認識你[Bm]真好 [G]只願一[A7]生與你[D]同行"
     },
     {
-      title: "33. 在主裡的時刻",
+      title: "43. 讓讚美飛揚",
       originalKey: "D",
       timeSignature: "4/4",
       editor: "烏鴉Lin",
-      content: "[D]在主裡的時[Em]刻 [A7]在主裡的時[D]刻\n[Bm]你使萬物[Em]變得[A7]其美[D]好\n[G]主啊 供我[A7]每天 [F#m]在你的[Bm]路徑\n[Em]教導我能[A7]明白你的[D]旨意"
+      content: "[D]在這美[F#m]麗的時[Bm]刻 [G]我們相[A7]聚在一[D]起\n[D]神的愛[F#m]擁抱著[Bm]我們 [G]神的靈[E7]充滿這[A7]地\n[D]當稱謝[F#m]進入祂的[Bm]門 [G]當讚美[A7]進入祂的[D]院\n[D]擊鼓跳舞[F#m]揚聲歡[Bm]呼 [G]凡有氣[A7]息都要讚[D]美\n[G]讓讚美[A7]從四處響[F#m]起 [Bm]\n[G]讓音符[A7]在空中飛[D]舞 [D7]\n[G]讓我們[A7]的心歸向[F#m]耶[Bm]和華\n[G]開始[A7]高聲讚[D]美"
     },
     {
-      title: "34. 耶穌愛我",
+      title: "44. 一件禮物",
       originalKey: "D",
       timeSignature: "4/4",
       editor: "烏鴉Lin",
-      content: "[D]耶穌愛我萬[G]分之[D]一 [D]耶穌愛我[E7]何等深[A7]切\n[D]因祂為我捨[G]棄生[D]命 [D]洗淨我罪[A7]得著新[D]生\n[G]主耶穌愛我 [D]主耶穌愛我\n[G]主耶穌愛我 [D]有聖經[A7]告訴[D]我"
+      content: "[D]有一件[A]禮物 [Bm]你收到沒[F#m]有\n[G]眼睛看不[D]見 [Em]你心會知[A7]道\n[D]這一件[A]禮物 [Bm]心門外等[F#m]候\n[G]是為了你[D]準備 [Em]別人[A7]不能收[D]\n[G]生命有[A7]限 [F#m]時光也[Bm]會走\n[G]如果你不[E7]珍惜 [A7]機會難留\n[D]禮物雖[A]然好 [Bm]如果你不[F#m]要\n[G]你怎麼能[D]夠得到 [Em]怎麼[A7]能得[D]到"
     },
     {
-      title: "35. 主耶穌我愛你",
+      title: "45. 雲上太陽",
       originalKey: "D",
       timeSignature: "4/4",
       editor: "烏鴉Lin",
-      content: "[D]主耶穌我愛[G]你 [D]深知我屬[A7]你\n[D]世上諸般樂[G]趣 [D]為你全拋[A7]棄\n[G]你是我救[D]主 [G]曾為我受[D]死\n[D]如果我曾愛[G]你 [A7]現在更愛[D]你"
+      content: "[D]無論是[A]住在 [Bm]美麗的[F#m]高山\n[G]或是躺臥[D]在 [Em]陰暗的[A7]幽谷\n[D]當你抬[A]起頭 [Bm]你將會[F#m]發現\n[G]主已為你[D]我而[Em]預備[A7]\n[D]雲上[A]太陽 [Bm]它總不[F#m]改變\n[G]雖然[D]小雨灑在[Em]臉[A7]上\n[D]雲上[A]太陽 [Bm]它總不[F#m]改變\n[G]哈啊[D] 祂[Em]不[A7]改[D]變"
     },
     {
-      title: "36. 耶穌恩友",
+      title: "46. 我的救贖者活著",
       originalKey: "D",
       timeSignature: "4/4",
       editor: "烏鴉Lin",
-      content: "[D]耶穌是我恩[G]慈友 [D]擔當我罪與[A7]憂\n[D]何等權利能[G]將萬事 [D]帶到主[A7]恩座前[D]求\n[A7]多少平安屢[D]屢失喪 [G]多少痛苦[D]無端[A7]受\n[D]皆因未將各[G]樣事務 [D]帶到主[A7]恩座前[D]求"
+      content: "[D]我知道[A]我的救贖[Bm]者活[F#m]著\n[G]祂是我的[D]盼望和[Em]力[A7]量\n[D]我知道[A]我的救贖[Bm]者活[F#m]著\n[G]祂已勝過[D]世界和[Em]死[A7]亡\n[G]我的救[A7]贖者[F#m]活[Bm]著\n[G]我的救[A7]贖者[D]活[D7]著\n[G]神的羔[A7]羊 [F#m]已復[Bm]活\n[Em]我的救贖者[A7]活[D]著"
     },
     {
-      title: "37. 靠近主",
-      originalKey: "D",
-      timeSignature: "6/8",
-      editor: "烏鴉Lin",
-      content: "[D]我願靠近主[G]身 [D]靠近主[A7]身\n[D]雖然十字架[G]重 [D]仍靠近[A7]主\n[D]我心中必[G]歌唱 [D]我願靠近主[A7]身\n[D]靠近主身 [G]我願[A7]靠近主[D]身"
-    },
-    {
-      title: "38. 我知誰掌管明天",
+      title: "47. 最珍貴的角落",
       originalKey: "D",
       timeSignature: "4/4",
       editor: "烏鴉Lin",
-      content: "[D]我不知明天[G]如何 [D]我只願天天[A7]度日\n[D]我不求明天[G]陽光 [D]因我主[A7]慈愛憐[D]恤\n[A7]有許多未來[D]的前途 [G]我現在[D]不能識[A7]透\n[D]但我知誰掌[G]管明天 [D]我也知[A7]誰牽我[D]手"
+      content: "[D]謝謝你[A]燦爛笑[Bm]容 [F#m]照亮我[G]的[D]天[Em]空 [A7]\n[D]謝謝你[A]分享痛[Bm]楚 [F#m]把我[G]放在[A7]你心[D]中\n[D]夜交瘁[A]有你做[Bm]伴 [F#m]不退縮[G]不[D]迷[Em]惘 [A7]\n[D]迎向日[A]出看那[Bm]希望 [F#m]在生[G]命的[A7]最高[D]處\n[G]有你做[A7]伴 [F#m]我[Bm]們一起[G]走過[D]這[Em]旅程 [A7]\n[D]我們[A]一起[Bm]走過 [F#m]這[G]最珍[A7]貴的角[D]落"
     },
     {
-      title: "39. 只要耶穌",
+      title: "48. 寶貴十架",
       originalKey: "D",
       timeSignature: "4/4",
       editor: "烏鴉Lin",
-      content: "[D]只要耶穌 只要耶穌 [G]除祂以外別無[D]愛慕\n[D]只要耶穌 只要耶穌 [E7]祂是我主我[A7]救主\n[D]在患難中 祂是幫助 [G]在憂愁中 祂是[D]安慰\n[D]只要耶穌 只要耶穌 [A7]祂是我主我[D]救主"
+      content: "[D]主耶穌[A]我感[Bm]謝你 [F#m]\n[G]你的身[D]體 [Em]為我而[A7]捨\n[D]帶我出[A]黑暗 [Bm]進入光[F#m]明國度\n[G]使我再[D]次能叫[Em]阿爸[A7]父\n[D]寶貴十[A]架的[Bm]血 [F#m]\n[G]洗淨我[D]萬的[Em]罪[A7]孽\n[D]你的愛[A]何等[Bm]偉大 [F#m]\n[G]我願一[A7]生為你[D]活"
     },
     {
-      title: "40. 我一生路程",
+      title: "49. 一生愛祢",
       originalKey: "D",
-      timeSignature: "3/4",
+      timeSignature: "4/4",
       editor: "烏鴉Lin",
-      content: "[D]我一生路程[G]由主引[D]領 [D]不論在何處[E7]主與同[A7]行\n[D]我雖經幽谷[G]也不遭[D]害 [D]因有主慈愛[A7]引領前[D]程\n[G]主領我 領[D]我 [D]主天天親自[E7]領[A7]我\n[D]我不論何處[G]主與同[D]行 [D]因我主親自[A7]引領[D]我"
+      content: "[D]親愛的[A]耶穌 [Bm]我求你[F#m]來\n[G]恢復我[D]對你 [Em]起初的[A7]愛\n[D]親愛的[A]耶穌 [Bm]我求你[F#m]來\n[G]讓我一[A7]生愛[D]你\n[G]一生愛[A7]你 [F#m]一生愛[Bm]你\n[G]讓我一[E7]生愛[A7]你\n[G]一生愛[A7]你 [F#m]一生愛[Bm]你\n[Em]讓我一[A7]生愛[D]你"
+    },
+    {
+      title: "50. 滿有能力",
+      originalKey: "D",
+      timeSignature: "4/4",
+      editor: "烏鴉Lin",
+      content: "[D]我的盼望[A]就在耶穌[Bm]基督[F#m]裡\n[G]在你裡面[D]滿有[Em]平[A7]安\n[D]生命泉源[A]就在耶穌[Bm]基督[F#m]裡\n[G]有主在[A7]我裡[D]面\n[G]滿有能力[A7] [F#m]滿有能[Bm]力\n[G]有主在[E7]我裡[A7]面\n[G]滿有能力[A7] [F#m]滿有能[Bm]力\n[Em]有主在我[A7]裡面 [D]滿有能力"
     }
   ];

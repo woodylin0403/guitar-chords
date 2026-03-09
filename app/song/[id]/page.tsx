@@ -15,7 +15,6 @@ const FLAT_NOTES  = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb',
 const FLAT_KEYS = ['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Dm', 'Gm', 'Cm', 'Fm', 'Bbm', 'Ebm']; 
 const TIME_SIGNATURES = ['4/4', '3/4', '2/4', '6/8', '9/8', '12/8', '2/2', '6/4'];
 
-// 🎸 常見吉他和弦指法資料庫 (0=空弦, x=悶音, 數字=格子)
 const CHORD_FINGERINGS: Record<string, (number | 'x')[]> = {
   'C': ['x', 3, 2, 0, 1, 0], 'C7': ['x', 3, 2, 3, 1, 0], 'Cm': ['x', 3, 5, 5, 4, 3],
   'D': ['x', 'x', 0, 2, 3, 2], 'D7': ['x', 'x', 0, 2, 1, 2], 'Dm': ['x', 'x', 0, 2, 3, 1], 'Dm7': ['x', 'x', 0, 2, 1, 1],
@@ -27,40 +26,23 @@ const CHORD_FINGERINGS: Record<string, (number | 'x')[]> = {
   'Bb': ['x', 1, 3, 3, 3, 1], 'Bbm': ['x', 1, 3, 3, 2, 1]
 };
 
-// 繪製單一指法圖的元件
 function ChordDiagram({ chordName }: { chordName: string }) {
-  // 處理複合和弦，只抓取斜線前面的主和弦來畫圖 (例如 C/E 只畫 C)
-  const baseChordName = chordName.split('/')[0];
+  const baseChordName = chordName.split('/')[0].replace('Major', '').replace('major', '').replace('Minor', 'm').replace('minor', 'm');
   const frets = CHORD_FINGERINGS[baseChordName];
-  
-  if (!frets) return null; // 如果資料庫沒有這個和弦，就不畫圖
-
-  // 計算是否需要標示起始把位 (如果按的格子超過第4格)
+  if (!frets) return null;
   const maxFret = Math.max(...frets.filter(f => typeof f === 'number') as number[]);
   const startFret = maxFret > 4 ? maxFret - 2 : 1;
-
   return (
     <div className="flex flex-col items-center mr-4 mb-4">
       <span className="font-bold text-stone-700 mb-1">{chordName}</span>
       <svg width="60" height="70" viewBox="0 0 60 70" className="text-stone-400">
-        {/* 把位數字提示 */}
         {startFret > 1 && <text x="-5" y="15" fontSize="10" fill="currentColor">{startFret}fr</text>}
-        
-        {/* 畫 6 根弦 */}
         {[0, 10, 20, 30, 40, 50].map(x => ( <line key={`s${x}`} x1={x+5} y1="10" x2={x+5} y2="60" stroke="currentColor" strokeWidth="1" /> ))}
-        {/* 畫 5 條琴桁 (產生4格) */}
         {[10, 22.5, 35, 47.5, 60].map((y, i) => ( <line key={`f${y}`} x1="5" y1={y} x2="55" y2={y} stroke="currentColor" strokeWidth={i === 0 && startFret === 1 ? "3" : "1"} /> ))}
-        
-        {/* 畫點、空弦(O)、悶音(X) */}
         {frets.map((fret, stringIdx) => {
           const x = stringIdx * 10 + 5;
-          if (fret === 'x') {
-            return <text key={`m${stringIdx}`} x={x-3} y="8" fontSize="10" fill="currentColor">x</text>;
-          }
-          if (fret === 0) {
-            return <circle key={`o${stringIdx}`} cx={x} cy="5" r="3" fill="none" stroke="currentColor" strokeWidth="1" />;
-          }
-          // 計算黑點的 Y 座標
+          if (fret === 'x') return <text key={`m${stringIdx}`} x={x-3} y="8" fontSize="10" fill="currentColor">x</text>;
+          if (fret === 0) return <circle key={`o${stringIdx}`} cx={x} cy="5" r="3" fill="none" stroke="currentColor" strokeWidth="1" />;
           const relativeFret = (fret as number) - startFret + 1;
           const y = 10 + (relativeFret - 1) * 12.5 + 6.25;
           return <circle key={`d${stringIdx}`} cx={x} cy={y} r="4" fill="#57534e" />;
@@ -71,7 +53,14 @@ function ChordDiagram({ chordName }: { chordName: string }) {
 }
 
 function getNoteIndex(note: string) { return SHARP_NOTES.indexOf(note) !== -1 ? SHARP_NOTES.indexOf(note) : FLAT_NOTES.indexOf(note); }
-function isChord(str: string) { return /^[CDEFGAB][#b]?(m|min|maj|M|dim|aug|sus|add|#|b|\d)*(?:\/[CDEFGAB][#b]?)?$/.test(str) && str !== '|'; }
+
+// 🌟 升級版：支援 Major, Minor, 以及更長的綴詞
+function isChord(str: string) { 
+  if (!str || str.trim() === '') return false;
+  const regex = /^[CDEFGAB][#b]?(m|min|minor|Minor|maj|major|Major|M|dim|aug|sus|add|#|b|\d)*(?:\/[CDEFGAB][#b]?)?$/;
+  return regex.test(str) && str !== '|'; 
+}
+
 function getRootNote(key: string) { return key.replace('m', ''); }
 
 function transposeChord(chord: string, steps: number, targetKey: string) {
@@ -147,13 +136,11 @@ export default function SongPage() {
     if (confirm("確定要刪除這首歌嗎？")) { await deleteDoc(doc(db, "songs", songId)); router.push('/'); }
   };
 
-  // 🌟 自動抓取這首歌所有用到的和弦 (轉調後)
   const uniqueChords = useMemo(() => {
     if (!song || isEditing) return [];
     const steps = getNoteIndex(getRootNote(targetKey)) - getNoteIndex(getRootNote(song.originalKey));
     const chords = new Set<string>();
     
-    // 抓取 [和弦] 標籤裡的
     const matches = song.content.match(/\[(.*?)\]/g);
     if (matches) {
       matches.forEach(m => {
@@ -161,7 +148,6 @@ export default function SongPage() {
         if (isChord(chord)) chords.add(transposeChord(chord, steps, targetKey));
       });
     }
-    // 抓取傳統排版空白鍵分隔的
     song.content.split(/(\s+|[|()[\]{}<>,.:;~\-｜（）【】《》，。：；～]+)/).forEach(token => {
       if (isChord(token)) chords.add(transposeChord(token, steps, targetKey));
     });
@@ -219,15 +205,12 @@ export default function SongPage() {
 
   return (
     <main className="min-h-screen bg-[#FDFBF7] text-stone-800 font-sans selection:bg-stone-200 pb-20">
-      
-      {/* 頂部導覽 */}
       <nav className="max-w-5xl mx-auto px-6 py-6 flex justify-between items-center border-b border-stone-200 mb-8">
         <Link href="/" className="text-stone-500 hover:text-stone-800 text-sm font-medium tracking-widest transition-colors">← 返回目錄</Link>
         {isEditing && <button onClick={handleDelete} className="text-red-400 hover:text-red-600 text-sm font-medium transition-colors">{songId === 'new' ? '放棄編輯' : '刪除樂譜'}</button>}
       </nav>
 
       <div className="max-w-4xl mx-auto px-6">
-        {/* 標題與操作區 */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-6">
           <div>
             <h1 className="text-3xl md:text-5xl font-light text-stone-800 mb-4 tracking-wide">{songId === 'new' ? '新增詩歌' : song.title}</h1>
@@ -268,7 +251,6 @@ export default function SongPage() {
           </div>
         )}
 
-        {/* 🌟 自動產生的吉他和弦指法圖區塊 */}
         {!isEditing && uniqueChords.length > 0 && (
           <div className="mb-10 p-6 bg-white border border-stone-100 rounded-2xl shadow-sm">
             <h3 className="text-sm font-bold text-stone-400 mb-4 tracking-widest uppercase">本曲使用和弦</h3>
