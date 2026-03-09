@@ -3,7 +3,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Song } from '@/data/songs';
-// 🌟 新增了處理留言需要的 Firestore 工具：collection, addDoc, query, orderBy, onSnapshot, serverTimestamp
 import { doc, getDoc, setDoc, deleteDoc, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
@@ -26,6 +25,14 @@ const CHORD_FINGERINGS: Record<string, (number | 'x')[]> = {
   'B': ['x', 2, 4, 4, 4, 2], 'B7': ['x', 2, 1, 2, 0, 2], 'Bm': ['x', 2, 4, 4, 3, 2],
   'Bb': ['x', 1, 3, 3, 3, 1], 'Bbm': ['x', 1, 3, 3, 2, 1]
 };
+
+// 🌟 新增：提取 YouTube 影片 ID 的工具函數
+function getYouTubeId(url: string) {
+  if (!url) return null;
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
+}
 
 function ChordDiagram({ chordName }: { chordName: string }) {
   const baseChordName = chordName.split('/')[0].replace('Major', '').replace('major', '').replace('Minor', 'm').replace('minor', 'm');
@@ -53,7 +60,6 @@ function ChordDiagram({ chordName }: { chordName: string }) {
   );
 }
 
-// 🌟 新增：將純文字中的網址轉換成可點擊的連結
 function LinkifyText({ text }: { text: string }) {
   const urlRegex = /(https?:\/\/[^\s]+)/g;
   const parts = text.split(urlRegex);
@@ -70,7 +76,6 @@ function LinkifyText({ text }: { text: string }) {
   );
 }
 
-// 🌟 新增：時間格式化工具
 function formatCommentTime(timestamp: any) {
   if (!timestamp) return '剛剛';
   const d = timestamp.toDate();
@@ -120,8 +125,8 @@ export default function SongPage() {
   const [editTimeSignature, setEditTimeSignature] = useState("4/4");
   const [editEditor, setEditEditor] = useState("烏鴉Lin"); 
   const [editContent, setEditContent] = useState("");
+  const [editYoutubeUrl, setEditYoutubeUrl] = useState(""); // 🌟 新增 YouTube State
 
-  // 🌟 新增：留言板相關 State
   const [comments, setComments] = useState<any[]>([]);
   const [newCommentText, setNewCommentText] = useState("");
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
@@ -133,8 +138,13 @@ export default function SongPage() {
 
   useEffect(() => {
     if (songId === 'new') {
-      setSong({ id: 'new', title: "", originalKey: "C", timeSignature: "4/4", editor: user?.displayName || "烏鴉Lin", content: "" });
-      setEditKey("C"); setEditTimeSignature("4/4"); setEditEditor(user?.displayName || "烏鴉Lin"); setIsEditing(true); setIsLoading(false);
+      setSong({ id: 'new', title: "", originalKey: "C", timeSignature: "4/4", editor: user?.displayName || "烏鴉Lin", content: "", youtubeUrl: "" });
+      setEditKey("C"); 
+      setEditTimeSignature("4/4"); 
+      setEditEditor(user?.displayName || "烏鴉Lin"); 
+      setEditYoutubeUrl("");
+      setIsEditing(true); 
+      setIsLoading(false);
       return;
     }
     const fetchSong = async () => {
@@ -142,21 +152,23 @@ export default function SongPage() {
         const docSnap = await getDoc(doc(db, "songs", songId));
         if (docSnap.exists()) {
           const foundSong = docSnap.data() as Song;
-          setSong(foundSong); setTargetKey(foundSong.originalKey); setEditTitle(foundSong.title); setEditKey(foundSong.originalKey); setEditTimeSignature(foundSong.timeSignature || "4/4"); setEditEditor(foundSong.editor || "烏鴉Lin"); setEditContent(foundSong.content);
+          setSong(foundSong); 
+          setTargetKey(foundSong.originalKey); 
+          setEditTitle(foundSong.title); 
+          setEditKey(foundSong.originalKey); 
+          setEditTimeSignature(foundSong.timeSignature || "4/4"); 
+          setEditEditor(foundSong.editor || "烏鴉Lin"); 
+          setEditContent(foundSong.content);
+          setEditYoutubeUrl(foundSong.youtubeUrl || ""); // 🌟 讀取原有的 YouTube 網址
         } else { alert("找不到這首詩歌！"); router.push('/'); }
       } catch (error) { console.error("讀取失敗:", error); } finally { setIsLoading(false); }
     };
     fetchSong();
   }, [songId, router, user]);
 
-  // 🌟 新增：即時監聽這首歌的留言
   useEffect(() => {
     if (!songId || songId === 'new') return;
-    
-    // 設定查詢條件：抓取這首歌底下的 comments 子集合，並依時間排序 (由舊到新)
     const q = query(collection(db, `songs/${songId}/comments`), orderBy('createdAt', 'asc'));
-    
-    // onSnapshot 會即時監聽，只要有人留言，畫面就會自動更新，不用重新整理！
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const commentsData = snapshot.docs.map(doc => ({
         id: doc.id,
@@ -164,18 +176,34 @@ export default function SongPage() {
       }));
       setComments(commentsData);
     });
-
     return () => unsubscribe();
   }, [songId]);
 
   const handleSave = async () => {
     if (!song) return;
     const finalId = songId === 'new' ? `song-${Date.now()}` : song.id;
-    const updatedSong: Song = { ...song, id: finalId, title: editTitle.trim() === "" ? "未命名新歌" : editTitle, originalKey: editKey, timeSignature: editTimeSignature, editor: editEditor, content: editContent, ownerId: song.ownerId || user?.uid, ownerEmail: song.ownerEmail || user?.email || "" };
+    // 🌟 儲存時把 YouTube 網址一起包進去
+    const updatedSong: Song = { 
+      ...song, 
+      id: finalId, 
+      title: editTitle.trim() === "" ? "未命名新歌" : editTitle, 
+      originalKey: editKey, 
+      timeSignature: editTimeSignature, 
+      editor: editEditor, 
+      content: editContent, 
+      youtubeUrl: editYoutubeUrl.trim(),
+      ownerId: song.ownerId || user?.uid, 
+      ownerEmail: song.ownerEmail || user?.email || "" 
+    };
+    
     try {
       await setDoc(doc(db, "songs", finalId), updatedSong);
       if (songId === 'new') router.replace(`/song/${finalId}`);
-      else { setSong(updatedSong); setTargetKey(editKey); setIsEditing(false); }
+      else { 
+        setSong(updatedSong); 
+        setTargetKey(editKey); 
+        setIsEditing(false); 
+      }
     } catch (error) { alert("儲存失敗，請重試！"); }
   };
 
@@ -184,15 +212,12 @@ export default function SongPage() {
     if (confirm("確定要刪除這首歌嗎？")) { await deleteDoc(doc(db, "songs", songId)); router.push('/'); }
   };
 
-  // 🌟 新增：送出留言的功能
-  // 🌟 升級版：送出留言並自動發 Email 給站長
   const handleAddComment = async () => {
     if (!user) { alert("請先登入才能留言喔！"); return; }
     if (!newCommentText.trim()) return;
 
     setIsSubmittingComment(true);
     try {
-      // 1. 先把留言寫入 Firebase
       await addDoc(collection(db, `songs/${songId}/comments`), {
         text: newCommentText.trim(),
         authorName: user.displayName || "匿名使用者",
@@ -200,7 +225,6 @@ export default function SongPage() {
         createdAt: serverTimestamp() 
       });
 
-      // 2. 🌟 背景發送 Email 通知給站長 (使用 FormSubmit API)
       fetch("https://formsubmit.co/ajax/coolcrow0403@gmail.com", {
         method: "POST",
         headers: { 
@@ -214,9 +238,9 @@ export default function SongPage() {
             "💬 留言內容": newCommentText.trim(),
             "🔗 前往樂譜": window.location.href
         })
-      }).catch(err => console.error("通知信發送失敗:", err)); // 背景執行，就算失敗也不影響使用者留言
+      }).catch(err => console.error("通知信發送失敗:", err));
 
-      setNewCommentText(""); // 清空輸入框
+      setNewCommentText(""); 
     } catch (error) {
       console.error("留言失敗:", error);
       alert("留言失敗，請重試！");
@@ -290,7 +314,7 @@ export default function SongPage() {
     );
   };
 
-  const canEdit = !song.ownerId || (user && user.uid === song.ownerId);
+  const canEdit = !song.ownerId || (user && user.uid === song.ownerId) || (user && user.displayName === "烏鴉Lin");
 
   return (
     <main className="min-h-screen bg-[#FDFBF7] text-stone-800 font-sans selection:bg-stone-200 pb-20">
@@ -301,27 +325,30 @@ export default function SongPage() {
 
       <div className="max-w-4xl mx-auto px-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-6">
-          <div>
-            <h1 className="text-3xl md:text-5xl font-light text-stone-800 mb-4 tracking-wide">{songId === 'new' ? '新增詩歌' : song.title}</h1>
-            <div className="flex items-center gap-3 text-sm text-stone-500">
+          <div className="flex-1 w-full md:w-auto">
+            <h1 className="text-3xl md:text-5xl font-light text-stone-800 mb-4 tracking-wide break-words">{songId === 'new' ? '新增詩歌' : song.title}</h1>
+            <div className="flex flex-wrap items-center gap-3 text-sm text-stone-500">
               {song.editor && <span className="border border-stone-200 px-3 py-1 rounded-full bg-white shadow-sm">編譜：{song.editor}</span>}
               {!isEditing && song.timeSignature && <span className="border border-stone-200 px-3 py-1 rounded-full bg-white shadow-sm">拍號：{song.timeSignature}</span>}
             </div>
           </div>
           
-          {canEdit ? (
-            isEditing ? (
-              <button onClick={handleSave} className="px-6 py-3 bg-stone-800 hover:bg-stone-900 text-white rounded-full text-sm font-medium transition-all shadow-md">儲存樂譜</button>
+          <div className="shrink-0">
+            {canEdit ? (
+              isEditing ? (
+                <button onClick={handleSave} className="px-6 py-3 bg-stone-800 hover:bg-stone-900 text-white rounded-full text-sm font-medium transition-all shadow-md">儲存樂譜</button>
+              ) : (
+                <button onClick={() => setIsEditing(true)} className="px-6 py-3 bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 rounded-full text-sm font-medium transition-all shadow-sm">編輯樂譜</button>
+              )
             ) : (
-              <button onClick={() => setIsEditing(true)} className="px-6 py-3 bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 rounded-full text-sm font-medium transition-all shadow-sm">編輯樂譜</button>
-            )
-          ) : (
-            <span className="text-stone-400 text-sm">僅建立者可編輯</span>
-          )}
+              <span className="text-stone-400 text-sm">僅建立者可編輯</span>
+            )}
+          </div>
         </div>
 
+        {/* 控制面板 */}
         {!isEditing && (
-          <div className="bg-white border border-stone-100 shadow-sm rounded-2xl p-4 md:p-6 mb-10 flex flex-wrap items-center gap-6">
+          <div className="bg-white border border-stone-100 shadow-sm rounded-2xl p-4 md:p-6 mb-8 flex flex-wrap items-center gap-6">
             <div className="flex items-center gap-3">
               <span className="text-sm font-medium text-stone-500">調性</span>
               <select value={targetKey} onChange={(e) => setTargetKey(e.target.value)} className="bg-stone-50 border border-stone-200 rounded-lg px-3 py-1.5 text-lg font-medium text-stone-700 focus:outline-none focus:ring-2 focus:ring-stone-300 cursor-pointer">
@@ -340,8 +367,26 @@ export default function SongPage() {
           </div>
         )}
 
+        {/* 🌟 閱讀模式下顯示 YouTube 影片 */}
+        {!isEditing && song.youtubeUrl && getYouTubeId(song.youtubeUrl) && (
+          <div className="mb-8 rounded-2xl overflow-hidden shadow-sm border border-stone-100 bg-white p-2">
+            <div className="aspect-video w-full rounded-xl overflow-hidden">
+              <iframe
+                width="100%"
+                height="100%"
+                src={`https://www.youtube.com/embed/${getYouTubeId(song.youtubeUrl)}`}
+                title="YouTube video player"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              ></iframe>
+            </div>
+          </div>
+        )}
+
+        {/* 和弦指法 */}
         {!isEditing && uniqueChords.length > 0 && (
-          <div className="mb-10 p-6 bg-white border border-stone-100 rounded-2xl shadow-sm">
+          <div className="mb-8 p-6 bg-white border border-stone-100 rounded-2xl shadow-sm">
             <h3 className="text-sm font-bold text-stone-400 mb-4 tracking-widest uppercase">本曲使用和弦</h3>
             <div className="flex flex-wrap">
               {uniqueChords.map(chord => (
@@ -351,6 +396,7 @@ export default function SongPage() {
           </div>
         )}
 
+        {/* 主要樂譜區域 */}
         <div className="bg-white border border-stone-100 shadow-sm rounded-3xl p-6 md:p-10 min-h-[500px]">
           {isEditing ? (
              <div className="space-y-6">
@@ -371,6 +417,18 @@ export default function SongPage() {
                      {TIME_SIGNATURES.map(ts => <option key={ts} value={ts}>{ts}</option>)}
                    </select>
                  </div>
+
+                 {/* 🌟 編輯模式下顯示 YouTube 網址輸入框 */}
+                 <div className="col-span-1 md:col-span-4 mt-2">
+                   <label className="block text-xs font-bold text-stone-400 mb-2 uppercase tracking-widest">YouTube 示範影片網址 (選填)</label>
+                   <input 
+                     type="text" 
+                     value={editYoutubeUrl} 
+                     onChange={e => setEditYoutubeUrl(e.target.value)} 
+                     placeholder="例如：https://www.youtube.com/watch?v=..." 
+                     className="w-full border border-stone-200 rounded-lg px-4 py-2 bg-stone-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-stone-300 transition-all" 
+                   />
+                 </div>
                </div>
                
                <textarea
@@ -387,14 +445,13 @@ export default function SongPage() {
           )}
         </div>
 
-        {/* 🌟 終極新增：留言與討論區塊 */}
+        {/* 留言與討論區塊 */}
         {!isEditing && songId !== 'new' && (
           <div className="mt-12 bg-white border border-stone-100 shadow-sm rounded-3xl p-6 md:p-10">
             <h3 className="text-xl font-medium text-stone-800 mb-8 flex items-center gap-3">
               <span className="text-2xl">💬</span> 詩歌討論與分享
             </h3>
 
-            {/* 留言列表 */}
             <div className="space-y-6 mb-8">
               {comments.length > 0 ? (
                 comments.map((comment) => (
@@ -403,7 +460,6 @@ export default function SongPage() {
                       <span className="font-bold text-stone-700">{comment.authorName}</span>
                       <span className="text-xs text-stone-400 font-mono">{formatCommentTime(comment.createdAt)}</span>
                     </div>
-                    {/* 使用 LinkifyText 來渲染留言，讓網址變成超連結 */}
                     <div className="text-stone-600 text-sm md:text-base leading-relaxed">
                       <LinkifyText text={comment.text} />
                     </div>
@@ -416,7 +472,6 @@ export default function SongPage() {
               )}
             </div>
 
-            {/* 留言輸入框 */}
             <div className="border-t border-stone-100 pt-8 mt-4">
               {user ? (
                 <div className="flex flex-col gap-3">
@@ -437,7 +492,6 @@ export default function SongPage() {
               ) : (
                 <div className="text-center py-8 bg-stone-50 rounded-2xl border border-stone-100">
                   <p className="text-stone-500 mb-3">登入後即可參與討論與分享連結</p>
-                  {/* 使用 Link 回首頁登入，或者也可以在這裡接 handleLogin */}
                   <span className="text-sm font-medium text-stone-400">請回首頁點擊右上角登入</span>
                 </div>
               )}
