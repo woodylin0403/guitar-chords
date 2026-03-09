@@ -3,7 +3,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Song } from '@/data/songs';
-import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
+// 🌟 新增了處理留言需要的 Firestore 工具：collection, addDoc, query, orderBy, onSnapshot, serverTimestamp
+import { doc, getDoc, setDoc, deleteDoc, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 
@@ -52,9 +53,32 @@ function ChordDiagram({ chordName }: { chordName: string }) {
   );
 }
 
+// 🌟 新增：將純文字中的網址轉換成可點擊的連結
+function LinkifyText({ text }: { text: string }) {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const parts = text.split(urlRegex);
+  return (
+    <span className="whitespace-pre-wrap">
+      {parts.map((part, i) =>
+        urlRegex.test(part) ? (
+          <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700 underline underline-offset-2 transition-colors">{part}</a>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      )}
+    </span>
+  );
+}
+
+// 🌟 新增：時間格式化工具
+function formatCommentTime(timestamp: any) {
+  if (!timestamp) return '剛剛';
+  const d = timestamp.toDate();
+  return `${d.getFullYear()}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+}
+
 function getNoteIndex(note: string) { return SHARP_NOTES.indexOf(note) !== -1 ? SHARP_NOTES.indexOf(note) : FLAT_NOTES.indexOf(note); }
 
-// 🌟 升級版：支援 Major, Minor, 以及更長的綴詞
 function isChord(str: string) { 
   if (!str || str.trim() === '') return false;
   const regex = /^[CDEFGAB][#b]?(m|min|minor|Minor|maj|major|Major|M|dim|aug|sus|add|#|b|\d)*(?:\/[CDEFGAB][#b]?)?$/;
@@ -97,6 +121,11 @@ export default function SongPage() {
   const [editEditor, setEditEditor] = useState("烏鴉Lin"); 
   const [editContent, setEditContent] = useState("");
 
+  // 🌟 新增：留言板相關 State
+  const [comments, setComments] = useState<any[]>([]);
+  const [newCommentText, setNewCommentText] = useState("");
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, setUser);
     return () => unsubscribe();
@@ -120,6 +149,25 @@ export default function SongPage() {
     fetchSong();
   }, [songId, router, user]);
 
+  // 🌟 新增：即時監聽這首歌的留言
+  useEffect(() => {
+    if (!songId || songId === 'new') return;
+    
+    // 設定查詢條件：抓取這首歌底下的 comments 子集合，並依時間排序 (由舊到新)
+    const q = query(collection(db, `songs/${songId}/comments`), orderBy('createdAt', 'asc'));
+    
+    // onSnapshot 會即時監聽，只要有人留言，畫面就會自動更新，不用重新整理！
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const commentsData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setComments(commentsData);
+    });
+
+    return () => unsubscribe();
+  }, [songId]);
+
   const handleSave = async () => {
     if (!song) return;
     const finalId = songId === 'new' ? `song-${Date.now()}` : song.id;
@@ -134,6 +182,28 @@ export default function SongPage() {
   const handleDelete = async () => {
     if (songId === 'new') return router.push('/');
     if (confirm("確定要刪除這首歌嗎？")) { await deleteDoc(doc(db, "songs", songId)); router.push('/'); }
+  };
+
+  // 🌟 新增：送出留言的功能
+  const handleAddComment = async () => {
+    if (!user) { alert("請先登入才能留言喔！"); return; }
+    if (!newCommentText.trim()) return;
+
+    setIsSubmittingComment(true);
+    try {
+      await addDoc(collection(db, `songs/${songId}/comments`), {
+        text: newCommentText.trim(),
+        authorName: user.displayName || "匿名使用者",
+        authorId: user.uid,
+        createdAt: serverTimestamp() // 使用 Firebase 伺服器時間
+      });
+      setNewCommentText(""); // 清空輸入框
+    } catch (error) {
+      console.error("留言失敗:", error);
+      alert("留言失敗，請重試！");
+    } finally {
+      setIsSubmittingComment(false);
+    }
   };
 
   const uniqueChords = useMemo(() => {
@@ -297,6 +367,65 @@ export default function SongPage() {
             renderPreview(song.content)
           )}
         </div>
+
+        {/* 🌟 終極新增：留言與討論區塊 */}
+        {!isEditing && songId !== 'new' && (
+          <div className="mt-12 bg-white border border-stone-100 shadow-sm rounded-3xl p-6 md:p-10">
+            <h3 className="text-xl font-medium text-stone-800 mb-8 flex items-center gap-3">
+              <span className="text-2xl">💬</span> 詩歌討論與分享
+            </h3>
+
+            {/* 留言列表 */}
+            <div className="space-y-6 mb-8">
+              {comments.length > 0 ? (
+                comments.map((comment) => (
+                  <div key={comment.id} className="bg-stone-50 p-5 rounded-2xl border border-stone-100">
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="font-bold text-stone-700">{comment.authorName}</span>
+                      <span className="text-xs text-stone-400 font-mono">{formatCommentTime(comment.createdAt)}</span>
+                    </div>
+                    {/* 使用 LinkifyText 來渲染留言，讓網址變成超連結 */}
+                    <div className="text-stone-600 text-sm md:text-base leading-relaxed">
+                      <LinkifyText text={comment.text} />
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-10 text-stone-400 text-sm">
+                  目前還沒有留言，來當第一個分享的人吧！
+                </div>
+              )}
+            </div>
+
+            {/* 留言輸入框 */}
+            <div className="border-t border-stone-100 pt-8 mt-4">
+              {user ? (
+                <div className="flex flex-col gap-3">
+                  <textarea
+                    value={newCommentText}
+                    onChange={(e) => setNewCommentText(e.target.value)}
+                    placeholder="分享你的感動、彈奏問題，或是貼上 YouTube 示範連結..."
+                    className="w-full p-4 bg-stone-50 border border-stone-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-stone-300 transition-all resize-none h-28"
+                  />
+                  <button 
+                    onClick={handleAddComment}
+                    disabled={!newCommentText.trim() || isSubmittingComment}
+                    className="self-end px-6 py-2.5 bg-stone-800 hover:bg-stone-900 text-white rounded-full text-sm font-medium transition-all disabled:bg-stone-300 disabled:cursor-not-allowed shadow-sm"
+                  >
+                    {isSubmittingComment ? '送出中...' : '送出留言'}
+                  </button>
+                </div>
+              ) : (
+                <div className="text-center py-8 bg-stone-50 rounded-2xl border border-stone-100">
+                  <p className="text-stone-500 mb-3">登入後即可參與討論與分享連結</p>
+                  {/* 使用 Link 回首頁登入，或者也可以在這裡接 handleLogin */}
+                  <span className="text-sm font-medium text-stone-400">請回首頁點擊右上角登入</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
       </div>
     </main>
   );

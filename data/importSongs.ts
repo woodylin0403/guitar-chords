@@ -1,72 +1,72 @@
 export const importSongs = [
     {
-      title: "41. 讚美之泉",
+      title: "51. 主的恩典乃是一生之久",
       originalKey: "D",
       timeSignature: "4/4",
       editor: "烏鴉Lin",
-      content: "[D]從天父[A]而來的[Bm]愛和恩[F#m]典\n[G]把我們[D]冰冷的[Em]心溶[A7]化\n[D]讓我們[A]獻出每[Bm]個微[F#m]笑\n[G]化成別[A7]人心中[D]的暖[D7]和\n[G]讓讚美[A7]從四處[F#m]響[Bm]起\n[G]讓音符[A7]在空中[D]飛[D7]舞\n[G]讓我們[A7]的心歸[F#m]向[Bm]神\n[Em]開始[A7]高聲讚[D]美"
+      content: "[D]一宿雖然[F#m]有哭泣 [G]早晨我們[D]必歡呼\n[G]主的恩典[D]乃是一生之[E7]久 [A7]\n[D]一宿雖然[F#m]有哭泣 [G]早晨我們[D]必歡呼\n[G]主的恩典[D]乃是[A7]一生之[D]久"
     },
     {
-      title: "42. 認識祢真好",
+      title: "52. 耶和華祝福滿滿",
       originalKey: "D",
       timeSignature: "4/4",
       editor: "烏鴉Lin",
-      content: "[D]如同朝[A]露中的[Bm]小[F#m]草 [G]體會到[D]神豐盛[Em]的創[A7]造\n[D]認識你[A]真好 [Bm]知道有[F#m]你 [G]生命才[A7]會有盼[D]望 [D7]\n[G]認識你[A7]真好 [F#m]認識你[Bm]真好 [G]今生今[E7]世我不再[A7]尋找\n[G]認識你[A7]真好 [F#m]認識你[Bm]真好 [G]只願一[A7]生與你[D]同行"
+      content: "[D]田中的白[Bm]鷺鷥 [G]無欠缺[A7]甚麼\n[D]山頂的百[Bm]合花 [G]春天又[A7]開花\n[F#m]總是全能的[Bm]上帝 [Em]每日賞賜真[A7]福氣\n[F#m]使地上發[Bm]芽結實 [G]顯出愛[A7]疼的根[D]基"
     },
     {
-      title: "43. 讓讚美飛揚",
+      title: "53. 我們愛讓世界不一樣",
       originalKey: "D",
       timeSignature: "4/4",
       editor: "烏鴉Lin",
-      content: "[D]在這美[F#m]麗的時[Bm]刻 [G]我們相[A7]聚在一[D]起\n[D]神的愛[F#m]擁抱著[Bm]我們 [G]神的靈[E7]充滿這[A7]地\n[D]當稱謝[F#m]進入祂的[Bm]門 [G]當讚美[A7]進入祂的[D]院\n[D]擊鼓跳舞[F#m]揚聲歡[Bm]呼 [G]凡有氣[A7]息都要讚[D]美\n[G]讓讚美[A7]從四處響[F#m]起 [Bm]\n[G]讓音符[A7]在空中飛[D]舞 [D7]\n[G]讓我們[A7]的心歸向[F#m]耶[Bm]和華\n[G]開始[A7]高聲讚[D]美"
+      content: "[D]你和[A]我 是[Bm]天父愛的創[F#m]造\n[G]每個人[D]有最[Em]美的夢[A7]想\n[D]一路上[A]經歷[Bm]歡笑和[F#m]悲傷\n[G]其實都[D]有一樣[A7]的盼[D]望\n[G]我們愛[A7]讓世界[F#m]不一[Bm]樣\n[G]我們愛[A7]心漸漸[D]開[D7]放\n[G]我們愛[A7]讓世界[F#m]不一[Bm]樣\n[Em]我們愛[A7]讓世[D]界不一樣"
     },
     {
-      title: "44. 一件禮物",
+      title: "54. 在耶穌裡我們是一家人",
       originalKey: "D",
       timeSignature: "4/4",
       editor: "烏鴉Lin",
-      content: "[D]有一件[A]禮物 [Bm]你收到沒[F#m]有\n[G]眼睛看不[D]見 [Em]你心會知[A7]道\n[D]這一件[A]禮物 [Bm]心門外等[F#m]候\n[G]是為了你[D]準備 [Em]別人[A7]不能收[D]\n[G]生命有[A7]限 [F#m]時光也[Bm]會走\n[G]如果你不[E7]珍惜 [A7]機會難留\n[D]禮物雖[A]然好 [Bm]如果你不[F#m]要\n[G]你怎麼能[D]夠得到 [Em]怎麼[A7]能得[D]到"
+      content: "[D]在耶穌裡 我們是[G]一家人\n[A7]在耶穌裡 我們是[D]一家人\n[D]在耶穌裡 我們是[G]一家人\n[A7]從今直到永[D]遠"
     },
     {
-      title: "45. 雲上太陽",
+      title: "55. 愛喜樂生命",
       originalKey: "D",
       timeSignature: "4/4",
       editor: "烏鴉Lin",
-      content: "[D]無論是[A]住在 [Bm]美麗的[F#m]高山\n[G]或是躺臥[D]在 [Em]陰暗的[A7]幽谷\n[D]當你抬[A]起頭 [Bm]你將會[F#m]發現\n[G]主已為你[D]我而[Em]預備[A7]\n[D]雲上[A]太陽 [Bm]它總不[F#m]改變\n[G]雖然[D]小雨灑在[Em]臉[A7]上\n[D]雲上[A]太陽 [Bm]它總不[F#m]改變\n[G]哈啊[D] 祂[Em]不[A7]改[D]變"
+      content: "[D]愛 喜樂 [Bm]生命 [G]都賞賜給[A7]我\n[D]愛 喜樂 [Bm]生命 [G]都賞賜給[A7]我\n[G]耶穌我[A7]的主 [F#m]是我[Bm]的幫助\n[Em]我要永遠[A7]跟隨[D]你"
     },
     {
-      title: "46. 我的救贖者活著",
+      title: "56. 專心仰望耶穌",
       originalKey: "D",
       timeSignature: "4/4",
       editor: "烏鴉Lin",
-      content: "[D]我知道[A]我的救贖[Bm]者活[F#m]著\n[G]祂是我的[D]盼望和[Em]力[A7]量\n[D]我知道[A]我的救贖[Bm]者活[F#m]著\n[G]祂已勝過[D]世界和[Em]死[A7]亡\n[G]我的救[A7]贖者[F#m]活[Bm]著\n[G]我的救[A7]贖者[D]活[D7]著\n[G]神的羔[A7]羊 [F#m]已復[Bm]活\n[Em]我的救贖者[A7]活[D]著"
+      content: "[D]專心[A]仰望耶[Bm]穌 [G]定睛[A7]仰望耶[D]穌\n[G]祂是我[A7]的救主 [F#m]是我的[Bm]避難所\n[Em]我要專心[A7]仰望耶[D]穌"
     },
     {
-      title: "47. 最珍貴的角落",
+      title: "57. 永遠尊貴",
       originalKey: "D",
       timeSignature: "4/4",
       editor: "烏鴉Lin",
-      content: "[D]謝謝你[A]燦爛笑[Bm]容 [F#m]照亮我[G]的[D]天[Em]空 [A7]\n[D]謝謝你[A]分享痛[Bm]楚 [F#m]把我[G]放在[A7]你心[D]中\n[D]夜交瘁[A]有你做[Bm]伴 [F#m]不退縮[G]不[D]迷[Em]惘 [A7]\n[D]迎向日[A]出看那[Bm]希望 [F#m]在生[G]命的[A7]最高[D]處\n[G]有你做[A7]伴 [F#m]我[Bm]們一起[G]走過[D]這[Em]旅程 [A7]\n[D]我們[A]一起[Bm]走過 [F#m]這[G]最珍[A7]貴的角[D]落"
+      content: "[D]永遠尊[F#m]貴 [Bm]理當受讚[F#m]美\n[G]榮耀的[D]君王 [Em]天地都[A7]跪拜\n[D]永遠尊[F#m]貴 [Bm]理當受讚[F#m]美\n[G]耶穌 神的[D]羔羊 [A7]配得大讚[D]美"
     },
     {
-      title: "48. 寶貴十架",
+      title: "58. 我神真偉大",
       originalKey: "D",
       timeSignature: "4/4",
       editor: "烏鴉Lin",
-      content: "[D]主耶穌[A]我感[Bm]謝你 [F#m]\n[G]你的身[D]體 [Em]為我而[A7]捨\n[D]帶我出[A]黑暗 [Bm]進入光[F#m]明國度\n[G]使我再[D]次能叫[Em]阿爸[A7]父\n[D]寶貴十[A]架的[Bm]血 [F#m]\n[G]洗淨我[D]萬的[Em]罪[A7]孽\n[D]你的愛[A]何等[Bm]偉大 [F#m]\n[G]我願一[A7]生為你[D]活"
+      content: "[D]尊貴[Bm]榮耀君王 [G]在全地[A7]之上\n[D]萬民都[Bm]歡呼 [G]萬民都[A7]歡呼\n[D]我神 [Bm]真偉大 [G]歌頌你神 [A7]真偉大\n[D]全地 [Bm]都看見 [G]我神 [A7]真偉[D]大"
     },
     {
-      title: "49. 一生愛祢",
+      title: "59. 恩典之路",
       originalKey: "D",
       timeSignature: "4/4",
       editor: "烏鴉Lin",
-      content: "[D]親愛的[A]耶穌 [Bm]我求你[F#m]來\n[G]恢復我[D]對你 [Em]起初的[A7]愛\n[D]親愛的[A]耶穌 [Bm]我求你[F#m]來\n[G]讓我一[A7]生愛[D]你\n[G]一生愛[A7]你 [F#m]一生愛[Bm]你\n[G]讓我一[E7]生愛[A7]你\n[G]一生愛[A7]你 [F#m]一生愛[Bm]你\n[Em]讓我一[A7]生愛[D]你"
+      content: "[D]你是[A]我的[Bm]主 [G]引我[A7]走正[D]義路\n[G]高山或[A7]低谷 [F#m]都是你在[Bm]保護\n[Em]萬人中引[A7]我歸向[D]你"
     },
     {
-      title: "50. 滿有能力",
+      title: "60. 奇妙的愛",
       originalKey: "D",
       timeSignature: "4/4",
       editor: "烏鴉Lin",
-      content: "[D]我的盼望[A]就在耶穌[Bm]基督[F#m]裡\n[G]在你裡面[D]滿有[Em]平[A7]安\n[D]生命泉源[A]就在耶穌[Bm]基督[F#m]裡\n[G]有主在[A7]我裡[D]面\n[G]滿有能力[A7] [F#m]滿有能[Bm]力\n[G]有主在[E7]我裡[A7]面\n[G]滿有能力[A7] [F#m]滿有能[Bm]力\n[Em]有主在我[A7]裡面 [D]滿有能力"
+      content: "[D]奇妙的[F#m]愛 [Bm]湧流在[F#m]我心\n[G]奇妙的[D]愛 [Em]無人能[A7]相比\n[D]主耶穌[F#m]愛我 [Bm]主耶穌[F#m]愛我\n[G]奇妙的[D]愛 [A7]永不改[D]變"
     }
   ];
