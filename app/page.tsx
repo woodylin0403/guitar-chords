@@ -28,18 +28,16 @@ const MINOR_KEYS = [
   { note: 'Bm', color: 'bg-pink-100 text-pink-900' },
 ];
 
-// 🌟 時間翻譯機：從歌曲 ID 萃取出建立日期
 function getUploadDate(id: string) {
   const parts = id.split('-');
   if (parts.length >= 2) {
     const timestamp = parseInt(parts[1]);
-    // 檢查是否為合法的時間戳
     if (!isNaN(timestamp) && timestamp > 1600000000000) {
       const d = new Date(timestamp);
       return `${d.getFullYear()}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}`;
     }
   }
-  return '早期建檔'; // 如果是手動亂編 ID 的歌，就顯示這個
+  return '早期建檔';
 }
 
 export default function Home() {
@@ -109,7 +107,10 @@ export default function Home() {
 
   const handleBatchImport = async () => {
     if (!user) { alert("請先登入才能匯入喔！"); return; }
-    if (!confirm("準備好施展魔法，匯入這批詩歌了嗎？\n請確認你已經在 importSongs.ts 放好資料了！")) return;
+    
+    // 🌟 在按下按鈕後的確認視窗，再次提醒即將匯入的內容
+    const firstSongTitle = importSongs.length > 0 ? importSongs[0].title : "未知歌曲";
+    if (!confirm(`準備好施展魔法了嗎？\n\n系統偵測到準備匯入：\n「${firstSongTitle}」... 等共 ${importSongs.length} 首歌。\n\n確定要寫入雲端嗎？`)) return;
     
     setIsImporting(true);
     try {
@@ -240,7 +241,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 md:mb-8 gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4">
           <h2 className="text-2xl md:text-3xl font-black text-gray-950 tracking-tight flex items-center gap-2">
             <span className="text-sky-500">
               {selectedKey ? `${selectedKey} 調` : 'All'}
@@ -249,12 +250,20 @@ export default function Home() {
             <span className="text-xs md:text-sm font-medium text-gray-400 bg-gray-100 p-1.5 md:p-2 rounded-full border border-gray-200">共 {filteredSongs.length} 首</span>
           </h2>
           
-          <div className="flex gap-2 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto items-start sm:items-center">
+            
+            {/* 🌟 匯入預覽雷達區塊 */}
+            {user && importSongs && importSongs.length > 0 && (
+              <div className="hidden lg:flex items-center text-sm font-bold text-gray-600 bg-white px-4 py-2.5 rounded-2xl border-2 border-dashed border-gray-300 shadow-[2px_2px_0_rgba(0,0,0,0.05)]">
+                📌 暫存區：{importSongs[0].title} ...等 {importSongs.length} 首
+              </div>
+            )}
+
             {user && (
               <button 
                 onClick={handleBatchImport} 
                 disabled={isImporting}
-                className="justify-center bg-purple-500 hover:bg-purple-600 text-white font-black py-3 px-4 md:px-6 rounded-full shadow-[4px_4px_0_rgba(0,0,0,1)] border-2 border-gray-950 transition-all flex items-center gap-2 text-base md:text-xl"
+                className="w-full sm:w-auto justify-center bg-purple-500 hover:bg-purple-600 text-white font-black py-3 px-4 md:px-6 rounded-full shadow-[4px_4px_0_rgba(0,0,0,1)] border-2 border-gray-950 transition-all flex items-center gap-2 text-base md:text-xl shrink-0"
               >
                 {isImporting ? "⌛ 匯入中..." : "🚀 批次匯入"}
               </button>
@@ -263,7 +272,7 @@ export default function Home() {
             {user && (
               <button 
                 onClick={handleCreateNewSong} 
-                className="flex-1 sm:flex-none justify-center bg-yellow-400 hover:bg-yellow-500 text-gray-950 font-black py-3 px-6 md:px-8 rounded-full shadow-[4px_4px_0_rgba(0,0,0,1)] border-2 border-gray-950 transition-all flex items-center gap-2 text-lg md:text-xl"
+                className="w-full sm:w-auto justify-center bg-yellow-400 hover:bg-yellow-500 text-gray-950 font-black py-3 px-6 md:px-8 rounded-full shadow-[4px_4px_0_rgba(0,0,0,1)] border-2 border-gray-950 transition-all flex items-center gap-2 text-lg md:text-xl shrink-0"
               >
                 ＋ 我要寫新歌
               </button>
@@ -295,7 +304,6 @@ export default function Home() {
                       </div>
                     </div>
                     
-                    {/* 🌟 卡片底部：新增了小小的日期顯示 */}
                     <div className="flex justify-between items-center mt-auto pt-2">
                       <div className="flex flex-wrap items-center gap-2 z-10">
                         {song.editor && (
