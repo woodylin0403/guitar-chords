@@ -147,7 +147,7 @@ export default function Home() {
         <div className="flex items-center gap-6">
           {/* 🌟 新增的聯絡站長按鈕 */}
           <a 
-            href="mailto:你的信箱@gmail.com?subject=老詩歌吉他譜-問題與回饋" 
+            href="mailto:coolcrow0403@gmail.com?subject=老詩歌吉他譜-問題與回饋" 
             className="text-sm font-medium text-stone-400 hover:text-stone-800 transition-colors flex items-center gap-1"
           >
             ✉️ 聯絡站長
