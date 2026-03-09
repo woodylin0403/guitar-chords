@@ -1,79 +1,114 @@
 export const importSongs = [
   {
-    title: "1. 就是我",
-    originalKey: "Dm",
-    timeSignature: "4/4",
+    title: "1. 我願你來",
+    originalKey: "G",
+    timeSignature: "3/4",
     editor: "烏鴉Lin",
-    content: "1.[Dm]就是我 那[A7]就是我 [Dm]終日摸索[F7]歲月[Bb][C7]\n2.就是我 那就是我 暗淡人生路途\n1.[F]已蹉[Dm]跎 自從[Gm]來就主 [C7]甘願獻於[Dm]主\n2.感徬徨 所遇非我願 使我感疲倦\n[Gm7]歡欣[Am7]快樂臨到 [Dm]我\n換來只是爭戰一場\n副 [Bb]生命[C7]曾無意[F]義 [Dm]從未[Gm]有安[A7]息[Dm][D7]\n[Gm]但[A7]如今[Dm]全然改變 [Bb7]對生[Dm]命歡欣[Gm7]樂無比[A]"
+    content: "(一)[G]聖潔被殺羔[C]羊 [Bm7] [EmC]在寶座上耶[G]穌 [A7]榮[D7G]耀\n[C]尊貴感[Bm7EmC]謝 都歸於寶座耶[C]穌 聖[G]哉 [C]聖[G]哉 [D]真神[C]羔羊耶[G]穌\n[Am7]聖哉 [D7]聖[G]哉 [C]真神[G]羔羊耶[D]穌 [C]真神[G]羔羊耶[Am7]穌 [D7] [G]\n(二)[G]昔在今在永[C]在 [Bm7] [EmC]全能主上[G]帝 [A7]快[D7G]要\n[C]再來君[Bm7EmC]王 主啊我願你來[C] 尊[G]貴 [C]尊[G]貴 [D]真神[C]羔羊耶[G]穌\n[Am7]尊貴 [D7]尊[G]貴 [C]真神[G]羔羊耶[D]穌 [C]真神[G]羔羊耶[Am7]穌 [D7] [G]\n(副)[G]阿們 [G]阿們 [D]主耶穌[Em]啊 [Bm7]我願你[C]來([D7]二次) [G] [D7/G]"
   },
   {
-    title: "2. 平安 SHALOM",
-    originalKey: "Dm",
+    title: "2. 來尋求你面",
+    originalKey: "G",
     timeSignature: "4/4",
     editor: "烏鴉Lin",
-    content: "[Dm]主耶穌你賜我平安 主耶穌你[Bb]賜我生[C]命\n[A]主耶穌你賜我喜樂 [Bb]主耶穌 Sha[A]lom\nSha[Dm]lom 是我的所有"
+    content: "[G]滿有 [D]憐憫的神 [Em7]恩 [C]惠[AmD7]之主 我[G]們來 [C]尋求[G]你 [F]\n[Em7]我們來尋求 [Ebmajor7]你面 [G] [Am7] [D7G]"
   },
   {
-    title: "3. 我們的心中多快樂",
-    originalKey: "Dm",
+    title: "3. 獻上感恩",
+    originalKey: "G",
     timeSignature: "4/4",
     editor: "烏鴉Lin",
-    content: "[Dm]我們的心[Gm]中多快[Dm]樂 不停的唱那美妙的[Gm]歌\n[Am]耶穌愛[Dm]你 也[Gm]愛[Bb]我 我們的心連[Dm]成一顆\n[Bb]愛的[C]歌 和[Dm]平的[Bb]歌 燃[C]燒起不[Am]滅的[Dm]火 我們\n[Gm]舉起[Bb]燃燒的[Am]火 [Gm]插遍[Am]每個角[Dm]落"
+    content: "[G]獻上感恩的心 [Bm7] [Em]歸給至聖全能神 [Bm]因為\n[C]賜下獨生子主耶穌基督[G] [F] [D] (二次)\n[Bm]如今軟弱者已得剛[Em7]強 [Am]貧窮者已成富[D7]足\n[G]都因為主已成了大事[Em] [F] [D] (二次) [G]感恩 [C]感恩\n[G]感恩 [C]"
   },
   {
-    title: "4. 建造耶路撒冷",
-    originalKey: "Dm",
+    title: "4. 你已被揀選",
+    originalKey: "G",
     timeSignature: "4/4",
     editor: "烏鴉Lin",
-    content: "[Dm]主正在建[Gm]造耶路撒冷 主正在[A]建造\n耶路撒[Dm]冷 我主[D]正在聚[Gm]集 流亡的\n[C]以色列人 醫好傷[Dm]心人 裹他們的傷\n[D]主正在建[Gm]造 主正[A]在建[A7]造 耶路[Dm]撒冷"
+    content: "[G]你已被揀選屬於上[Bm]帝 你是君尊神[C]的祭司[Cm]\n[Am]聖潔的國[D7]度 我們都是屬神[G]的子民 [E7]\n在主[Am]面前 [D7]我已看[C]見 在你裏面神[Am]的榮美 [C]言語\n[D]不足說[Bm]明 你是何等寶[E7]貴 榮耀歸於父[Am]神\n[D7]哦 哈利路[G]亞 [C] [G]"
   },
   {
-    title: "5. 良人帶我",
-    originalKey: "Dm",
+    title: "5. 走天路",
+    originalKey: "G",
     timeSignature: "4/4",
     editor: "烏鴉Lin",
-    content: "[Dm]良人帶我[Gm] [Am]進入[Dm]內室 [Bb]知心的[C]話兒說不[F]完 [Em]\n[Dm]我們的愛[Am]情 如[Gm]死之[Dm]堅強 [Gm]大水也[Am]不能淹[C]沒\n[Dm]我的良[Gm]人 白[Am]而且[Dm]紅 [Gm]超乎那[Am]萬人之[Gm]上 [C]\n[Gm]良人屬[Am]我 我[Dm]屬良[Gm]人 從[Bb]此也[C]不會離[F]分 [Em]\n[Dm]良人帶[Gm]我 往[Am]田間[Dm]去 [Gm]也在那[Am]葡萄園[Gm]中\n[Am]在百合[Dm]花中 [Am]牧放[Dm]群羊 我[Am]和良人[Gm]永 遠[Bb]\n同[F]行"
+    content: "[G]我們在走天路 [C]我[G]們在走天路 [G]唱唱唱[D7]唱\n[C]每一[C]個人[D7]都唱走天路 [G]我們在走天路 [D7] [G] [D7] [G]\n[C]我們在走天路 [D7]唱唱唱[C]唱 [C]每一[D7]個人都[C]唱 快[D7G]到家"
   },
   {
-    title: "6. 當向耶和華歡呼歌唱",
-    originalKey: "Dm",
+    title: "6. 我的心哪 稱頌主",
+    originalKey: "G",
     timeSignature: "4/4",
     editor: "烏鴉Lin",
-    content: "[Dm]當向耶和華歡呼 當向耶和華歡呼 [Gm]當\n樂意事奉[Dm]祂 當來向祂歌唱 當曉得[A7]\n耶和華是[Dm]神[D7] 我們是祂[Gm]造的 也是屬於\n祂[A7]的 是祂的[Dm]民 草場的[Dm]羊 當稱謝[D7]讚美\n進祂[Dm]門 感謝稱頌[D7]祂 因為祂本為善\n[Gm]永遠慈愛 [A](一)祂信實直到萬[A]代\n[Dm] (二)祂信實[A7]直到萬[Dm]代"
+    content: "1.[G]我的心哪要稱頌主 [C]我的心哪要稱頌[A7]主\n[D7]凡在我裏面的 [G]也要稱頌祂聖[C]名 [Am] [D7] [G] [C] [G]\n2.[G]不可忘記祂的恩惠 [C]不可忘記祂的恩[A7]惠\n[D7]不可忘記祂的恩惠 [G]要稱頌祂聖[C]名 [Am] [D7] [G] [C] [G]\n3.[G]祂赦免你的一切罪 [C]祂赦免你的一切[A7]罪\n[D7]祂赦免你的一切罪 [G]要稱頌祂聖[C]名 [Am] [D7] [G] [C] [G]"
   },
   {
-    title: "7. 向主唱新歌",
-    originalKey: "Dm",
-    timeSignature: "4/4",
+    title: "7. 願你認識主耶穌",
+    originalKey: "G",
+    timeSignature: "3/4",
     editor: "烏鴉Lin",
-    content: "[Dm]向我們的主唱新歌 全地都來向祂歌[A7]唱\n[G]向我們的主[A7]唱新[A]歌 全地[A7]都來向祂歌[Dm]唱\n[Gm]神本為[Dm]大 當[Gm]受極大[Dm]讚美 [Gm]神為[Dm]大 當[Gm]受\n極[A]大讚美 [A7]喔"
+    content: "[G]願你[D7]認識主耶[C]穌 [Em]像我一[G]樣愛[D7]祂 [Am]若你\n[C]認識主耶[D7]穌 [G]你也[D7]必然愛[Em]祂 祂捨生[G]命[D7]在十架\n[C]為你付上贖[D7]價 [G]若你[C]認識主耶[G]穌 [C]你也必[AB]然愛[Am]祂 [D7] [G]"
   },
   {
-    title: "8. 向耶和華唱新歌",
-    originalKey: "Dm",
+    title: "8. 與耶穌同行",
+    originalKey: "G",
     timeSignature: "4/4",
     editor: "烏鴉Lin",
-    content: "[Am]你們要向耶[Dm]和華唱新歌 [F]全地都要向耶和華歌[Dm]唱\n[Gm7]要向耶[Gm]和華歌[Am]唱 稱頌祂的[Dm]名 祂的[Dm]名 天天傳揚\n[Gm]祂的救[C]恩 天天[Dm]傳揚祂的救恩 在列邦中述說[Gm7]\n[Dm]祂的榮[C]耀 在萬民[Dm]中述說祂的奇事 因耶和華[Gm7]\n[Gm]為大 當[Am]受極大的讚美 [Gm7]祂在[Gm]萬神之[Am]上 當[C7]受敬[Dm]畏"
+    content: "[G]與耶穌同[C]行 天天與主[D]行 處處與主[G]行\n[C]與耶穌同[C7]行 我只[D]要與主同[G]行"
   },
   {
-    title: "9. 心願",
-    originalKey: "Dm",
+    title: "9. 行在光明中",
+    originalKey: "G",
     timeSignature: "4/4",
     editor: "烏鴉Lin",
-    content: "[Dm]主啊 我願奉獻我自己 [Gm]主啊 我願永遠\n服事[Dm]你 無論我在那裡 無論[Gm]我何境[Dm]遇\n我願[Am]一生順服你旨[Dm]意 (男)願為主\n(女:願為[Gm]主)捨生[Dm]命 願為主作精兵\n[Gm]願為主作僕人 願為主服事[Dm]人 主啊\n[Dm]我願奉獻我自己 主[Gm]啊 我願永遠服事[Dm]你\n無論[Gm]我在那裡 無論我何境[Dm]遇 我願一生\n[Am]順服你旨[Dm]意 無論我在那裡 無論我何\n[Dm]境遇 我願[Am]一生順服你旨[Dm]意"
+    content: "[G]讓我們同心聚集有甜美團[C]契 [G]行在光明[AmD7G]中\n[G]讓我們彼此相愛直到見主[C]面 [G]行在光明[AmD7G]中\n[Em]行在光明[Am]中 [D7]行在光明[G]中 [Em]行在光明[Am]中\n[D7]行在神的光明[G]中 [C] [G]"
   },
   {
-    title: "10. 頌揚讚美神",
-    originalKey: "Dm",
+    title: "10. 頭一次的愛",
+    originalKey: "G",
     timeSignature: "4/4",
     editor: "烏鴉Lin",
-    content: "1.[Dm]蒙恩的人蒙恩的人 [E]頌 [A]揚 [Gm]讚 美 [A7]神 [Dm]\n2.基督是主基督是主 頌 揚 讚 美 神\n3.哈利路亞哈利路亞 頌 揚 讚 美 神\n1.[Gm]蒙恩的人蒙恩的人 [Dm]頌揚 [C]讚 美 [C7]神 [F]\n2.基督是主基督是主 頌揚 讚 美 神\n3.[Gm]哈利路亞哈利路亞 [Dm]頌揚 [G]讚 美 [A7]神 [Dm]"
+    content: "[G]當頭一次遇見了[Em]你 我的心充滿歡[Am]喜\n[D7]哈利路亞喜樂滿[G]溢 主耶穌充滿在我[Em]裏 [Am] [D7]\n[G]頭一次的愛 [Em]最甘甜的愛 [Am]耶穌 耶穌我[D]的愛\n超過一切真[G]實的愛 竟然臨及我[C] [G]\n[G]甘甜的愛 [Em]最真實的愛 [C]耶穌 耶穌我[D]的愛[G] [C] [G]"
   },
   {
-    title: "11. 唱哈利路亞",
-    originalKey: "Dm",
+    title: "11. 真神極愛世人",
+    originalKey: "G",
+    timeSignature: "3/4",
+    editor: "烏鴉Lin",
+    content: "[G]真神極愛世[E]人 賜下獨生[E7A]子 各各他山[A7D]拯救\n我脫離罪[D]惡 一日祂要再[D7G]來 那是何等榮[E7]耀\n[A]祂對我的愛奇[A7D7]妙 [G7]"
+  },
+  {
+    title: "12. 清心的人",
+    originalKey: "G",
     timeSignature: "4/4",
     editor: "烏鴉Lin",
-    content: "[Dm]讓我們[Gm]來向[Dm]主耶和華歌唱 向[Bb]拯救我們的磐[C]石\n[Asus4]揚聲來歡[A]呼 [Dm]我們要以[Gm]感謝 [Dm]進入祂面前\n[Bb]讓我們[C]唱詩歌頌[Dm]祂聖名 [Gm]唱哈利路亞 [Dm]唱\n[Bb]哈利路亞 [C]唱[Asus4]哈利路[A]亞 [Dm]唱哈利路[Gm]亞 [Dm]唱哈利路[Bb]亞 [C]\n[Dm]路亞 [Dm]來讓我們跪下[Dm]在祂面前 俯伏敬[Bb]\n[C]拜創造我[Asus4]們的主[A]宰 [Dm]祂是我[Gm]們的神 [Dm]我們\n[Bb]都屬於[C]祂 是祂的[Dm]子民 是祂 所帶領的羊 唱\n[Gm]哈利路[Dm]亞 唱[Bb]哈利路[C]亞 [Asus4]唱哈利路[A]亞 [Dm]唱哈利路[Gm]亞 [Dm]唱哈利路[Bb]亞 [C]\n[Dm]路亞 唱[Am]哈利路[Dm]亞"
+    content: "[G]清心的人 必[A]然看見祂的[C]神 手[Am]潔清心[D7]的人[G] [A]\n[C]就可站在祂聖[D7]所 [G]我要朝見我的[C]神 我[D7]要登[G]上\n耶和華的[C]山 我要攀登聖[D7]潔的手 我[G]要[E]朝見我的[C]神[D7] [G] [C] [D7] [G]"
+  },
+  {
+    title: "13. 再活一次",
+    originalKey: "G",
+    timeSignature: "4/4",
+    editor: "烏鴉Lin",
+    content: "1.[G]你可以再活一次 新再活一次 把舊的[Bm]歲月埋葬 讓新的生活開[Cmaj9]始 [G] [B7]\n2.[G]主耶穌神的兒子 為救罪人降世 祂為你[Bm]被釘十架 流寶血洗盡你[Cmaj9]心 [G] [B7]\n(副)若有人在耶[Em]穌 [C] [A7C#]裡 祂[Dsus4]就是[D7]新造的\n[G]人 舊事已過[F#dim7]都變[B7]成 [Am/E]新[Em]的 [C]舊事已過[A7]\n都變成[D7Bm]新[B7/D#]的 [Em]都變成[A7/C#]新[A7/C]的[C/D] [D7G] [G]"
+  },
+  {
+    title: "14. 主我高舉你的名",
+    originalKey: "G",
+    timeSignature: "4/4",
+    editor: "烏鴉Lin",
+    content: "[G]主我高舉[C]你的[D]名 [C] [D] [G]主我深愛[C]稱頌[D]你 [C] [D]\n[G]我甚欣慰[C]你愛[D]我 [C] [D] [G]我甚欣慰[C]你救贖[D]我 [C] [D] [G]\n[C]你從天上[D]降世間 [C]指引我[G]路 在世間[C]被釘十[D]架 我罪得[G]贖\n從十[Am7]架到墳[D]墓 從墳[Em7]墓升回[G/B]天[Am]主我高舉[D]你的[G]名 [C/D] [G/C] [G]"
+  },
+  {
+    title: "15. 主我愛你",
+    originalKey: "G",
+    timeSignature: "4/4",
+    editor: "烏鴉Lin",
+    content: "[G]主我愛[C/G]你 你已聽[G]見我呼[F#m7]求 惟有[Bb]你能醫[Em7]治\n我破碎[Dm7]心靈[G7] [C]主我愛[Cm6]你 因為你[C/G]先愛[G]我[Em7] [Am7]主你\n愛已深[G/D]深感[D]動我[G]"
+  },
+  {
+    title: "16. 我等候",
+    originalKey: "G",
+    timeSignature: "4/4",
+    editor: "烏鴉Lin",
+    content: "[C/G]我等[G]候 在你[C]面[Am7]前 [D/C]舉起雙[G]手 [C]來敬拜[G]你\n我等[Em7]候 [Am7] [G/B] [Am/C] [C/D] [D/A] [Am7] [D] [G] 主你已為我 成全\n[C] [Am7] [D/G] [G/G] [B/C] [G/D] [C/D] [D7] [G] 讚美耶[C]穌\n主你已為我 成全 [C] [Am7] [D/G] [G/G] [B/C] [G/D] [C/D] [D7] [G]"
   }
 ];
