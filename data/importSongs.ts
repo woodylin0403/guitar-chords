@@ -1,107 +1,86 @@
 export const importSongs = [
   {
-    title: "52. 神的聖靈",
+    title: "67. 我就是來讚美主",
     originalKey: "D",
     timeSignature: "4/4",
     editor: "烏鴉Lin",
-    content: "[D]當我們在此敬拜 [G]你榮耀已同在 [G]在[D]你聖潔[Bm]中俯[F#m]伏\n[Em]我高[A]舉雙手 [D]領受你[G]大愛 [D]你榮光[Bm]在我們[G]臉[D]上\n[Bm]噢神的[Em]靈求[A]提升[G]我 [A]真神的[F#m]靈求提[Bm]升我\n[Em]以你大[Em7]愛來充[A]滿我 神[D]甜蜜的[A7]靈\n[D]噢神的[G]靈求提[A]升我 [F#m]真神的[Bm]靈求提升我\n[Em]以你大[A]愛來充[Em7]滿我 [A7]神甜蜜的[D]靈[G][D]"
+    content: "[D]我就是來讚美[C#]主 [Bm]我就是來[A]讚美[Gmaj7]主[F#][Em][A]\n[D]我就是來讚[C#]美祂[C]聖名[B][Bb][A] 我就是來[A7]讚\n[G]美主[D]"
   },
   {
-    title: "53. 讚美祭",
+    title: "68. 前進",
     originalKey: "D",
     timeSignature: "4/4",
     editor: "烏鴉Lin",
-    content: "[D]我們獻上[Em7]讚美的祭 [F#m]來進[Bm7]入神的殿[G]中 我[D]們\n[D]獻上[Em7]讚美的祭 [F#m]來進[Bm7]入神的殿[G]中\n我[Em]們以感[A]恩[D]的[G]心 來向你[F#m]獻上感[Bm7]謝的祭\n[Em]我們以喜[A]樂[D]的[Em]心[D][D][G]的[F#m]心 [Bm7]來獻上[Em7]讚 [A7]美的[D]祭"
+    content: "[D]興起主大能的戰士 [Am7/D]興起屬神的[G/D]百姓 興[D]起發\n光照亮世界 [Am7/D]拯救黑暗的[G/D]時代 我們[F]要勇[C]往[F]\n[G]前進[D] 我們[G]要勇往[D]前進 時候[A/D]已到[D] 快去奉\n[A]主的名[G] [F#m7]快去[A/E] 神愛[A]世人[D] 快去[A]傳[D]\n[D]揚福音[A/D] [E/G#]快去[A] 時候[D/F#]已到[G] [Bm7/F#]看[Em7]\n[G/A]哪莊稼已成[A]熟 [G/A]快去[A] [D]"
   },
   {
-    title: "54. 不忘主愛",
+    title: "69. 只要想到你聖名",
     originalKey: "D",
+    timeSignature: "4/4",
+    editor: "烏鴉Lin",
+    content: "1.[G]只要想到[A]你聖[D]名 [G]就使我跪[A]在你面[D]\n2.只要想到你聖名 感受你慈愛的溫\n1.[Bm7]前 流淚[Em7]來 敬[A]拜你[D]主 當[Bm7]我[Em7]\n2.暖 擁抱我靠近你胸懷 當我\n1.[A]默想你聖[D]名 只要[G]想到[A]你聖[D]名\n2.默想你聖名 只要想到你聖名\n副 [Bm]耶穌 [F#m7]耶穌 [G]耶穌 [D]耶穌 [Bm]當我默[F#m7]想[G]你聖[A]名[G]\n我敬[A]拜[A7] [D]"
+  },
+  {
+    title: "70. 我永不再是",
+    originalKey: "D",
+    timeSignature: "4/4",
+    editor: "烏鴉Lin",
+    content: "[D]我永不再是[G/D]原來[G/B]的[A/C#]我[D] [D/F#]我不再[G]留戀[A]不再[Bm7]回頭[A/C#] [D]\n遵行[G/D]你的道跑[G/B]你[A/C#]的[D]路 [G]我永[A]不再是[Bm7]原來[A/C#]的[D]我 (反覆)\n[C]靈火[G/D]焚[A]靈雨[A/C#]浸[D] [C]活水湧[G/D]流不斷[A]在我[A/C#]心[D]\n[Bb]除去一切[C/Bb]黑暗[Am]煉盡了自我 [D/A]使我[Em7]心燃\n[F#m7]燒[G] 來榮耀[Asus]你[A]的[D]名\n在[G/D]高天之[G/B]上[A/C#]在深[D]海[D/F#]洋[G] 只要[A]你心所願[Bm7]主差遣[A/C#]我\n[D]願你[G/D]的榮耀[G/B]來[A/C#]充滿[D]我 [G]我永[A]不再是[Bm7]原來[A/C#]的[D]我\n\nI will never be the same again. I can never return. I've closed the door.\nI will walk the path. I'll run the race. And I will never be the same again.\n(Repeat)\nFall like fire. Soak like rain. Flow like mighty waters again and again.\nSweep away the darkness. Burn away the chaff. And let a flame burn. To glorify your name.\nThere are higher heights. There are deeper seas. Whatever you need to do.\nLord, do in me. The glory of God. Fills my life. And I will never be the same again."
+  },
+  {
+    title: "1. 你是榮耀君王",
+    originalKey: "E",
+    timeSignature: "4/4",
+    editor: "烏鴉Lin",
+    content: "[E]你是榮耀的[B7]君王 [E]你是[A]和平之[B7]主\n[G#7]你是天地萬有[C#m7]主宰 [A]惟有你聖潔[B7]公義\n[G#7]天使都向你[C#m7]跪下 [A]敬拜尊崇[B7]你\n[E]因為在你有永生之[A]道 [B7C#m7A]你是[B7]主耶穌[E]基督\n和散那歸於大衛[C#m]的子孫 [A]和散那歸於萬王之王[B7E]願\n[B7E]榮耀歸於[C#m7A]至高神 [B7]耶穌是彌賽[E]亞"
+  },
+  {
+    title: "2. 求充滿我",
+    originalKey: "E",
     timeSignature: "3/4",
     editor: "烏鴉Lin",
-    content: "1.[D]耶穌你愛我怎能忘 [A7]不時牢記心中 [G]你[D]\n2.怎敢忘你苦心憂愁 曠野禁食祈求 鬚\n3.記念你在客西馬尼 汗流如血下滴 橄\n4.我的罪多應受禍患 你卻替我擔當 用\n5.我今願棄人間樂趣 願棄血肉愛情 讓\n1.[A7]血流出還我罪債 [D]此恩何等深宏 [A][D]\n2.髮絲絲披滴夜露 為著我們的罪\n3.欖山中黑夜蓋地 無人儆醒同情\n4.你寶血作我贖價 使我今得釋放\n5.你恩愛充滿我心 使我永歸你名"
+    content: "[E]充滿[E7]我 主[A]聖靈 [E]解我[C#m]乾渴的[F#m7]靈[B7]\n[E]充滿[E7]我 主[A]聖靈 [F#m7B7]求使我得完[E]全"
   },
   {
-    title: "55. 如鹿切慕溪水",
-    originalKey: "D",
+    title: "3. 我們高舉雙手",
+    originalKey: "E",
     timeSignature: "4/4",
     editor: "烏鴉Lin",
-    content: "[D]神啊 [A]我的心[Bm]切慕你 [G]如鹿[Em]切慕溪水[A7][D][A7]\n[D]唯有[A]你是我[Bm]心所愛 [G]我渴[Em7]慕來敬拜[A7]你[D]\n[Bm]你是我的力[G]量盾牌 [D]我靈[G]單單降服於[Em]你[F#]\n[D]唯有[A]你是我[Bm]心所愛 [G]我渴[Em7]慕來敬[A7]拜[D]你"
+    content: "[E]我們高舉雙手來[E7]讚美主 [A]我們抬頭仰望讚美[E]主\n凡被造的萬物[B7]都來讚美[E]主 [A]萬王之王耶穌\n萬[E]主之主耶[B7]穌 賜我新生命讚美[E]主\n副 [E7]哈利路亞來讚美[A]主 哈利路亞來讚美[E]主\n賜我新生[B7]命 1.讚美[B7]主\n2.讚美[E]主"
   },
   {
-    title: "56. 全能的上帝",
-    originalKey: "D",
+    title: "4. 父神我敬拜你",
+    originalKey: "E",
     timeSignature: "4/4",
     editor: "烏鴉Lin",
-    content: "[D]祂名是全能 [F#m]全能的上帝 [Bm]主啊 [D]我敬拜你[A7]\n[D]一切祂都能 [F#m]萬事都可能 [Bm]宇宙[Em]萬物主宰[A7][D]\n[G]當我感到沒有[A7]能力 [F#m]沒有人我可尋覓[Bm]\n[G]你的愛使我堅固[Em] 你的名給我[G]歸宿 [E]耶和[A7]華[D]\n[F#m]全能[Bm]主 [Em]必[F#m]然[G]成[Em]就[F#m]必[G]然成[G7]就這[D]事"
+    content: "[E]父[F#m]神我[B7E]敬拜你 [A]我一[B7E]生交託你\n[E]我[F#m]真 愛[B7E]你 (2)耶穌 (3)聖靈"
   },
   {
-    title: "57. 忠心順服歌",
-    originalKey: "D",
+    title: "5. 祂已被尊崇",
+    originalKey: "E",
+    timeSignature: "6/8",
+    editor: "烏鴉Lin",
+    content: "[E]祂已被尊崇 祂名稱為至高君[A]王\n我要[A]讚美[B7]祂 [E]祂被尊崇 祂作王到永[E]遠\n[A]來讚美祂[B7A]聖名 [B7C#m]祂[F#m]已作[C#m]王\n祂真[B7]理永[E]遠掌[C#m]權 [A]天[E]上地[F#m]下\n歡呼[C#m]頌揚[B7]祂聖[E]名 [G#m]祂已[A]被尊[E]崇\n[F#m]祂名[D]稱為至[B7]高君[E]王"
+  },
+  {
+    title: "6. 三一頌",
+    originalKey: "E",
     timeSignature: "4/4",
     editor: "烏鴉Lin",
-    content: "1.[D]你無論[A]去那裡 [Bm]都要順服 [F#m]你無論[G]\n2.我無論去那裡 都要順服 我無論\n1.[D]在那裡[E7]都要忠心 [A]主你[D]的上帝 [A]祂[Bm]\n2.在那裡都要忠心 主我的上帝 祂\n1.[F#m]是君王 [G]我要永[D]永遠遠 [A7]來讚美[D]主\n2.是君王 我要永永遠遠 來讚美主"
+    content: "[E]普天之下[G#m]萬國萬[A]民 [E]齊聲讚美[A]父子[E]聖[B7]靈\n[E]三位一體[G#m]同榮同[A]尊 [E]萬有之源[A]萬福[E]之[B7]本[E]"
   },
   {
-    title: "58. 天父 阿爸天父",
-    originalKey: "D",
-    timeSignature: "4/4",
+    title: "7. 耶穌降世為你",
+    originalKey: "E",
+    timeSignature: "3/4",
     editor: "烏鴉Lin",
-    content: "[D]天父阿爸天[A]父 我真[Bm]愛你 我感[F#m]謝你 用我[G]\n[D]全心來服事[Em]你 求 [A]你悅納[D]我 [A]天父阿爸天\n[Bm]父 我親近[F#m]你 求你降[G]臨 用[D]我一生來服事\n[A7]你 全心服事[E]你"
+    content: "[E]耶穌降世為[A]你 [B7]耶穌降世為[G#m]我 [C#m]耶\n穌降世為[A]你為[B7]我 我[G#m]願為[C#m]祂而[A]活[B7][E]"
   },
   {
-    title: "59. 開我的眼主",
-    originalKey: "D",
-    timeSignature: "12/8",
+    title: "8. 神啊求你鑒察",
+    originalKey: "E",
+    timeSignature: "9/8",
     editor: "烏鴉Lin",
-    content: "[D]開我的眼主 [G]我要[A7]看見耶穌 [D]我要觸[Bm]摸\n[Em]到祂 [A7]我要向祂傾訴 [D]開我[G]耳朵主 [A7]教\n[D]我聽你聲音 [Bm]開我的眼[Em]主 我[A]要看見耶[D]穌"
-  },
-  {
-    title: "60. 主啊!你是盾牌環繞我",
-    originalKey: "D",
-    timeSignature: "4/4",
-    editor: "烏鴉Lin",
-    content: "[D]主啊 [A]你是盾牌環[C]繞我 [D]是我榮耀 [Bm]你\n[Em]使我抬[A]起頭來 [D]\n副 哈利路亞 [C]哈利[G][C]路亞 [Em]哈利路[A]亞 你使[D]我抬起頭來"
-  },
-  {
-    title: "61. 差遣我",
-    originalKey: "D",
-    timeSignature: "4/4",
-    editor: "烏鴉Lin",
-    content: "[D]懇求[A]主 [Bm]差遣[A]我 [D]差遣[Em7]我 [G]懇求[D]主[A][G][D][A] [Bm]\n[Am7]差遣[D]我 [Em7]差遣[G]我 [D]Fine\n[A]副 開我心[Bm7]眼 [A]使我能[Bm7]見 [E]千[F#m7]千萬[E]萬的同[F#m7]胞\n[G]等候福[D]音 等得[Em7]救 [G]求[D]開通我[A]耳 [A]使我聽[Bm7]見 [A][Bm7]\n[E]遙遠呼[F#m7]聲已傳[E]來 周[F#m7]圍四方都說 請來\n[G]這裡 幫助[D]我 是否[Em7]願意向他[A]們見證\n[A]是否[Em]願意前往 [A]是否[Bm7]願意去傳\n[Em]是否[G]願意前[A]往 是否願意去傳"
-  },
-  {
-    title: "62. 看祂榮耀",
-    originalKey: "D",
-    timeSignature: "4/4",
-    editor: "烏鴉Lin",
-    content: "[D]看祂榮耀 [F#m7]看祂榮[Gm7]耀 [F#m7]看祂榮[Bm7]耀降[Gm7]臨 [F#m7] [Bm7]\n[Em7]讚美耶[D]穌 祂已[F#m7]掌權 [Gm7]看祂[F#m]榮耀[Em7]降臨 [D/A] [A/G]\n[D]看祂榮[Em7]耀 [Gm]看祂[D/A]榮耀降臨[Em7] [A] [D]"
-  },
-  {
-    title: "63. 這裡有神的同在",
-    originalKey: "D",
-    timeSignature: "4/4",
-    editor: "烏鴉Lin",
-    content: "[D]這裡有神的同在 [C#m]喔喔 [Bm]這裡有神的言[G]\n[A]語 [G]這裡有聖靈的恩[F#m]膏 [Bm]這裡[Em]是另外\n[A]一個天[D]地 看哪[C#m]弟兄和睦同[Bm]居 何等[G]\n[F#m]的善 何等[G]的美 [F#m]如同那黑門的甘[G]露 [Bm]\n[G]降在錫安山[Em]地 愛在[A]這裡 和平在[D]這裡 [Bm]\n[G]光明在[F#m]這裡 生命在[Bm]這裡 [G]耶和華所[A]\n[F#m]命定的[D]福 都在這[A/G]裡 [D/F#m]你若想[Em]要得\n[D]到祂 [A]在耶穌基[Bm]督裡"
-  },
-  {
-    title: "64. 主的喜樂是我的力量",
-    originalKey: "D",
-    timeSignature: "4/4",
-    editor: "烏鴉Lin",
-    content: "1.[D]耶和華的喜樂 是我們的力量 [A7]耶和華的\n2.祂給我活水喝 我永遠不再渴 祂給我活\n3.祂醫治破碎心 使我不再憂傷 祂醫治破\n1.[D]喜樂 是我們的力量 耶和華的喜樂 是\n2.水喝 我永遠不再渴 祂給我活水喝 我\n3.碎心 使我不再憂傷 祂醫治破碎心 使\n1.[G]我們的力量 [D/A]因主的喜樂是我的力[A7]量 [D]\n2.永遠不再渴 因主的喜樂是我的力量\n3.我不再憂傷 因主的喜樂是我的力量"
-  },
-  {
-    title: "65. 我要歌頌",
-    originalKey: "D",
-    timeSignature: "4/4",
-    editor: "烏鴉Lin",
-    content: "[D]我要歌頌我的主 [A]在一生[G]中 我還有[D]氣息就[Em]\n[A]要讚美我的神 [D]我默想[Em7]主我[F#m]的[A/E]神 [D]\n[A7]越甘甜 [G]靠主喜樂 [D]我要倚[Em7]靠主喜樂[A7] [D]\n[D7]我的心[G]哪要稱頌讚美我主 [A]我的[D]心[C#]哪[Bm] [A] [G]\n[A]要稱頌讚美我主 [D]我的心[G]哪要稱[D7]頌讚\n[D]美我[C#]主 [Bm] [A] [G]我的心[A]哪要稱頌讚美我[A7]主[D]"
-  },
-  {
-    title: "66. 主 我們再來你面前",
-    originalKey: "D",
-    timeSignature: "4/4",
-    editor: "烏鴉Lin",
-    content: "[A7]主 我們[D]再一次來到[D]你的面前 [Em7]主我[A7]\n[Em7]們再一次來讚[A7]美尊榮你聖[D]名 願你[C#]榮[Bm] [D7] [G]\n[A7]耀滿同在 [F#m7]你大愛降下[B7]來 我們[Em7]舉雙手\n[A]全心來敬拜主 [D]我神"
+    content: "[E]神啊 求你鑒[A]察我 知道[B7]我的心[E]思\n試煉[B7]我 知道我的[E]意念 看在[A]我裡面\n有什麼[E]惡行沒有[A] 引[E]導我走永生[B7]的道[E]路"
   }
 ];
