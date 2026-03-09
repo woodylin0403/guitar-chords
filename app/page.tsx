@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { initialSongList, Song } from '@/data/songs';
-import { importSongs } from '@/data/importSongs'; // 🌟 引入剛剛建立的資料包
+import { importSongs } from '@/data/importSongs';
 import { collection, getDocs, doc, setDoc } from 'firebase/firestore';
 import { db, auth, googleProvider } from '@/lib/firebase';
 import { signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
@@ -28,13 +28,27 @@ const MINOR_KEYS = [
   { note: 'Bm', color: 'bg-pink-100 text-pink-900' },
 ];
 
+// 🌟 時間翻譯機：從歌曲 ID 萃取出建立日期
+function getUploadDate(id: string) {
+  const parts = id.split('-');
+  if (parts.length >= 2) {
+    const timestamp = parseInt(parts[1]);
+    // 檢查是否為合法的時間戳
+    if (!isNaN(timestamp) && timestamp > 1600000000000) {
+      const d = new Date(timestamp);
+      return `${d.getFullYear()}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}`;
+    }
+  }
+  return '早期建檔'; // 如果是手動亂編 ID 的歌，就顯示這個
+}
+
 export default function Home() {
   const [songs, setSongs] = useState<Song[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
-  const [isImporting, setIsImporting] = useState(false); // 匯入狀態
+  const [isImporting, setIsImporting] = useState(false);
   
   const router = useRouter();
 
@@ -56,7 +70,6 @@ export default function Home() {
       } else {
         const songsData: Song[] = [];
         querySnapshot.forEach((doc) => songsData.push(doc.data() as Song));
-        // 按標題排序，讓數字開頭的乖乖排好
         songsData.sort((a, b) => a.title.localeCompare(b.title, 'zh-Hant', { numeric: true }));
         setSongs(songsData);
       }
@@ -94,7 +107,6 @@ export default function Home() {
     router.push(`/song/${newId}`);
   };
 
-  // 🌟 魔法按鈕功能：一鍵批次匯入
   const handleBatchImport = async () => {
     if (!user) { alert("請先登入才能匯入喔！"); return; }
     if (!confirm("準備好施展魔法，匯入這批詩歌了嗎？\n請確認你已經在 importSongs.ts 放好資料了！")) return;
@@ -118,7 +130,7 @@ export default function Home() {
         count++;
       }
       alert(`🎉 太神啦！成功匯入了 ${count} 首詩歌！`);
-      await fetchSongs(); // 重新抓取資料更新畫面
+      await fetchSongs(); 
     } catch (error) {
       console.error(error);
       alert("匯入失敗，請看終端機錯誤訊息！");
@@ -238,7 +250,6 @@ export default function Home() {
           </h2>
           
           <div className="flex gap-2 w-full sm:w-auto">
-            {/* 🌟 只有站長登入才看得到的隱藏魔法按鈕 */}
             {user && (
               <button 
                 onClick={handleBatchImport} 
@@ -284,12 +295,18 @@ export default function Home() {
                       </div>
                     </div>
                     
+                    {/* 🌟 卡片底部：新增了小小的日期顯示 */}
                     <div className="flex justify-between items-center mt-auto pt-2">
-                      {song.editor && (
-                        <span className="inline-block px-2 py-1 md:px-3 md:py-1.5 bg-green-50 text-green-800 text-[10px] md:text-xs font-bold rounded-lg border border-green-100 z-10">
-                          ✏️ {song.editor}
+                      <div className="flex flex-wrap items-center gap-2 z-10">
+                        {song.editor && (
+                          <span className="inline-block px-2 py-1 md:px-3 md:py-1.5 bg-green-50 text-green-800 text-[10px] md:text-xs font-bold rounded-lg border border-green-100">
+                            ✏️ {song.editor}
+                          </span>
+                        )}
+                        <span className="text-[10px] md:text-xs font-bold text-gray-400 tracking-wide">
+                          📅 {getUploadDate(song.id)}
                         </span>
-                      )}
+                      </div>
                       <span className="text-sky-500 group-hover:text-gray-950 text-3xl md:text-4xl font-black transition-transform ml-auto z-10">→</span>
                     </div>
                     
