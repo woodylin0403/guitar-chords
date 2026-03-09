@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Song } from '@/data/songs';
@@ -15,40 +15,79 @@ const FLAT_NOTES  = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb',
 const FLAT_KEYS = ['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Dm', 'Gm', 'Cm', 'Fm', 'Bbm', 'Ebm']; 
 const TIME_SIGNATURES = ['4/4', '3/4', '2/4', '6/8', '9/8', '12/8', '2/2', '6/4'];
 
-function getYouTubeId(url: string) {
-  if (!url) return null;
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-  const match = url.match(regExp);
-  return (match && match[2].length === 11) ? match[2] : null;
+// 🎸 常見吉他和弦指法資料庫 (0=空弦, x=悶音, 數字=格子)
+const CHORD_FINGERINGS: Record<string, (number | 'x')[]> = {
+  'C': ['x', 3, 2, 0, 1, 0], 'C7': ['x', 3, 2, 3, 1, 0], 'Cm': ['x', 3, 5, 5, 4, 3],
+  'D': ['x', 'x', 0, 2, 3, 2], 'D7': ['x', 'x', 0, 2, 1, 2], 'Dm': ['x', 'x', 0, 2, 3, 1], 'Dm7': ['x', 'x', 0, 2, 1, 1],
+  'E': [0, 2, 2, 1, 0, 0], 'E7': [0, 2, 0, 1, 0, 0], 'Em': [0, 2, 2, 0, 0, 0], 'Em7': [0, 2, 0, 0, 0, 0],
+  'F': [1, 3, 3, 2, 1, 1], 'Fm': [1, 3, 3, 1, 1, 1], 'F#m': [2, 4, 4, 2, 2, 2],
+  'G': [3, 2, 0, 0, 0, 3], 'G7': [3, 2, 0, 0, 0, 1], 'Gm': [3, 5, 5, 3, 3, 3],
+  'A': ['x', 0, 2, 2, 2, 0], 'A7': ['x', 0, 2, 0, 2, 0], 'Am': ['x', 0, 2, 2, 1, 0], 'Am7': ['x', 0, 2, 0, 1, 0],
+  'B': ['x', 2, 4, 4, 4, 2], 'B7': ['x', 2, 1, 2, 0, 2], 'Bm': ['x', 2, 4, 4, 3, 2],
+  'Bb': ['x', 1, 3, 3, 3, 1], 'Bbm': ['x', 1, 3, 3, 2, 1]
+};
+
+// 繪製單一指法圖的元件
+function ChordDiagram({ chordName }: { chordName: string }) {
+  // 處理複合和弦，只抓取斜線前面的主和弦來畫圖 (例如 C/E 只畫 C)
+  const baseChordName = chordName.split('/')[0];
+  const frets = CHORD_FINGERINGS[baseChordName];
+  
+  if (!frets) return null; // 如果資料庫沒有這個和弦，就不畫圖
+
+  // 計算是否需要標示起始把位 (如果按的格子超過第4格)
+  const maxFret = Math.max(...frets.filter(f => typeof f === 'number') as number[]);
+  const startFret = maxFret > 4 ? maxFret - 2 : 1;
+
+  return (
+    <div className="flex flex-col items-center mr-4 mb-4">
+      <span className="font-bold text-stone-700 mb-1">{chordName}</span>
+      <svg width="60" height="70" viewBox="0 0 60 70" className="text-stone-400">
+        {/* 把位數字提示 */}
+        {startFret > 1 && <text x="-5" y="15" fontSize="10" fill="currentColor">{startFret}fr</text>}
+        
+        {/* 畫 6 根弦 */}
+        {[0, 10, 20, 30, 40, 50].map(x => ( <line key={`s${x}`} x1={x+5} y1="10" x2={x+5} y2="60" stroke="currentColor" strokeWidth="1" /> ))}
+        {/* 畫 5 條琴桁 (產生4格) */}
+        {[10, 22.5, 35, 47.5, 60].map((y, i) => ( <line key={`f${y}`} x1="5" y1={y} x2="55" y2={y} stroke="currentColor" strokeWidth={i === 0 && startFret === 1 ? "3" : "1"} /> ))}
+        
+        {/* 畫點、空弦(O)、悶音(X) */}
+        {frets.map((fret, stringIdx) => {
+          const x = stringIdx * 10 + 5;
+          if (fret === 'x') {
+            return <text key={`m${stringIdx}`} x={x-3} y="8" fontSize="10" fill="currentColor">x</text>;
+          }
+          if (fret === 0) {
+            return <circle key={`o${stringIdx}`} cx={x} cy="5" r="3" fill="none" stroke="currentColor" strokeWidth="1" />;
+          }
+          // 計算黑點的 Y 座標
+          const relativeFret = (fret as number) - startFret + 1;
+          const y = 10 + (relativeFret - 1) * 12.5 + 6.25;
+          return <circle key={`d${stringIdx}`} cx={x} cy={y} r="4" fill="#57534e" />;
+        })}
+      </svg>
+    </div>
+  );
 }
-function getNoteIndex(note: string) {
-  const idx = SHARP_NOTES.indexOf(note);
-  return idx !== -1 ? idx : FLAT_NOTES.indexOf(note);
-}
-function isChord(str: string) {
-  if (!str || str.trim() === '') return false;
-  const regex = /^[CDEFGAB][#b]?(m|min|maj|M|dim|aug|sus|add|#|b|\d)*(?:\/[CDEFGAB][#b]?)?$/;
-  return regex.test(str);
-}
+
+function getNoteIndex(note: string) { return SHARP_NOTES.indexOf(note) !== -1 ? SHARP_NOTES.indexOf(note) : FLAT_NOTES.indexOf(note); }
+function isChord(str: string) { return /^[CDEFGAB][#b]?(m|min|maj|M|dim|aug|sus|add|#|b|\d)*(?:\/[CDEFGAB][#b]?)?$/.test(str) && str !== '|'; }
 function getRootNote(key: string) { return key.replace('m', ''); }
+
 function transposeChord(chord: string, steps: number, targetKey: string) {
-  if (!chord) return chord;
+  if (!chord || chord === '|') return chord;
   const useFlats = FLAT_KEYS.includes(targetKey);
   const outputScale = useFlats ? FLAT_NOTES : SHARP_NOTES;
-  const parts = chord.split('/');
-  const transposeNote = (note: string) => {
+  return chord.split('/').map(note => {
     const match = note.match(/^([CDEFGAB][#b]?)(.*)$/);
     if (!match) return note; 
-    const baseNote = match[1];
-    const modifier = match[2];
-    const currentIndex = getNoteIndex(baseNote);
+    const currentIndex = getNoteIndex(match[1]);
     if (currentIndex === -1) return note;
     let newIndex = (currentIndex + steps) % 12;
     if (newIndex < 0) newIndex += 12;
-    if (getRootNote(targetKey) === 'C' && newIndex === 10) return 'Bb' + modifier;
-    return outputScale[newIndex] + modifier;
-  };
-  return parts.map(transposeNote).join('/');
+    if (getRootNote(targetKey) === 'C' && newIndex === 10) return 'Bb' + match[2];
+    return outputScale[newIndex] + match[2];
+  }).join('/');
 }
 
 export default function SongPage() {
@@ -68,137 +107,79 @@ export default function SongPage() {
   const [editTimeSignature, setEditTimeSignature] = useState("4/4");
   const [editEditor, setEditEditor] = useState("烏鴉Lin"); 
   const [editContent, setEditContent] = useState("");
-  const [editYoutubeUrl, setEditYoutubeUrl] = useState("");
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
+    const unsubscribe = onAuthStateChanged(auth, setUser);
     return () => unsubscribe();
   }, []);
 
   useEffect(() => {
-    // 🌟 如果發現網址是 /song/new，就進入「虛擬草稿模式」
     if (songId === 'new') {
-      const newDraft: Song = {
-        id: 'new',
-        title: "",
-        originalKey: "C",
-        timeSignature: "4/4",
-        editor: user?.displayName || "烏鴉Lin",
-        content: ""
-      };
-      setSong(newDraft);
-      setEditTitle("");
-      setEditKey("C");
-      setEditTimeSignature("4/4");
-      setEditEditor(user?.displayName || "烏鴉Lin");
-      setEditContent("");
-      setIsEditing(true); // 直接展開編輯畫面
-      setIsLoading(false);
-      return; // 結束，不去資料庫抓資料
+      setSong({ id: 'new', title: "", originalKey: "C", timeSignature: "4/4", editor: user?.displayName || "烏鴉Lin", content: "" });
+      setEditKey("C"); setEditTimeSignature("4/4"); setEditEditor(user?.displayName || "烏鴉Lin"); setIsEditing(true); setIsLoading(false);
+      return;
     }
-
-    // 如果不是 new，就去雲端抓歌
     const fetchSong = async () => {
       try {
-        const docRef = doc(db, "songs", songId);
-        const docSnap = await getDoc(docRef);
+        const docSnap = await getDoc(doc(db, "songs", songId));
         if (docSnap.exists()) {
           const foundSong = docSnap.data() as Song;
-          setSong(foundSong);
-          setTargetKey(foundSong.originalKey);
-          setEditTitle(foundSong.title);
-          setEditKey(foundSong.originalKey);
-          setEditTimeSignature(foundSong.timeSignature || "4/4");
-          setEditEditor(foundSong.editor || "烏鴉Lin"); 
-          setEditContent(foundSong.content);
-          setEditYoutubeUrl(foundSong.youtubeUrl || "");
-        } else {
-          alert("找不到這首詩歌！");
-          router.push('/');
-        }
-      } catch (error) {
-        console.error("讀取失敗:", error);
-      } finally {
-        setIsLoading(false);
-      }
+          setSong(foundSong); setTargetKey(foundSong.originalKey); setEditTitle(foundSong.title); setEditKey(foundSong.originalKey); setEditTimeSignature(foundSong.timeSignature || "4/4"); setEditEditor(foundSong.editor || "烏鴉Lin"); setEditContent(foundSong.content);
+        } else { alert("找不到這首詩歌！"); router.push('/'); }
+      } catch (error) { console.error("讀取失敗:", error); } finally { setIsLoading(false); }
     };
     fetchSong();
   }, [songId, router, user]);
 
   const handleSave = async () => {
     if (!song) return;
-    
-    // 🌟 如果是新歌，在存檔的這一刻才正式發給它一個 ID
-    const isNewSong = songId === 'new';
-    const finalId = isNewSong ? `song-${Date.now()}` : song.id;
-
-    // 防止沒打歌名
-    const safeTitle = editTitle.trim() === "" ? "未命名新歌" : editTitle;
-
-    const updatedSong: Song = { 
-      ...song, 
-      id: finalId,
-      title: safeTitle, 
-      originalKey: editKey, 
-      timeSignature: editTimeSignature,
-      editor: editEditor, 
-      content: editContent,
-      youtubeUrl: editYoutubeUrl,
-      ownerId: song.ownerId || user?.uid,
-      ownerEmail: song.ownerEmail || user?.email || ""
-    };
-
+    const finalId = songId === 'new' ? `song-${Date.now()}` : song.id;
+    const updatedSong: Song = { ...song, id: finalId, title: editTitle.trim() === "" ? "未命名新歌" : editTitle, originalKey: editKey, timeSignature: editTimeSignature, editor: editEditor, content: editContent, ownerId: song.ownerId || user?.uid, ownerEmail: song.ownerEmail || user?.email || "" };
     try {
       await setDoc(doc(db, "songs", finalId), updatedSong);
-      alert("儲存成功！");
-      
-      if (isNewSong) {
-        // 如果是剛建好的新歌，把網址換成真實的 ID (這樣重新整理才不會壞掉)
-        router.replace(`/song/${finalId}`);
-      } else {
-        setSong(updatedSong);
-        setTargetKey(editKey);
-        setIsEditing(false);
-      }
-    } catch (error) {
-      console.error("儲存失敗:", error);
-      alert("儲存失敗，請重試！");
-    }
+      if (songId === 'new') router.replace(`/song/${finalId}`);
+      else { setSong(updatedSong); setTargetKey(editKey); setIsEditing(false); }
+    } catch (error) { alert("儲存失敗，請重試！"); }
   };
 
   const handleDelete = async () => {
-    if (songId === 'new') {
-      router.push('/'); // 如果是草稿，放棄編輯直接回首頁
-      return;
-    }
-    if (confirm("確定要刪除這首歌嗎？刪除後全世界都看不到囉！")) {
-      try {
-        await deleteDoc(doc(db, "songs", songId));
-        router.push('/');
-      } catch (error) {
-        console.error("刪除失敗:", error);
-        alert("刪除失敗，請重試！");
-      }
-    }
+    if (songId === 'new') return router.push('/');
+    if (confirm("確定要刪除這首歌嗎？")) { await deleteDoc(doc(db, "songs", songId)); router.push('/'); }
   };
 
-  if (isLoading) return <div className="p-8 text-center text-xl font-bold text-gray-500">雲端讀譜中...</div>;
+  // 🌟 自動抓取這首歌所有用到的和弦 (轉調後)
+  const uniqueChords = useMemo(() => {
+    if (!song || isEditing) return [];
+    const steps = getNoteIndex(getRootNote(targetKey)) - getNoteIndex(getRootNote(song.originalKey));
+    const chords = new Set<string>();
+    
+    // 抓取 [和弦] 標籤裡的
+    const matches = song.content.match(/\[(.*?)\]/g);
+    if (matches) {
+      matches.forEach(m => {
+        const chord = m.slice(1, -1);
+        if (isChord(chord)) chords.add(transposeChord(chord, steps, targetKey));
+      });
+    }
+    // 抓取傳統排版空白鍵分隔的
+    song.content.split(/(\s+|[|()[\]{}<>,.:;~\-｜（）【】《》，。：；～]+)/).forEach(token => {
+      if (isChord(token)) chords.add(transposeChord(token, steps, targetKey));
+    });
+    
+    return Array.from(chords).sort();
+  }, [song, targetKey, isEditing]);
+
+  if (isLoading) return <div className="min-h-screen flex items-center justify-center text-xl font-medium text-stone-400 bg-[#FDFBF7] tracking-widest">載入中...</div>;
   if (!song) return null;
 
-  const originalIndex = getNoteIndex(getRootNote(song.originalKey));
-  const targetIndex = getNoteIndex(getRootNote(targetKey));
-  const steps = targetIndex - originalIndex;
+  const steps = getNoteIndex(getRootNote(targetKey)) - getNoteIndex(getRootNote(song.originalKey));
 
   const renderPreview = (text: string) => {
-    const lines = text.split('\n');
     return (
       <div className="overflow-x-auto pb-6">
-        <div className="w-max min-w-full font-mono leading-relaxed text-gray-800 tracking-wide transition-all duration-200" style={{ fontSize: `${fontSize}px` }}>
-          {lines.map((line, lineIndex) => {
-            const hasBrackets = /\[.*?\]/.test(line);
-            if (hasBrackets) {
+        <div className="w-max min-w-full font-mono leading-relaxed text-stone-800 tracking-wide transition-all duration-200" style={{ fontSize: `${fontSize}px` }}>
+          {text.split('\n').map((line, lineIndex) => {
+            if (/\[.*?\]/.test(line)) {
               const parts = line.split(/\[(.*?)\]/);
               const elements = [];
               for (let i = 0; i < parts.length; i += 2) {
@@ -207,13 +188,11 @@ export default function SongPage() {
                 if (!chord && !lyric) continue;
                 const isLyricEmpty = lyric === '';
                 elements.push(
-                  <div key={i} className={`flex flex-col justify-end ${isLyricEmpty ? 'mr-4' : ''}`}>
-                    <span className="text-sky-500 font-bold pr-1" style={{ fontSize: '0.85em', minHeight: '1.25em' }}>
+                  <div key={i} className={`flex flex-col justify-end ${isLyricEmpty ? 'mr-3' : ''}`}>
+                    <span className={`font-bold pr-1 ${chord === '|' ? 'text-stone-300' : 'text-stone-600'}`} style={{ fontSize: '0.85em', minHeight: '1.25em' }}>
                       {chord ? transposeChord(chord, steps, targetKey) : ''}
                     </span>
-                    <span className="whitespace-pre" style={{ minHeight: '1.25em' }}>
-                      {isLyricEmpty ? ' ' : lyric}
-                    </span>
+                    <span className="whitespace-pre" style={{ minHeight: '1.25em' }}>{isLyricEmpty ? ' ' : lyric}</span>
                   </div>
                 );
               }
@@ -222,12 +201,11 @@ export default function SongPage() {
               const tokens = line.split(/(\s+|[|()[\]{}<>,.:;~\-｜（）【】《》，。：；～]+)/);
               return (
                 <div key={lineIndex} className="whitespace-pre mb-1" style={{ minHeight: '1.5em' }}>
-                  {tokens.filter(Boolean).map((token, i) => {
-                    if (isChord(token)) {
-                      return <span key={i} className="text-sky-500 font-bold">{transposeChord(token, steps, targetKey)}</span>;
-                    }
-                    return <span key={i}>{token}</span>;
-                  })}
+                  {tokens.filter(Boolean).map((token, i) => (
+                    <span key={i} className={isChord(token) ? "text-stone-600 font-bold" : (token==='|'||token==='｜' ? "text-stone-300" : "")}>
+                      {isChord(token) ? transposeChord(token, steps, targetKey) : token}
+                    </span>
+                  ))}
                 </div>
               );
             }
@@ -240,122 +218,103 @@ export default function SongPage() {
   const canEdit = !song.ownerId || (user && user.uid === song.ownerId);
 
   return (
-    <main className="min-h-screen p-4 md:p-8 max-w-5xl mx-auto bg-gray-50 text-gray-800 font-sans">
-      <div className="mb-6 flex justify-between items-center bg-white p-4 rounded-2xl shadow-[4px_4px_0_rgba(0,0,0,1)] border-2 border-gray-950">
-        <Link href="/" className="text-gray-950 hover:text-sky-500 font-black flex items-center gap-2 transition-colors">← 回到歌單目錄</Link>
-        {isEditing && (
-          <button onClick={handleDelete} className="text-red-500 hover:text-red-700 font-bold text-sm bg-red-50 px-3 py-1 rounded-full border border-red-200">
-            {songId === 'new' ? '放棄編輯' : '🗑️ 刪除此歌曲'}
-          </button>
-        )}
-      </div>
+    <main className="min-h-screen bg-[#FDFBF7] text-stone-800 font-sans selection:bg-stone-200 pb-20">
+      
+      {/* 頂部導覽 */}
+      <nav className="max-w-5xl mx-auto px-6 py-6 flex justify-between items-center border-b border-stone-200 mb-8">
+        <Link href="/" className="text-stone-500 hover:text-stone-800 text-sm font-medium tracking-widest transition-colors">← 返回目錄</Link>
+        {isEditing && <button onClick={handleDelete} className="text-red-400 hover:text-red-600 text-sm font-medium transition-colors">{songId === 'new' ? '放棄編輯' : '刪除樂譜'}</button>}
+      </nav>
 
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 bg-white p-6 md:p-8 rounded-3xl shadow-[6px_6px_0_rgba(0,0,0,1)] border-4 border-gray-950">
-        <div>
-          <h1 className="text-3xl md:text-5xl font-black text-gray-950 mb-3 tracking-tight">
-            {songId === 'new' ? '✨ 新增詩歌' : song.title}
-          </h1>
-          <div className="flex items-center gap-3">
-            {song.editor && <span className="inline-block px-3 py-1 bg-gray-950 text-white rounded-lg text-sm font-bold">編輯者：{song.editor}</span>}
-            {!isEditing && song.timeSignature && (
-              <span className="inline-block px-3 py-1 bg-white text-gray-950 border-2 border-gray-950 rounded-lg text-sm font-black shadow-[2px_2px_0_rgba(0,0,0,1)]">
-                ⏱ {song.timeSignature}
-              </span>
-            )}
+      <div className="max-w-4xl mx-auto px-6">
+        {/* 標題與操作區 */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-6">
+          <div>
+            <h1 className="text-3xl md:text-5xl font-light text-stone-800 mb-4 tracking-wide">{songId === 'new' ? '新增詩歌' : song.title}</h1>
+            <div className="flex items-center gap-3 text-sm text-stone-500">
+              {song.editor && <span className="border border-stone-200 px-3 py-1 rounded-full bg-white shadow-sm">編譜：{song.editor}</span>}
+              {!isEditing && song.timeSignature && <span className="border border-stone-200 px-3 py-1 rounded-full bg-white shadow-sm">拍號：{song.timeSignature}</span>}
+            </div>
           </div>
-        </div>
-        
-        {canEdit ? (
-          isEditing ? (
-            <button onClick={handleSave} className="w-full md:w-auto px-6 py-4 rounded-2xl font-black text-gray-950 bg-green-400 hover:bg-green-500 border-2 border-gray-950 shadow-[4px_4px_0_rgba(0,0,0,1)] transform hover:-translate-y-1 active:translate-y-0 transition-all text-lg flex items-center justify-center gap-2">
-              💾 儲存並上傳雲端
-            </button>
+          
+          {canEdit ? (
+            isEditing ? (
+              <button onClick={handleSave} className="px-6 py-3 bg-stone-800 hover:bg-stone-900 text-white rounded-full text-sm font-medium transition-all shadow-md">儲存樂譜</button>
+            ) : (
+              <button onClick={() => setIsEditing(true)} className="px-6 py-3 bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 rounded-full text-sm font-medium transition-all shadow-sm">編輯樂譜</button>
+            )
           ) : (
-            <button onClick={() => setIsEditing(true)} className="w-full md:w-auto px-6 py-4 rounded-2xl font-black text-gray-950 bg-yellow-400 hover:bg-yellow-500 border-2 border-gray-950 shadow-[4px_4px_0_rgba(0,0,0,1)] transform hover:-translate-y-1 active:translate-y-0 transition-all text-lg flex items-center justify-center gap-2">
-              ✏️ 編輯樂譜
-            </button>
-          )
-        ) : (
-          <div className="px-5 py-3 bg-gray-100 text-gray-500 rounded-xl text-sm font-bold border-2 border-gray-300">
-            🔒 僅建立者可編輯
-          </div>
-        )}
-      </div>
+            <span className="text-stone-400 text-sm">僅建立者可編輯</span>
+          )}
+        </div>
 
-      {!isEditing && (
-        <div className="mb-8 flex flex-wrap items-center justify-start gap-4 md:gap-6 p-4 md:p-6 bg-white rounded-3xl border-4 border-gray-950 shadow-[4px_4px_0_rgba(0,0,0,1)]">
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            <label className="font-black text-gray-950 text-lg">選擇調性：</label>
-            <select value={targetKey} onChange={(e) => setTargetKey(e.target.value)} className="flex-1 md:flex-none border-2 border-gray-950 rounded-xl px-4 py-2 text-xl font-bold bg-gray-50 focus:ring-4 focus:ring-sky-400 focus:outline-none transition-all cursor-pointer">
-              {ALL_KEYS.map((note) => <option key={note} value={note}>{note} 調</option>)}
-            </select>
-          </div>
-          <div className="w-full md:w-px h-px md:h-10 bg-gray-200"></div>
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            <label className="font-black text-gray-950 text-lg">字體大小：</label>
-            <div className="flex-1 md:flex-none flex items-center bg-gray-50 border-2 border-gray-950 rounded-xl overflow-hidden">
-              <button onClick={() => setFontSize(prev => Math.max(12, prev - 2))} className="px-5 py-2 hover:bg-gray-200 active:bg-gray-300 font-black text-xl text-gray-950 transition-colors border-r-2 border-gray-950">－</button>
-              <span className="px-5 py-2 font-black text-lg min-w-[3.5rem] text-center text-gray-950">{fontSize}</span>
-              <button onClick={() => setFontSize(prev => Math.min(48, prev + 2))} className="px-5 py-2 hover:bg-gray-200 active:bg-gray-300 font-black text-xl text-gray-950 transition-colors border-l-2 border-gray-950">＋</button>
+        {!isEditing && (
+          <div className="bg-white border border-stone-100 shadow-sm rounded-2xl p-4 md:p-6 mb-10 flex flex-wrap items-center gap-6">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-stone-500">調性</span>
+              <select value={targetKey} onChange={(e) => setTargetKey(e.target.value)} className="bg-stone-50 border border-stone-200 rounded-lg px-3 py-1.5 text-lg font-medium text-stone-700 focus:outline-none focus:ring-2 focus:ring-stone-300 cursor-pointer">
+                {ALL_KEYS.map((note) => <option key={note} value={note}>{note}</option>)}
+              </select>
             </div>
-          </div>
-        </div>
-      )}
-
-      {!isEditing && song.youtubeUrl && getYouTubeId(song.youtubeUrl) && (
-        <div className="mb-8 aspect-video w-full max-w-3xl mx-auto rounded-3xl overflow-hidden shadow-[6px_6px_0_rgba(0,0,0,1)] border-4 border-gray-950 bg-gray-950">
-          <iframe width="100%" height="100%" src={`https://www.youtube.com/embed/${getYouTubeId(song.youtubeUrl)}`} title="YouTube Reference" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
-        </div>
-      )}
-
-      <div className="bg-[#fdfbf7] p-4 md:p-8 rounded-3xl border-4 border-gray-950 shadow-[6px_6px_0_rgba(0,0,0,1)] min-h-[600px] overflow-hidden relative">
-        <div className="absolute top-4 right-4 text-4xl opacity-20 pointer-events-none select-none">🎸</div>
-        
-        {isEditing ? (
-          <div className="space-y-6">
-            <div className="bg-white p-5 rounded-2xl border-2 border-gray-950 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="col-span-1 md:col-span-2">
-                  <label className="block text-sm font-black text-gray-950 mb-2">🎵 歌名：</label>
-                  <input type="text" value={editTitle} onChange={e => setEditTitle(e.target.value)} placeholder="請輸入歌名" className="w-full border-2 border-gray-950 rounded-xl px-4 py-2 font-bold focus:ring-4 focus:ring-yellow-400 focus:outline-none" />
-                </div>
-                <div>
-                  <label className="block text-sm font-black text-gray-950 mb-2">🎯 原調：</label>
-                  <select value={editKey} onChange={e => setEditKey(e.target.value)} className="w-full border-2 border-gray-950 rounded-xl px-4 py-2 font-bold focus:ring-4 focus:ring-yellow-400 focus:outline-none bg-white">
-                    {ALL_KEYS.map(note => <option key={note} value={note}>{note}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-black text-gray-950 mb-2">⏱️ 拍號：</label>
-                  <select value={editTimeSignature} onChange={e => setEditTimeSignature(e.target.value)} className="w-full border-2 border-gray-950 rounded-xl px-4 py-2 font-bold focus:ring-4 focus:ring-yellow-400 focus:outline-none bg-white">
-                    {TIME_SIGNATURES.map(ts => <option key={ts} value={ts}>{ts}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-black text-gray-950 mb-2">👤 編輯者：</label>
-                  <input type="text" value={editEditor} onChange={e => setEditEditor(e.target.value)} className="w-full border-2 border-gray-950 rounded-xl px-4 py-2 font-bold focus:ring-4 focus:ring-yellow-400 focus:outline-none" />
-                </div>
-                <div>
-                  <label className="block text-sm font-black text-gray-950 mb-2">📺 YouTube 參考影片網址 (選填)：</label>
-                  <input type="text" value={editYoutubeUrl} onChange={e => setEditYoutubeUrl(e.target.value)} placeholder="例如: https://www.youtube.com/watch?v=..." className="w-full border-2 border-gray-950 rounded-xl px-4 py-2 font-bold focus:ring-4 focus:ring-sky-400 focus:outline-none" />
-                </div>
+            <div className="w-px h-6 bg-stone-200 hidden md:block"></div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-stone-500">字體</span>
+              <div className="flex items-center bg-stone-50 border border-stone-200 rounded-lg overflow-hidden">
+                <button onClick={() => setFontSize(p => Math.max(12, p - 2))} className="px-3 py-1 hover:bg-stone-200 text-stone-600 transition-colors border-r border-stone-200">－</button>
+                <span className="px-3 py-1 font-medium text-sm text-stone-700 min-w-[2.5rem] text-center">{fontSize}</span>
+                <button onClick={() => setFontSize(p => Math.min(48, p + 2))} className="px-3 py-1 hover:bg-stone-200 text-stone-600 transition-colors border-l border-stone-200">＋</button>
               </div>
             </div>
-            
-            <textarea
-              value={editContent}
-              onChange={(e) => setEditContent(e.target.value)}
-              style={{ fontSize: `${fontSize}px` }}
-              className="w-full h-[500px] p-6 bg-gray-950 text-sky-300 font-mono leading-relaxed rounded-2xl border-4 border-gray-950 focus:outline-none focus:ring-4 focus:ring-yellow-400 whitespace-pre overflow-x-auto selection:bg-sky-900 shadow-[inset_0_4px_10px_rgba(0,0,0,0.5)]"
-              placeholder="支援兩種寫法：&#10;1. 傳統對齊：用空白鍵將和弦對齊在歌詞上方&#10;2. 標籤寫法：在歌詞中插入 [和弦]，例如: 今[C]十架山上[G]羔羊"
-              spellCheck="false"
-            />
           </div>
-        ) : (
-          renderPreview(song.content)
         )}
+
+        {/* 🌟 自動產生的吉他和弦指法圖區塊 */}
+        {!isEditing && uniqueChords.length > 0 && (
+          <div className="mb-10 p-6 bg-white border border-stone-100 rounded-2xl shadow-sm">
+            <h3 className="text-sm font-bold text-stone-400 mb-4 tracking-widest uppercase">本曲使用和弦</h3>
+            <div className="flex flex-wrap">
+              {uniqueChords.map(chord => (
+                <ChordDiagram key={chord} chordName={chord} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="bg-white border border-stone-100 shadow-sm rounded-3xl p-6 md:p-10 min-h-[500px]">
+          {isEditing ? (
+             <div className="space-y-6">
+               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pb-6 border-b border-stone-100">
+                 <div className="col-span-1 md:col-span-2">
+                   <label className="block text-xs font-bold text-stone-400 mb-2 uppercase tracking-widest">歌名</label>
+                   <input type="text" value={editTitle} onChange={e => setEditTitle(e.target.value)} className="w-full border border-stone-200 rounded-lg px-4 py-2 bg-stone-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-stone-300 transition-all" />
+                 </div>
+                 <div>
+                   <label className="block text-xs font-bold text-stone-400 mb-2 uppercase tracking-widest">原調</label>
+                   <select value={editKey} onChange={e => setEditKey(e.target.value)} className="w-full border border-stone-200 rounded-lg px-4 py-2 bg-stone-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-stone-300 transition-all">
+                     {ALL_KEYS.map(note => <option key={note} value={note}>{note}</option>)}
+                   </select>
+                 </div>
+                 <div>
+                   <label className="block text-xs font-bold text-stone-400 mb-2 uppercase tracking-widest">拍號</label>
+                   <select value={editTimeSignature} onChange={e => setEditTimeSignature(e.target.value)} className="w-full border border-stone-200 rounded-lg px-4 py-2 bg-stone-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-stone-300 transition-all">
+                     {TIME_SIGNATURES.map(ts => <option key={ts} value={ts}>{ts}</option>)}
+                   </select>
+                 </div>
+               </div>
+               
+               <textarea
+                 value={editContent}
+                 onChange={(e) => setEditContent(e.target.value)}
+                 style={{ fontSize: `${fontSize}px` }}
+                 className="w-full h-[500px] p-6 bg-[#2d2a26] text-stone-200 font-mono leading-relaxed rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-400 whitespace-pre overflow-x-auto shadow-inner"
+                 placeholder="[C]舉目仰望 [G]仰望耶穌..."
+                 spellCheck="false"
+               />
+             </div>
+          ) : (
+            renderPreview(song.content)
+          )}
+        </div>
       </div>
     </main>
   );
