@@ -1,72 +1,72 @@
 export const importSongs = [
     {
-      title: "1. 偉大奇妙神",
+      title: "11. 榮耀歸於真神",
       originalKey: "F",
-      timeSignature: "4/4",
+      timeSignature: "3/4",
       editor: "烏鴉Lin",
-      content: "[F]我們有偉大[Bb]奇妙[F]神 [Dm]祂創造天地[G7]和萬[C]物\n[F]我們有偉大[Bb]奇妙[F]神 [Dm]祂使瞎眼[G7]看見[C]瘸腿[F]能行走\n[Bb]在祂沒有[F]難成的事 [Bb]在祂沒有[F]難成的事\n[F]哦 偉大[Bb]奇妙[F]神 [Dm]我們[G7]敬拜[C]祢至高[F]神"
+      content: "[F]榮耀歸於真神 祂[C]成就大[F]事\n[F]為愛世人甚至[C]賜下獨生[F]子\n[F]獻上祂生命為[Bb]人贖罪[F]過\n[F]恩門已大開使[C]眾人得[F]救\n[F]讚美主 讚美主 全地[C]聽主聲[F]音\n[F]讚美主 讚美主 萬民[C]快樂高[F]聲\n[F]榮耀歸於真神 祂[Bb]成就大[F]事\n[F]藉著聖子耶穌[C]賜下大歡[F]欣"
     },
     {
-      title: "2. 復興的火",
+      title: "12. 祢信實何廣大",
       originalKey: "F",
-      timeSignature: "4/4",
+      timeSignature: "3/4",
       editor: "烏鴉Lin",
-      content: "[F]復興的[C]火 [Dm]降臨這[Am]地\n[Bb]復興的[F]火 [Gm]燃燒我[C]心\n[F]主聖靈[C]充滿 [Dm]這整個[Am]世代\n[Bb]使我們[F]能為主[C]發[F]光\n[Bb]為主發[F]光 [Gm]為主發[C]光\n[Bb]讓這世[F]界 [Gm]看見祢的[C]榮耀\n[F]主聖靈[C]充滿 [Dm]這整個[Am]世代\n[Bb]使我們[F]能為主[C]發[F]光"
+      content: "[F]祢信實何廣[Bb]大 [C]我神我天[F]父\n[Bb]在祢沒有[F]轉動的[G7]影[C]兒\n[C]祢的憐憫[F]不致[Bb]斷絕[F]與[Bb]衰微\n[G]如同祢[F]起初一[C]樣到永[F]遠\n[C]祢信實[F]何廣大 [D]祢信實[Gm]何廣大\n[C]清晨復[F]清晨 [G7]主愛日更[C]新\n[C]我一切[F]所需用 [Bb]祢手全[F]賜[Bb]給\n[G]祢信實[F]何廣大 [C]顯在我[F]身"
     },
     {
-      title: "3. 充滿我",
+      title: "13. 有福的確據",
       originalKey: "F",
-      timeSignature: "4/4",
+      timeSignature: "9/8",
       editor: "烏鴉Lin",
-      content: "[F]充滿我 [C]充滿我 [Dm]聖靈現在[Am]充滿我\n[Bb]充滿我 [F]充滿我 [Gm]求主現在[C]充滿我\n[F]願我心[C]完全敞開 [Dm]領受祢大[Am]能\n[Bb]聖靈[F]現在 [C]充滿[F]我"
+      content: "[F]有福的[Bb]確據 [F]耶穌屬我\n[F]我今得[Dm]預嘗 [G7]天堂的榮[C]耀\n[F]為神後[Bb]嗣 [F]救贖大[Dm]功\n[Gm]由聖靈[F]重生 [C]寶血洗[F]淨\n[F]這是我[Bb]信息 [F]我的詩歌\n[F]讚美我[Dm]救主 [G7]晝夜唱和[C]\n[F]這是我[Bb]信息 [F]我的詩[Dm]歌\n[Gm]讚美我[F]救主 [C]晝夜唱[F]和"
     },
     {
-      title: "4. 一生敬拜祢",
+      title: "14. 奇妙十架",
       originalKey: "F",
       timeSignature: "4/4",
       editor: "烏鴉Lin",
-      content: "[F]我願一生 [C]敬拜祢 [Dm]我願一生 [Am]跟隨祢\n[Bb]因祢是[F]我的主 [Gm]我的[C]神\n[F]祢的慈愛 [C]永不變 [Dm]祢的信實 [Am]到永遠\n[Bb]我願一生 [C]敬拜[F]祢\n[Bb]高舉雙手 [C]讚美祢 [Am]全心全意 [Dm]愛慕祢\n[Gm]因祢是我 [C]的一切 [F]耶[F7]穌\n[Bb]高舉雙手 [C]讚美祢 [Am]全心全意 [Dm]愛慕祢\n[Gm]我願一生 [C]敬拜[F]祢"
+      content: "[F]每逢思[C]想奇妙[Dm]十[Am]架\n[Bb]榮耀之[F]主在[G7]上懸[C]掛\n[F]萬般財[C]富視如[Dm]塵[Am]土\n[Bb]從前所[F]誇今[C]覺鄙[F]下\n[F]求主禁[C]我別有[Dm]所[Am]誇\n[Bb]但誇我[F]主救[G7]贖十[C]架\n[F]前所珍[C]愛虛空[Dm]榮[Am]華\n[Bb]今為主[F]血情[C]願丟[F]下"
     },
     {
-      title: "5. 全能神",
+      title: "15. 在花園裡",
       originalKey: "F",
-      timeSignature: "4/4",
+      timeSignature: "6/8",
       editor: "烏鴉Lin",
-      content: "[|] [F] [|] [Bb] [|] [C] [|] [F] [|]\n[F]全能[Bb]神 [C]祢是[F]全能神\n[Dm]天地[Gm]萬物 [C]都屈膝敬[F]拜\n[F]全能[Bb]神 [C]祢是[F]全能神\n[Dm]一切[Gm]榮耀 [C]都歸於[F]祢\n[Bb]哈利路[C]亞 [Am]哈利路[Dm]亞\n[Gm]讚美[C]全能[F]神[F7]\n[Bb]哈利路[C]亞 [Am]哈利路[Dm]亞\n[Gm]讚美[C]全能[F]神"
+      content: "[F]獨步徘徊[Bb]在花[F]園裡\n[F]玫瑰花尚[G7]有晶瑩露[C]滴\n[F]忽然我聽見[Bb]溫柔[F]聲音\n[Gm]懇切[F]對我[C]耳語[F]\n[F]祂和我同[C]在 [F]和我同走\n[F]對我說我[G7]屬祂所[C]有\n[F]我們同歡[F7]樂在[Bb]花園[F]裡\n[Gm]百鳥[F]歌聲[C]全停[F]息"
     },
     {
-      title: "6. 最知心的朋友",
+      title: "16. 快樂狂歡",
       originalKey: "F",
       timeSignature: "4/4",
       editor: "烏鴉Lin",
-      content: "[F]主祢是[C]我最知心[Dm]的朋友 [Am]\n[Bb]主祢是[F]我最親愛[Gm]的伴[C]侶\n[F]我的心[C]在天天追[Dm]求祢 [Am]\n[Bb]渴望看[C]見祢的榮[F]面\n[Bb]在我人[C]生的每一個[Am]台[Dm]階\n[Gm]在我一[C]生的每一個[F]小[F7]站\n[Bb]祢的手[C]總是在攙[Am]拉著[Dm]我\n[Gm]把我帶[C]在祢身[F]邊"
+      content: "[F]快樂快樂[C]我們敬拜 [F]榮耀[Dm]大主[G7]愛之[C]神\n[F]心如花開[C]仰望晴空 [F]日光[Dm]驅散[C]罪與[F]愁\n[C]苦勞罪[F]惡 煩[C]惱憂[F]愁 [C]疑懼[Dm]陰霾[G7]盡驅[C]走\n[F]賜下歡樂[C]無上喜樂 [F]充滿[Dm]我們[C]的心[F]中"
     },
     {
-      title: "7. 讚美主",
+      title: "17. 寶架清影",
       originalKey: "F",
       timeSignature: "4/4",
       editor: "烏鴉Lin",
-      content: "[F]讚美主 [Bb]哈利路亞 [C]讚美主 [F]哈利路亞\n[Dm]讚美主 [Gm]哈利路亞 [C]讚美[F]主\n[F]我們要 [Bb]高舉主名 [C]我們要 [F]歡呼喜樂\n[Dm]我們要 [Gm]讚美主名 [C]讚美[F]主"
+      content: "[F]懇求引領[Bb]我[C]到寶[F]架\n[F]為我靈[Dm]魂得[G7]安[C]息\n[F]在彼有如[Bb]大[C]磐石[F]影\n[Gm]白晝[F]可避[C]炎[F]熱\n[F]曠野如火[Bb]熱[C]氣逼[F]人\n[F]長途跋[Dm]涉力[G7]疲[C]困\n[F]寶架清影[Bb]遮[C]蓋我[F]身\n[Gm]使我[F]得保[C]平[F]安"
     },
     {
-      title: "8. 將祢最好的獻與主",
+      title: "18. 萬古磐石",
       originalKey: "F",
-      timeSignature: "4/4",
+      timeSignature: "3/4",
       editor: "烏鴉Lin",
-      content: "[F]將祢最[C]好的獻與[F]主 [Bb]獻祢青[C]春的力[F]量\n[F]將祢純[C]潔熱情心[F]靈 [Gm]忠心為[C]真理打[F]仗\n[Bb]主耶穌[C]已作好榜[Am]樣 [Dm]勇敢堅[G7]定不退[C]讓\n[F]將祢最[C]好的獻與[F]主 [Gm]獻祢青[C]春的力[F]量"
+      content: "[F]萬古磐石[Bb]為我[F]開\n[F]容我藏於[C]祢懷[F]中\n[F]願因祢肋[Bb]旁流[F]血\n[F]洗我罪過[C]免我[F]死\n[F]使我免受[Bb]罪法[F]律\n[F]使我免受[C]罪刑[F]罰\n[F]萬古磐石[Bb]為我[F]開\n[F]容我藏於[C]祢懷[F]中"
     },
     {
-      title: "9. 敬拜主",
+      title: "19. 這是天父世界",
       originalKey: "F",
       timeSignature: "4/4",
       editor: "烏鴉Lin",
-      content: "[F]敬拜主 [Dm]敬拜全能的[Gm]主 [C]\n[F]榮耀尊[Dm]貴 頌讚都歸與[Eb]祂 [C]\n[F]敬拜主 [Dm]敬拜權柄的[Gm]主 [C]\n[F]從祂寶[Dm]座 能力流[Gm]出 [C]流到萬[F]民\n[C]來高舉 [Dm]一同高舉[Gm]主耶穌[C]的聖名\n[C]來讚美 [Dm]一同讚美[Gm]耶穌榮[C]耀君王\n[F]敬拜主 [Dm]敬拜尊貴的[Gm]主 [C]\n[F]祂已復[Dm]活 永遠作[Gm]王 [C]祂是萬王之[F]王"
+      content: "[F]這是天父[Bb]世[F]界\n[F]我們側耳[C]要聽[F]\n[F]宇宙唱歌[Bb]四[F]圍響應\n[Gm]星辰[F]作樂[C]同[F]聲\n[F]這是天父[C]世[F]界\n[F]我心滿有[C]安[F]慰\n[F]樹木花草[Bb]蒼[F]天碧海\n[Gm]述說[F]天父[C]作[F]為"
     },
     {
-      title: "10. 獻上生命",
+      title: "20. 十字架",
       originalKey: "F",
       timeSignature: "4/4",
       editor: "烏鴉Lin",
-      content: "[F]主我獻上[Bb]生命給祢 [C]用我一[F]生\n[Dm]主我獻上[Gm]生命給祢 [C]為祢而[F]活\n[Bb]我的心[C]完全屬[Am]祢 [Dm]我的靈[Gm]敬拜[C]祢[F][F7]\n[Bb]我的心[C]完全屬[Am]祢 [Dm]我的靈[Gm]敬拜[C]祢[F]"
+      content: "[F]求主使我[Bb]近十[F]架\n[F]在彼有生[G7]命[C]水\n[F]由各各他[Bb]山流[F]下\n[Gm]白白[F]賜人[C]洗[F]罪\n[F]十字架 [Bb]十字[F]架\n[F]永是我的[G7]榮[C]耀\n[F]我眾罪都[Bb]洗清[F]潔\n[Gm]惟靠[F]耶穌[C]寶[F]血"
     }
   ];
