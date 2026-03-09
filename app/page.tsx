@@ -239,8 +239,8 @@ export default function Home() {
                 <strong className="block text-lg text-stone-800 mb-2">方式一：傳統文件排版 (純文字對齊)</strong>
                 <p className="mb-4">就像在 Word 或記事本裡打字一樣，把和弦打在第一行，歌詞打在第二行。系統會完美保留你按的所有「空白鍵」，不用擔心跑版！</p>
                 <div className="bg-white border border-stone-200 p-4 rounded-xl font-mono text-stone-700 overflow-x-auto shadow-sm">
-                  <p>D &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;A7 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Bm</p>
-                  <p>舉目仰望 仰望耶穌</p>
+                  <p>| &nbsp;D &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;A7 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Bm &nbsp;&nbsp;&nbsp;&nbsp;|</p>
+                  <p>&nbsp;&nbsp;舉目仰望 仰望耶穌</p>
                 </div>
               </div>
 
@@ -255,19 +255,16 @@ export default function Home() {
 
               <hr className="border-stone-100" />
               
+              {/* 🌟 修正後的小節線說明 */}
               <div>
-                <strong className="block text-stone-800 mb-3">💡 補充：如何加上「小節線」？</strong>
-                <ul className="space-y-3 pl-2">
-                  <li className="flex items-start gap-2">
-                    <span className="mt-0.5">👉</span> 
-                    <div>若想放在<strong className="mx-1">和弦那行</strong>，請將直線包起來：<code className="bg-stone-50 border border-stone-200 px-2 py-1 rounded mx-1 text-stone-700">[|]</code></div>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="mt-0.5">👉</span> 
-                    <div>若想放在<strong className="mx-1">歌詞那行</strong>，直接打直線即可：<code className="bg-stone-50 border border-stone-200 px-2 py-1 rounded mx-1 text-stone-700">｜</code></div>
-                  </li>
-                </ul>
+                <strong className="block text-stone-800 mb-2">3. 如何標示「小節線」？</strong>
+                <p className="mb-4">音樂中的小節線通常只會出現在和弦那一行。你只需要把直線用中括號包起來 <code className="bg-stone-50 border border-stone-200 px-2 py-1 rounded text-stone-700">[|]</code> 即可！</p>
+                <div className="bg-white border border-stone-200 p-4 rounded-xl font-mono text-stone-700 overflow-x-auto shadow-sm">
+                  <p className="text-stone-400 mb-1">輸入範例：</p>
+                  <p>[|] [D]舉目仰望 [A7]仰望耶[Bm]穌 [|]</p>
+                </div>
               </div>
+
             </div>
             
             <div className="absolute -bottom-10 -right-10 text-[180px] opacity-[0.03] select-none pointer-events-none">🎸</div>
