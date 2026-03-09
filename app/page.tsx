@@ -34,7 +34,7 @@ export default function Home() {
   const router = useRouter();
 
   // 🔒 站長專屬安全鎖
-  const adminEmail = "你的Google信箱@gmail.com"; 
+  const adminEmail = "coolcrow0403@gmail.com"; 
   const isAdmin = user?.email === adminEmail;
 
   useEffect(() => {
