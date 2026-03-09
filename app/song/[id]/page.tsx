@@ -185,18 +185,37 @@ export default function SongPage() {
   };
 
   // 🌟 新增：送出留言的功能
+  // 🌟 升級版：送出留言並自動發 Email 給站長
   const handleAddComment = async () => {
     if (!user) { alert("請先登入才能留言喔！"); return; }
     if (!newCommentText.trim()) return;
 
     setIsSubmittingComment(true);
     try {
+      // 1. 先把留言寫入 Firebase
       await addDoc(collection(db, `songs/${songId}/comments`), {
         text: newCommentText.trim(),
         authorName: user.displayName || "匿名使用者",
         authorId: user.uid,
-        createdAt: serverTimestamp() // 使用 Firebase 伺服器時間
+        createdAt: serverTimestamp() 
       });
+
+      // 2. 🌟 背景發送 Email 通知給站長 (使用 FormSubmit API)
+      fetch("https://formsubmit.co/ajax/coolcrow0403@gmail.com", {
+        method: "POST",
+        headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+            _subject: `老詩歌吉他譜 🎸 有新留言囉！`,
+            "🎵 歌曲名稱": song?.title || "未知歌曲",
+            "👤 留言者": user.displayName || "匿名使用者",
+            "💬 留言內容": newCommentText.trim(),
+            "🔗 前往樂譜": window.location.href
+        })
+      }).catch(err => console.error("通知信發送失敗:", err)); // 背景執行，就算失敗也不影響使用者留言
+
       setNewCommentText(""); // 清空輸入框
     } catch (error) {
       console.error("留言失敗:", error);
