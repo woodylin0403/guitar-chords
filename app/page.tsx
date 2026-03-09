@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { initialSongList, Song } from '@/data/songs';
 import { importSongs } from '@/data/importSongs';
-import { collection, getDocs, doc, setDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore'; // 這裡加入了 deleteDoc
 import { db, auth, googleProvider } from '@/lib/firebase';
 import { signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
 
@@ -104,6 +104,29 @@ export default function Home() {
       alert("匯入失敗！");
     } finally {
       setIsImporting(false);
+    }
+  };
+
+  // ✅ 新增的刪除功能
+  const handleDeleteSong = async (songId: string, songEditor: string, e: React.MouseEvent) => {
+    e.preventDefault(); // 避免點擊按鈕時觸發外層 Link 導航
+    e.stopPropagation(); // 阻止事件冒泡
+
+    // 確認目前登入的使用者是否為該樂譜的編輯者 (或管理員)
+    if (songEditor !== "烏鴉Lin" && !isAdmin) {
+      alert("您只能刪除自己上傳的樂譜喔！");
+      return;
+    }
+
+    if (window.confirm("確定要刪除這首樂譜嗎？此動作無法復原。")) {
+      try {
+        await deleteDoc(doc(db, "songs", songId));
+        alert("樂譜已成功刪除！");
+        await fetchSongs(); // 刪除成功後重新獲取列表
+      } catch (error) {
+        console.error("刪除失敗: ", error);
+        alert("刪除時發生錯誤");
+      }
     }
   };
 
@@ -207,15 +230,29 @@ export default function Home() {
             {filteredSongs.length > 0 ? (
               filteredSongs.map((song) => (
                 <Link href={`/song/${song.id}`} key={song.id} className="group block">
-                  <div className="bg-white p-6 rounded-2xl border border-stone-100 shadow-sm hover:shadow-md transition-all h-full flex flex-col">
+                  <div className="bg-white p-6 rounded-2xl border border-stone-100 shadow-sm hover:shadow-md transition-all h-full flex flex-col relative">
                     <div className="flex justify-between items-start mb-4">
-                      <h3 className="text-xl font-medium text-stone-800 group-hover:text-stone-600 transition-colors pr-4 leading-tight">{song.title}</h3>
+                      <h3 className="text-xl font-medium text-stone-800 group-hover:text-stone-600 transition-colors pr-10 leading-tight">{song.title}</h3>
                       <span className="text-stone-400 text-xs font-mono border border-stone-200 px-2 py-1 rounded-md shrink-0">{song.originalKey}</span>
                     </div>
+                    
                     <div className="mt-auto pt-6 flex justify-between items-center text-xs text-stone-400">
                       <span className="bg-stone-50 px-2 py-1 rounded">編：{song.editor}</span>
                       <span className="font-mono">{getUploadDate(song.id)}</span>
                     </div>
+
+                    {/* ✅ 加入垃圾桶刪除按鈕 */}
+                    {(user?.displayName === "烏鴉Lin" || isAdmin || song.editor === "烏鴉Lin") && (
+                      <button 
+                        onClick={(e) => handleDeleteSong(song.id, song.editor, e)}
+                        className="absolute top-6 right-16 p-1.5 text-stone-300 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                        title="刪除此樂譜"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    )}
                   </div>
                 </Link>
               ))
@@ -234,7 +271,6 @@ export default function Home() {
             
             <div className="space-y-8 text-sm md:text-base relative z-10">
               
-              {/* 方式一：傳統文件排版 */}
               <div className="bg-stone-50 p-6 rounded-2xl border border-stone-100">
                 <strong className="block text-lg text-stone-800 mb-2">方式一：傳統文件排版 (純文字對齊)</strong>
                 <p className="mb-4">就像在 Word 或記事本裡打字一樣，把和弦打在第一行，歌詞打在第二行。系統會完美保留你按的所有「空白鍵」，不用擔心跑版！</p>
@@ -244,7 +280,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* 方式二：智能標籤排版 */}
               <div className="bg-emerald-50/50 p-6 rounded-2xl border border-emerald-100/50">
                 <strong className="block text-lg text-stone-800 mb-2">方式二：智能標籤排版 (✨ 推薦使用)</strong>
                 <p className="mb-4">將和弦用中括號 <code className="bg-white px-1.5 py-0.5 rounded text-stone-700">[ ]</code> 包起來，緊貼在歌詞前方。系統會自動把和弦浮在歌詞上方，這樣在使用「一鍵轉調」功能時最精準好看！</p>
@@ -255,7 +290,6 @@ export default function Home() {
 
               <hr className="border-stone-100" />
               
-              {/* 🌟 修正後的小節線說明 */}
               <div>
                 <strong className="block text-stone-800 mb-2">3. 如何標示「小節線」？</strong>
                 <p className="mb-4">音樂中的小節線通常只會出現在和弦那一行。你只需要把直線用中括號包起來 <code className="bg-stone-50 border border-stone-200 px-2 py-1 rounded text-stone-700">[|]</code> 即可！</p>
