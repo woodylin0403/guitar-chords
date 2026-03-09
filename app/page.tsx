@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { initialSongList, Song } from '@/data/songs';
 import { importSongs } from '@/data/importSongs';
-import { collection, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore'; // 這裡加入了 deleteDoc
+import { collection, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db, auth, googleProvider } from '@/lib/firebase';
 import { signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
 
@@ -31,10 +31,12 @@ export default function Home() {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [showMode, setShowMode] = useState<'instructions' | 'list'>('instructions');
+  
+  // ✅ 新增：用來儲存被選取的歌曲 ID 列表
+  const [selectedSongs, setSelectedSongs] = useState<string[]>([]);
 
   const router = useRouter();
 
-  // 🚨 記得把這裡改成你的信箱！
   const adminEmail = "coolcrow0403@gmail.com"; 
   const isAdmin = user?.email === adminEmail;
 
@@ -107,12 +109,11 @@ export default function Home() {
     }
   };
 
-  // ✅ 新增的刪除功能
+  // ✅ 單一刪除功能
   const handleDeleteSong = async (songId: string, songEditor: string, e: React.MouseEvent) => {
-    e.preventDefault(); // 避免點擊按鈕時觸發外層 Link 導航
-    e.stopPropagation(); // 阻止事件冒泡
+    e.preventDefault(); 
+    e.stopPropagation(); 
 
-    // 確認目前登入的使用者是否為該樂譜的編輯者 (或管理員)
     if (songEditor !== "烏鴉Lin" && !isAdmin) {
       alert("您只能刪除自己上傳的樂譜喔！");
       return;
@@ -121,13 +122,43 @@ export default function Home() {
     if (window.confirm("確定要刪除這首樂譜嗎？此動作無法復原。")) {
       try {
         await deleteDoc(doc(db, "songs", songId));
-        alert("樂譜已成功刪除！");
-        await fetchSongs(); // 刪除成功後重新獲取列表
+        setSelectedSongs(prev => prev.filter(id => id !== songId)); // 從選取清單移除
+        await fetchSongs(); 
       } catch (error) {
         console.error("刪除失敗: ", error);
         alert("刪除時發生錯誤");
       }
     }
+  };
+
+  // ✅ 批次刪除功能
+  const handleBatchDelete = async () => {
+    if (selectedSongs.length === 0) return;
+    if (!window.confirm(`確定要一口氣刪除選取的 ${selectedSongs.length} 首樂譜嗎？此動作無法復原。`)) return;
+
+    try {
+      // 迴圈執行刪除
+      for (const id of selectedSongs) {
+        await deleteDoc(doc(db, "songs", id));
+      }
+      alert(`成功刪除 ${selectedSongs.length} 首樂譜！`);
+      setSelectedSongs([]); // 清空打勾狀態
+      await fetchSongs();   // 重新抓取資料
+    } catch (error) {
+      console.error("批次刪除失敗: ", error);
+      alert("批次刪除時發生錯誤");
+    }
+  };
+
+  // ✅ 處理打勾/取消打勾
+  const toggleSelection = (e: React.MouseEvent, songId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSelectedSongs(prev => 
+      prev.includes(songId) 
+        ? prev.filter(id => id !== songId) // 如果已經有，就移除
+        : [...prev, songId]                // 如果沒有，就加入
+    );
   };
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -206,6 +237,16 @@ export default function Home() {
               {isImporting ? "⏳ 匯入中..." : `🚀 批次匯入 (${importSongs.length})`}
             </button>
           )}
+
+          {/* ✅ 批次刪除按鈕 (有選取歌曲時才會出現) */}
+          {selectedSongs.length > 0 && (
+            <button 
+              onClick={handleBatchDelete} 
+              className="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-full text-sm font-medium transition-all shadow-md"
+            >
+              🗑️ 刪除已選 ({selectedSongs.length})
+            </button>
+          )}
         </div>
 
         <div className="flex flex-wrap justify-center items-center gap-2 md:gap-3 bg-white p-2 rounded-3xl border border-stone-100 shadow-sm inline-flex mx-auto">
@@ -225,37 +266,76 @@ export default function Home() {
         <div className="max-w-5xl mx-auto px-6 pb-20">
           <div className="mb-6 flex justify-between items-end border-b border-stone-200 pb-2">
             <span className="text-stone-500 text-sm tracking-widest">{selectedKey ? `調性：${selectedKey}` : '所有詩歌'} · 共 {filteredSongs.length} 首</span>
+            
+            {/* 快速全選按鈕 (選用功能，可以方便一鍵清空當前篩選的項目) */}
+            {filteredSongs.length > 0 && (user?.displayName === "烏鴉Lin" || isAdmin) && (
+              <button 
+                onClick={() => {
+                  const allVisibleIds = filteredSongs.filter(s => s.editor === "烏鴉Lin" || isAdmin).map(s => s.id);
+                  if (selectedSongs.length === allVisibleIds.length) {
+                    setSelectedSongs([]); // 取消全選
+                  } else {
+                    setSelectedSongs(allVisibleIds); // 全選
+                  }
+                }}
+                className="text-xs text-stone-400 hover:text-stone-600 transition-colors"
+              >
+                {selectedSongs.length === filteredSongs.length && filteredSongs.length > 0 ? "取消全選" : "全選本頁"}
+              </button>
+            )}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredSongs.length > 0 ? (
-              filteredSongs.map((song) => (
-                <Link href={`/song/${song.id}`} key={song.id} className="group block">
-                  <div className="bg-white p-6 rounded-2xl border border-stone-100 shadow-sm hover:shadow-md transition-all h-full flex flex-col relative">
-                    <div className="flex justify-between items-start mb-4">
-                      <h3 className="text-xl font-medium text-stone-800 group-hover:text-stone-600 transition-colors pr-10 leading-tight">{song.title}</h3>
-                      <span className="text-stone-400 text-xs font-mono border border-stone-200 px-2 py-1 rounded-md shrink-0">{song.originalKey}</span>
-                    </div>
-                    
-                    <div className="mt-auto pt-6 flex justify-between items-center text-xs text-stone-400">
-                      <span className="bg-stone-50 px-2 py-1 rounded">編：{song.editor}</span>
-                      <span className="font-mono">{getUploadDate(song.id)}</span>
-                    </div>
+              filteredSongs.map((song) => {
+                const canEdit = user?.displayName === "烏鴉Lin" || isAdmin || song.editor === "烏鴉Lin";
+                const isSelected = selectedSongs.includes(song.id);
 
-                    {/* ✅ 加入垃圾桶刪除按鈕 */}
-                    {(user?.displayName === "烏鴉Lin" || isAdmin || song.editor === "烏鴉Lin") && (
-                      <button 
-                        onClick={(e) => handleDeleteSong(song.id, song.editor, e)}
-                        className="absolute top-6 right-16 p-1.5 text-stone-300 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
-                        title="刪除此樂譜"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    )}
-                  </div>
-                </Link>
-              ))
+                return (
+                  <Link href={`/song/${song.id}`} key={song.id} className="group block">
+                    <div className={`bg-white p-6 rounded-2xl border ${isSelected ? 'border-red-400 shadow-md ring-1 ring-red-400' : 'border-stone-100 shadow-sm hover:shadow-md'} transition-all h-full flex flex-col relative`}>
+                      
+                      {/* ✅ 獨立的核取方塊區塊 */}
+                      {canEdit && (
+                        <div 
+                          onClick={(e) => toggleSelection(e, song.id)}
+                          className="absolute top-4 right-4 z-10 bg-white/80 p-1.5 rounded-md cursor-pointer hover:bg-stone-100 transition-colors"
+                          title="選取以批次刪除"
+                        >
+                          <input 
+                            type="checkbox" 
+                            checked={isSelected}
+                            readOnly
+                            className="w-5 h-5 cursor-pointer accent-red-500"
+                          />
+                        </div>
+                      )}
+
+                      <div className="flex justify-between items-start mb-4 pr-10">
+                        <h3 className="text-xl font-medium text-stone-800 group-hover:text-stone-600 transition-colors leading-tight">{song.title}</h3>
+                        <span className="text-stone-400 text-xs font-mono border border-stone-200 px-2 py-1 rounded-md shrink-0 ml-2">{song.originalKey}</span>
+                      </div>
+                      
+                      <div className="mt-auto pt-6 flex justify-between items-center text-xs text-stone-400 pr-10">
+                        <span className="bg-stone-50 px-2 py-1 rounded">編：{song.editor}</span>
+                        <span className="font-mono">{getUploadDate(song.id)}</span>
+                      </div>
+
+                      {/* ✅ 單一刪除按鈕 (保留供習慣單筆刪除的操作) */}
+                      {canEdit && (
+                        <button 
+                          onClick={(e) => handleDeleteSong(song.id, song.editor, e)}
+                          className="absolute bottom-6 right-4 p-1.5 text-stone-300 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                          title="單獨刪除此樂譜"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  </Link>
+                );
+              })
             ) : (
               <div className="col-span-full py-20 text-center text-stone-400">找不到符合條件的詩歌</div>
             )}
