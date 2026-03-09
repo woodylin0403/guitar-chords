@@ -94,19 +94,8 @@ export default function Home() {
 
   const handleCreateNewSong = async () => {
     if (!user) { alert("請先登入才能新增詩歌喔！"); return; }
-    const newId = `song-${Date.now()}`; 
-    const newSong: Song = {
-      id: newId, 
-      title: "新詩歌 (請點擊進入編輯)", 
-      originalKey: "C",
-      timeSignature: "4/4",
-      editor: user.displayName || "站長", 
-      content: "[C]請在此輸入歌詞與和弦...",
-      ownerId: user.uid, 
-      ownerEmail: user.email || ""
-    };
-    await setDoc(doc(db, "songs", newId), newSong);
-    router.push(`/song/${newId}`);
+    // 🌟 改變作法：不再先存檔，而是直接跳轉到虛擬新增頁面
+    router.push(`/song/new`);
   };
 
   const handleBatchImport = async () => {

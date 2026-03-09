@@ -10,11 +10,9 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 const MAJOR_KEYS = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
 const MINOR_KEYS = ['Cm', 'C#m', 'Dm', 'Ebm', 'Em', 'Fm', 'F#m', 'Gm', 'G#m', 'Am', 'Bbm', 'Bm'];
 const ALL_KEYS = [...MAJOR_KEYS, ...MINOR_KEYS];
-
 const SHARP_NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const FLAT_NOTES  = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
 const FLAT_KEYS = ['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Dm', 'Gm', 'Cm', 'Fm', 'Bbm', 'Ebm']; 
-
 const TIME_SIGNATURES = ['4/4', '3/4', '2/4', '6/8', '9/8', '12/8', '2/2', '6/4'];
 
 function getYouTubeId(url: string) {
@@ -23,42 +21,31 @@ function getYouTubeId(url: string) {
   const match = url.match(regExp);
   return (match && match[2].length === 11) ? match[2] : null;
 }
-
 function getNoteIndex(note: string) {
   const idx = SHARP_NOTES.indexOf(note);
   return idx !== -1 ? idx : FLAT_NOTES.indexOf(note);
 }
-
 function isChord(str: string) {
   if (!str || str.trim() === '') return false;
   const regex = /^[CDEFGAB][#b]?(m|min|maj|M|dim|aug|sus|add|#|b|\d)*(?:\/[CDEFGAB][#b]?)?$/;
   return regex.test(str);
 }
-
-function getRootNote(key: string) {
-  return key.replace('m', '');
-}
-
+function getRootNote(key: string) { return key.replace('m', ''); }
 function transposeChord(chord: string, steps: number, targetKey: string) {
   if (!chord) return chord;
   const useFlats = FLAT_KEYS.includes(targetKey);
   const outputScale = useFlats ? FLAT_NOTES : SHARP_NOTES;
-
   const parts = chord.split('/');
   const transposeNote = (note: string) => {
     const match = note.match(/^([CDEFGAB][#b]?)(.*)$/);
     if (!match) return note; 
     const baseNote = match[1];
     const modifier = match[2];
-
     const currentIndex = getNoteIndex(baseNote);
     if (currentIndex === -1) return note;
-    
     let newIndex = (currentIndex + steps) % 12;
     if (newIndex < 0) newIndex += 12;
-
     if (getRootNote(targetKey) === 'C' && newIndex === 10) return 'Bb' + modifier;
-
     return outputScale[newIndex] + modifier;
   };
   return parts.map(transposeNote).join('/');
@@ -91,11 +78,32 @@ export default function SongPage() {
   }, []);
 
   useEffect(() => {
+    // 🌟 如果發現網址是 /song/new，就進入「虛擬草稿模式」
+    if (songId === 'new') {
+      const newDraft: Song = {
+        id: 'new',
+        title: "",
+        originalKey: "C",
+        timeSignature: "4/4",
+        editor: user?.displayName || "烏鴉Lin",
+        content: ""
+      };
+      setSong(newDraft);
+      setEditTitle("");
+      setEditKey("C");
+      setEditTimeSignature("4/4");
+      setEditEditor(user?.displayName || "烏鴉Lin");
+      setEditContent("");
+      setIsEditing(true); // 直接展開編輯畫面
+      setIsLoading(false);
+      return; // 結束，不去資料庫抓資料
+    }
+
+    // 如果不是 new，就去雲端抓歌
     const fetchSong = async () => {
       try {
         const docRef = doc(db, "songs", songId);
         const docSnap = await getDoc(docRef);
-        
         if (docSnap.exists()) {
           const foundSong = docSnap.data() as Song;
           setSong(foundSong);
@@ -117,25 +125,43 @@ export default function SongPage() {
       }
     };
     fetchSong();
-  }, [songId, router]);
+  }, [songId, router, user]);
 
   const handleSave = async () => {
     if (!song) return;
-    const updatedSong = { 
+    
+    // 🌟 如果是新歌，在存檔的這一刻才正式發給它一個 ID
+    const isNewSong = songId === 'new';
+    const finalId = isNewSong ? `song-${Date.now()}` : song.id;
+
+    // 防止沒打歌名
+    const safeTitle = editTitle.trim() === "" ? "未命名新歌" : editTitle;
+
+    const updatedSong: Song = { 
       ...song, 
-      title: editTitle, 
+      id: finalId,
+      title: safeTitle, 
       originalKey: editKey, 
       timeSignature: editTimeSignature,
       editor: editEditor, 
       content: editContent,
-      youtubeUrl: editYoutubeUrl 
+      youtubeUrl: editYoutubeUrl,
+      ownerId: song.ownerId || user?.uid,
+      ownerEmail: song.ownerEmail || user?.email || ""
     };
+
     try {
-      await setDoc(doc(db, "songs", song.id), updatedSong);
-      setSong(updatedSong);
-      setTargetKey(editKey);
-      setIsEditing(false);
+      await setDoc(doc(db, "songs", finalId), updatedSong);
       alert("儲存成功！");
+      
+      if (isNewSong) {
+        // 如果是剛建好的新歌，把網址換成真實的 ID (這樣重新整理才不會壞掉)
+        router.replace(`/song/${finalId}`);
+      } else {
+        setSong(updatedSong);
+        setTargetKey(editKey);
+        setIsEditing(false);
+      }
     } catch (error) {
       console.error("儲存失敗:", error);
       alert("儲存失敗，請重試！");
@@ -143,6 +169,10 @@ export default function SongPage() {
   };
 
   const handleDelete = async () => {
+    if (songId === 'new') {
+      router.push('/'); // 如果是草稿，放棄編輯直接回首頁
+      return;
+    }
     if (confirm("確定要刪除這首歌嗎？刪除後全世界都看不到囉！")) {
       try {
         await deleteDoc(doc(db, "songs", songId));
@@ -161,62 +191,40 @@ export default function SongPage() {
   const targetIndex = getNoteIndex(getRootNote(targetKey));
   const steps = targetIndex - originalIndex;
 
-  // 🌟 排版終極完美版雙引擎渲染器
   const renderPreview = (text: string) => {
     const lines = text.split('\n');
-
     return (
       <div className="overflow-x-auto pb-6">
         <div className="w-max min-w-full font-mono leading-relaxed text-gray-800 tracking-wide transition-all duration-200" style={{ fontSize: `${fontSize}px` }}>
           {lines.map((line, lineIndex) => {
             const hasBrackets = /\[.*?\]/.test(line);
-
             if (hasBrackets) {
-              // 🌟 引擎一：標籤寫法 (防彈積木排版)
               const parts = line.split(/\[(.*?)\]/);
               const elements = [];
               for (let i = 0; i < parts.length; i += 2) {
                 const lyric = parts[i];
                 const chord = i > 0 ? parts[i - 1] : null;
-
                 if (!chord && !lyric) continue;
-
-                // 💡 核心魔法：如果沒有歌詞（連續和弦或句尾）
                 const isLyricEmpty = lyric === '';
-
                 elements.push(
-                  // 如果底下沒歌詞，就強迫加上 mr-4 (右邊距)，把下一個和弦遠遠推開
                   <div key={i} className={`flex flex-col justify-end ${isLyricEmpty ? 'mr-4' : ''}`}>
-                    
-                    {/* 上半部：和弦積木。加上 pr-1 讓和弦右邊有微小呼吸空間，不會死死貼著下個字 */}
                     <span className="text-sky-500 font-bold pr-1" style={{ fontSize: '0.85em', minHeight: '1.25em' }}>
                       {chord ? transposeChord(chord, steps, targetKey) : ''}
                     </span>
-                    
-                    {/* 下半部：歌詞積木。如果是空的，塞一個半形空白維持高度 */}
                     <span className="whitespace-pre" style={{ minHeight: '1.25em' }}>
                       {isLyricEmpty ? ' ' : lyric}
                     </span>
                   </div>
                 );
               }
-              return (
-                <div key={lineIndex} className="flex items-end mb-2">
-                  {elements}
-                </div>
-              );
+              return <div key={lineIndex} className="flex items-end mb-2">{elements}</div>;
             } else {
-              // 🌟 引擎二：傳統對齊寫法
               const tokens = line.split(/(\s+|[|()[\]{}<>,.:;~\-｜（）【】《》，。：；～]+)/);
               return (
                 <div key={lineIndex} className="whitespace-pre mb-1" style={{ minHeight: '1.5em' }}>
                   {tokens.filter(Boolean).map((token, i) => {
                     if (isChord(token)) {
-                      return (
-                        <span key={i} className="text-sky-500 font-bold">
-                          {transposeChord(token, steps, targetKey)}
-                        </span>
-                      );
+                      return <span key={i} className="text-sky-500 font-bold">{transposeChord(token, steps, targetKey)}</span>;
                     }
                     return <span key={i}>{token}</span>;
                   })}
@@ -236,13 +244,17 @@ export default function SongPage() {
       <div className="mb-6 flex justify-between items-center bg-white p-4 rounded-2xl shadow-[4px_4px_0_rgba(0,0,0,1)] border-2 border-gray-950">
         <Link href="/" className="text-gray-950 hover:text-sky-500 font-black flex items-center gap-2 transition-colors">← 回到歌單目錄</Link>
         {isEditing && (
-          <button onClick={handleDelete} className="text-red-500 hover:text-red-700 font-bold text-sm bg-red-50 px-3 py-1 rounded-full border border-red-200">🗑️ 刪除此歌曲</button>
+          <button onClick={handleDelete} className="text-red-500 hover:text-red-700 font-bold text-sm bg-red-50 px-3 py-1 rounded-full border border-red-200">
+            {songId === 'new' ? '放棄編輯' : '🗑️ 刪除此歌曲'}
+          </button>
         )}
       </div>
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 bg-white p-6 md:p-8 rounded-3xl shadow-[6px_6px_0_rgba(0,0,0,1)] border-4 border-gray-950">
         <div>
-          <h1 className="text-3xl md:text-5xl font-black text-gray-950 mb-3 tracking-tight">{song.title}</h1>
+          <h1 className="text-3xl md:text-5xl font-black text-gray-950 mb-3 tracking-tight">
+            {songId === 'new' ? '✨ 新增詩歌' : song.title}
+          </h1>
           <div className="flex items-center gap-3">
             {song.editor && <span className="inline-block px-3 py-1 bg-gray-950 text-white rounded-lg text-sm font-bold">編輯者：{song.editor}</span>}
             {!isEditing && song.timeSignature && (
@@ -292,14 +304,7 @@ export default function SongPage() {
 
       {!isEditing && song.youtubeUrl && getYouTubeId(song.youtubeUrl) && (
         <div className="mb-8 aspect-video w-full max-w-3xl mx-auto rounded-3xl overflow-hidden shadow-[6px_6px_0_rgba(0,0,0,1)] border-4 border-gray-950 bg-gray-950">
-          <iframe
-            width="100%"
-            height="100%"
-            src={`https://www.youtube.com/embed/${getYouTubeId(song.youtubeUrl)}`}
-            title="YouTube Reference"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          ></iframe>
+          <iframe width="100%" height="100%" src={`https://www.youtube.com/embed/${getYouTubeId(song.youtubeUrl)}`} title="YouTube Reference" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
         </div>
       )}
 
@@ -312,7 +317,7 @@ export default function SongPage() {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="col-span-1 md:col-span-2">
                   <label className="block text-sm font-black text-gray-950 mb-2">🎵 歌名：</label>
-                  <input type="text" value={editTitle} onChange={e => setEditTitle(e.target.value)} className="w-full border-2 border-gray-950 rounded-xl px-4 py-2 font-bold focus:ring-4 focus:ring-yellow-400 focus:outline-none" />
+                  <input type="text" value={editTitle} onChange={e => setEditTitle(e.target.value)} placeholder="請輸入歌名" className="w-full border-2 border-gray-950 rounded-xl px-4 py-2 font-bold focus:ring-4 focus:ring-yellow-400 focus:outline-none" />
                 </div>
                 <div>
                   <label className="block text-sm font-black text-gray-950 mb-2">🎯 原調：</label>
@@ -334,13 +339,7 @@ export default function SongPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-black text-gray-950 mb-2">📺 YouTube 參考影片網址 (選填)：</label>
-                  <input 
-                    type="text" 
-                    value={editYoutubeUrl} 
-                    onChange={e => setEditYoutubeUrl(e.target.value)} 
-                    placeholder="例如: https://www.youtube.com/watch?v=..." 
-                    className="w-full border-2 border-gray-950 rounded-xl px-4 py-2 font-bold focus:ring-4 focus:ring-sky-400 focus:outline-none" 
-                  />
+                  <input type="text" value={editYoutubeUrl} onChange={e => setEditYoutubeUrl(e.target.value)} placeholder="例如: https://www.youtube.com/watch?v=..." className="w-full border-2 border-gray-950 rounded-xl px-4 py-2 font-bold focus:ring-4 focus:ring-sky-400 focus:outline-none" />
                 </div>
               </div>
             </div>
