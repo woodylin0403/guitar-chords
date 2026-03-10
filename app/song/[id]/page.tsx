@@ -26,7 +26,6 @@ const CHORD_FINGERINGS: Record<string, (number | 'x')[]> = {
   'Bb': ['x', 1, 3, 3, 3, 1], 'Bbm': ['x', 1, 3, 3, 2, 1]
 };
 
-// 🌟 新增：提取 YouTube 影片 ID 的工具函數
 function getYouTubeId(url: string) {
   if (!url) return null;
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
@@ -83,15 +82,12 @@ function formatCommentTime(timestamp: any) {
 }
 
 function getNoteIndex(note: string) { return SHARP_NOTES.indexOf(note) !== -1 ? SHARP_NOTES.indexOf(note) : FLAT_NOTES.indexOf(note); }
-
 function isChord(str: string) { 
   if (!str || str.trim() === '') return false;
   const regex = /^[CDEFGAB][#b]?(m|min|minor|Minor|maj|major|Major|M|dim|aug|sus|add|#|b|\d)*(?:\/[CDEFGAB][#b]?)?$/;
   return regex.test(str) && str !== '|'; 
 }
-
 function getRootNote(key: string) { return key.replace('m', ''); }
-
 function transposeChord(chord: string, steps: number, targetKey: string) {
   if (!chord || chord === '|') return chord;
   const useFlats = FLAT_KEYS.includes(targetKey);
@@ -119,13 +115,16 @@ export default function SongPage() {
   const [fontSize, setFontSize] = useState(22);
   const [isLoading, setIsLoading] = useState(true);
 
+  // 🌟 新增：演奏模式狀態
+  const [isPlayingMode, setIsPlayingMode] = useState(false);
+
   const [user, setUser] = useState<User | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editKey, setEditKey] = useState("C");
   const [editTimeSignature, setEditTimeSignature] = useState("4/4");
   const [editEditor, setEditEditor] = useState("烏鴉Lin"); 
   const [editContent, setEditContent] = useState("");
-  const [editYoutubeUrl, setEditYoutubeUrl] = useState(""); // 🌟 新增 YouTube State
+  const [editYoutubeUrl, setEditYoutubeUrl] = useState(""); 
 
   const [comments, setComments] = useState<any[]>([]);
   const [newCommentText, setNewCommentText] = useState("");
@@ -159,12 +158,21 @@ export default function SongPage() {
           setEditTimeSignature(foundSong.timeSignature || "4/4"); 
           setEditEditor(foundSong.editor || "烏鴉Lin"); 
           setEditContent(foundSong.content);
-          setEditYoutubeUrl(foundSong.youtubeUrl || ""); // 🌟 讀取原有的 YouTube 網址
+          setEditYoutubeUrl(foundSong.youtubeUrl || ""); 
         } else { alert("找不到這首詩歌！"); router.push('/'); }
       } catch (error) { console.error("讀取失敗:", error); } finally { setIsLoading(false); }
     };
     fetchSong();
   }, [songId, router, user]);
+
+  // 🌟 SEO 優化：當歌曲載入完成後，動態更新網頁標題
+  useEffect(() => {
+    if (song && song.title) {
+      document.title = `${song.title} 吉他譜 - 老詩歌吉他譜`;
+    } else {
+      document.title = "老詩歌吉他譜";
+    }
+  }, [song]);
 
   useEffect(() => {
     if (!songId || songId === 'new') return;
@@ -182,28 +190,18 @@ export default function SongPage() {
   const handleSave = async () => {
     if (!song) return;
     const finalId = songId === 'new' ? `song-${Date.now()}` : song.id;
-    // 🌟 儲存時把 YouTube 網址一起包進去
     const updatedSong: Song = { 
-      ...song, 
-      id: finalId, 
+      ...song, id: finalId, 
       title: editTitle.trim() === "" ? "未命名新歌" : editTitle, 
-      originalKey: editKey, 
-      timeSignature: editTimeSignature, 
-      editor: editEditor, 
-      content: editContent, 
-      youtubeUrl: editYoutubeUrl.trim(),
-      ownerId: song.ownerId || user?.uid, 
-      ownerEmail: song.ownerEmail || user?.email || "" 
+      originalKey: editKey, timeSignature: editTimeSignature, 
+      editor: editEditor, content: editContent, youtubeUrl: editYoutubeUrl.trim(),
+      ownerId: song.ownerId || user?.uid, ownerEmail: song.ownerEmail || user?.email || "" 
     };
     
     try {
       await setDoc(doc(db, "songs", finalId), updatedSong);
       if (songId === 'new') router.replace(`/song/${finalId}`);
-      else { 
-        setSong(updatedSong); 
-        setTargetKey(editKey); 
-        setIsEditing(false); 
-      }
+      else { setSong(updatedSong); setTargetKey(editKey); setIsEditing(false); }
     } catch (error) { alert("儲存失敗，請重試！"); }
   };
 
@@ -215,38 +213,19 @@ export default function SongPage() {
   const handleAddComment = async () => {
     if (!user) { alert("請先登入才能留言喔！"); return; }
     if (!newCommentText.trim()) return;
-
     setIsSubmittingComment(true);
     try {
       await addDoc(collection(db, `songs/${songId}/comments`), {
-        text: newCommentText.trim(),
-        authorName: user.displayName || "匿名使用者",
-        authorId: user.uid,
-        createdAt: serverTimestamp() 
+        text: newCommentText.trim(), authorName: user.displayName || "匿名使用者", authorId: user.uid, createdAt: serverTimestamp() 
       });
-
       fetch("https://formsubmit.co/ajax/coolcrow0403@gmail.com", {
-        method: "POST",
-        headers: { 
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        },
+        method: "POST", headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({
-            _subject: `老詩歌吉他譜 🎸 有新留言囉！`,
-            "🎵 歌曲名稱": song?.title || "未知歌曲",
-            "👤 留言者": user.displayName || "匿名使用者",
-            "💬 留言內容": newCommentText.trim(),
-            "🔗 前往樂譜": window.location.href
+            _subject: `老詩歌吉他譜 🎸 有新留言囉！`, "🎵 歌曲名稱": song?.title || "未知歌曲", "👤 留言者": user.displayName || "匿名使用者", "💬 留言內容": newCommentText.trim(), "🔗 前往樂譜": window.location.href
         })
-      }).catch(err => console.error("通知信發送失敗:", err));
-
+      }).catch(err => console.error(err));
       setNewCommentText(""); 
-    } catch (error) {
-      console.error("留言失敗:", error);
-      alert("留言失敗，請重試！");
-    } finally {
-      setIsSubmittingComment(false);
-    }
+    } catch (error) { alert("留言失敗，請重試！"); } finally { setIsSubmittingComment(false); }
   };
 
   const uniqueChords = useMemo(() => {
@@ -255,15 +234,8 @@ export default function SongPage() {
     const chords = new Set<string>();
     
     const matches = song.content.match(/\[(.*?)\]/g);
-    if (matches) {
-      matches.forEach(m => {
-        const chord = m.slice(1, -1);
-        if (isChord(chord)) chords.add(transposeChord(chord, steps, targetKey));
-      });
-    }
-    song.content.split(/(\s+|[|()[\]{}<>,.:;~\-｜（）【】《》，。：；～]+)/).forEach(token => {
-      if (isChord(token)) chords.add(transposeChord(token, steps, targetKey));
-    });
+    if (matches) { matches.forEach(m => { const chord = m.slice(1, -1); if (isChord(chord)) chords.add(transposeChord(chord, steps, targetKey)); }); }
+    song.content.split(/(\s+|[|()[\]{}<>,.:;~\-｜（）【】《》，。：；～]+)/).forEach(token => { if (isChord(token)) chords.add(transposeChord(token, steps, targetKey)); });
     
     return Array.from(chords).sort();
   }, [song, targetKey, isEditing]);
@@ -317,76 +289,108 @@ export default function SongPage() {
   const canEdit = !song.ownerId || (user && user.uid === song.ownerId) || (user && user.displayName === "烏鴉Lin");
 
   return (
-    <main className="min-h-screen bg-[#FDFBF7] text-stone-800 font-sans selection:bg-stone-200 pb-20">
-      <nav className="max-w-5xl mx-auto px-6 py-6 flex justify-between items-center border-b border-stone-200 mb-8">
-        <Link href="/" className="text-stone-500 hover:text-stone-800 text-sm font-medium tracking-widest transition-colors">← 返回目錄</Link>
-        {isEditing && <button onClick={handleDelete} className="text-red-400 hover:text-red-600 text-sm font-medium transition-colors">{songId === 'new' ? '放棄編輯' : '刪除樂譜'}</button>}
-      </nav>
+    // 🌟 在演奏模式時，隱藏多餘背景，填滿螢幕
+    <main className={`min-h-screen bg-[#FDFBF7] text-stone-800 font-sans selection:bg-stone-200 pb-20 ${isPlayingMode ? 'fixed inset-0 z-50 overflow-y-auto !pb-0' : ''}`}>
+      
+      {/* 🌟 離開演奏模式的懸浮按鈕 (只在演奏模式顯示，列印時隱藏) */}
+      {isPlayingMode && (
+        <button 
+          onClick={() => setIsPlayingMode(false)}
+          className="fixed top-6 right-6 z-[60] bg-stone-800/80 hover:bg-stone-900 text-white px-5 py-2.5 rounded-full shadow-lg backdrop-blur-sm transition-all print:hidden flex items-center gap-2"
+        >
+          <span>✕</span> 結束演奏
+        </button>
+      )}
 
-      <div className="max-w-4xl mx-auto px-6">
+      {/* 導覽列：演奏模式與列印時隱藏 (print:hidden) */}
+      {!isPlayingMode && (
+        <nav className="max-w-5xl mx-auto px-6 py-6 flex justify-between items-center border-b border-stone-200 mb-8 print:hidden">
+          <Link href="/" className="text-stone-500 hover:text-stone-800 text-sm font-medium tracking-widest transition-colors">← 返回目錄</Link>
+          {isEditing && <button onClick={handleDelete} className="text-red-400 hover:text-red-600 text-sm font-medium transition-colors">{songId === 'new' ? '放棄編輯' : '刪除樂譜'}</button>}
+        </nav>
+      )}
+
+      <div className={`mx-auto px-6 ${isPlayingMode ? 'max-w-6xl pt-12' : 'max-w-4xl'}`}>
+        
+        {/* 標題與操作按鈕區塊 */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-6">
           <div className="flex-1 w-full md:w-auto">
             <h1 className="text-3xl md:text-5xl font-light text-stone-800 mb-4 tracking-wide break-words">{songId === 'new' ? '新增詩歌' : song.title}</h1>
             <div className="flex flex-wrap items-center gap-3 text-sm text-stone-500">
               {song.editor && <span className="border border-stone-200 px-3 py-1 rounded-full bg-white shadow-sm">編譜：{song.editor}</span>}
               {!isEditing && song.timeSignature && <span className="border border-stone-200 px-3 py-1 rounded-full bg-white shadow-sm">拍號：{song.timeSignature}</span>}
+              {/* 🌟 提示目前轉出的調性，列印時也看得到 */}
+              {!isEditing && targetKey !== song.originalKey && <span className="border border-red-200 text-red-600 px-3 py-1 rounded-full bg-red-50 shadow-sm font-medium">彈奏調性：{targetKey}</span>}
             </div>
           </div>
           
-          <div className="shrink-0">
-            {canEdit ? (
-              isEditing ? (
-                <button onClick={handleSave} className="px-6 py-3 bg-stone-800 hover:bg-stone-900 text-white rounded-full text-sm font-medium transition-all shadow-md">儲存樂譜</button>
+          {/* 編輯按鈕：演奏模式與列印時隱藏 */}
+          {!isPlayingMode && (
+            <div className="shrink-0 print:hidden">
+              {canEdit ? (
+                isEditing ? (
+                  <button onClick={handleSave} className="px-6 py-3 bg-stone-800 hover:bg-stone-900 text-white rounded-full text-sm font-medium transition-all shadow-md">儲存樂譜</button>
+                ) : (
+                  <button onClick={() => setIsEditing(true)} className="px-6 py-3 bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 rounded-full text-sm font-medium transition-all shadow-sm">編輯樂譜</button>
+                )
               ) : (
-                <button onClick={() => setIsEditing(true)} className="px-6 py-3 bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 rounded-full text-sm font-medium transition-all shadow-sm">編輯樂譜</button>
-              )
-            ) : (
-              <span className="text-stone-400 text-sm">僅建立者可編輯</span>
-            )}
-          </div>
+                <span className="text-stone-400 text-sm">僅建立者可編輯</span>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* 控制面板 */}
-        {!isEditing && (
-          <div className="bg-white border border-stone-100 shadow-sm rounded-2xl p-4 md:p-6 mb-8 flex flex-wrap items-center gap-6">
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-stone-500">調性</span>
-              <select value={targetKey} onChange={(e) => setTargetKey(e.target.value)} className="bg-stone-50 border border-stone-200 rounded-lg px-3 py-1.5 text-lg font-medium text-stone-700 focus:outline-none focus:ring-2 focus:ring-stone-300 cursor-pointer">
-                {ALL_KEYS.map((note) => <option key={note} value={note}>{note}</option>)}
-              </select>
-            </div>
-            <div className="w-px h-6 bg-stone-200 hidden md:block"></div>
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-stone-500">字體</span>
-              <div className="flex items-center bg-stone-50 border border-stone-200 rounded-lg overflow-hidden">
-                <button onClick={() => setFontSize(p => Math.max(12, p - 2))} className="px-3 py-1 hover:bg-stone-200 text-stone-600 transition-colors border-r border-stone-200">－</button>
-                <span className="px-3 py-1 font-medium text-sm text-stone-700 min-w-[2.5rem] text-center">{fontSize}</span>
-                <button onClick={() => setFontSize(p => Math.min(48, p + 2))} className="px-3 py-1 hover:bg-stone-200 text-stone-600 transition-colors border-l border-stone-200">＋</button>
+        {/* 控制面板：演奏模式與列印時隱藏 */}
+        {!isEditing && !isPlayingMode && (
+          <div className="bg-white border border-stone-100 shadow-sm rounded-2xl p-4 md:p-6 mb-8 flex flex-wrap items-center justify-between gap-6 print:hidden">
+            <div className="flex flex-wrap items-center gap-6">
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-stone-500">調性</span>
+                <select value={targetKey} onChange={(e) => setTargetKey(e.target.value)} className="bg-stone-50 border border-stone-200 rounded-lg px-3 py-1.5 text-lg font-medium text-stone-700 focus:outline-none focus:ring-2 focus:ring-stone-300 cursor-pointer">
+                  {ALL_KEYS.map((note) => <option key={note} value={note}>{note}</option>)}
+                </select>
+              </div>
+              <div className="w-px h-6 bg-stone-200 hidden md:block"></div>
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-stone-500">字體</span>
+                <div className="flex items-center bg-stone-50 border border-stone-200 rounded-lg overflow-hidden">
+                  <button onClick={() => setFontSize(p => Math.max(12, p - 2))} className="px-3 py-1 hover:bg-stone-200 text-stone-600 transition-colors border-r border-stone-200">－</button>
+                  <span className="px-3 py-1 font-medium text-sm text-stone-700 min-w-[2.5rem] text-center">{fontSize}</span>
+                  <button onClick={() => setFontSize(p => Math.min(60, p + 2))} className="px-3 py-1 hover:bg-stone-200 text-stone-600 transition-colors border-l border-stone-200">＋</button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
 
-        {/* 🌟 閱讀模式下顯示 YouTube 影片 */}
-        {!isEditing && song.youtubeUrl && getYouTubeId(song.youtubeUrl) && (
-          <div className="mb-8 rounded-2xl overflow-hidden shadow-sm border border-stone-100 bg-white p-2">
-            <div className="aspect-video w-full rounded-xl overflow-hidden">
-              <iframe
-                width="100%"
-                height="100%"
-                src={`https://www.youtube.com/embed/${getYouTubeId(song.youtubeUrl)}`}
-                title="YouTube video player"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              ></iframe>
+            {/* 🌟 實用工具區塊 */}
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setIsPlayingMode(true)}
+                className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg text-sm font-medium transition-all flex items-center gap-2"
+              >
+                🎸 演奏模式
+              </button>
+              <button 
+                onClick={() => window.print()}
+                className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg text-sm font-medium transition-all flex items-center gap-2"
+              >
+                🖨️ 列印樂譜
+              </button>
             </div>
           </div>
         )}
 
-        {/* 和弦指法 */}
+        {/* YouTube 影片：演奏模式與列印時隱藏 */}
+        {!isEditing && !isPlayingMode && song.youtubeUrl && getYouTubeId(song.youtubeUrl) && (
+          <div className="mb-8 rounded-2xl overflow-hidden shadow-sm border border-stone-100 bg-white p-2 print:hidden">
+            <div className="aspect-video w-full rounded-xl overflow-hidden">
+              <iframe width="100%" height="100%" src={`https://www.youtube.com/embed/${getYouTubeId(song.youtubeUrl)}`} title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+            </div>
+          </div>
+        )}
+
+        {/* 和弦指法：列印時可以保留，但如果你不想印出來可以加上 print:hidden */}
         {!isEditing && uniqueChords.length > 0 && (
-          <div className="mb-8 p-6 bg-white border border-stone-100 rounded-2xl shadow-sm">
+          <div className={`mb-8 p-6 bg-white border border-stone-100 rounded-2xl shadow-sm ${isPlayingMode ? 'hidden' : ''} print:border-none print:shadow-none print:p-0 print:mb-4`}>
             <h3 className="text-sm font-bold text-stone-400 mb-4 tracking-widest uppercase">本曲使用和弦</h3>
             <div className="flex flex-wrap">
               {uniqueChords.map(chord => (
@@ -397,7 +401,7 @@ export default function SongPage() {
         )}
 
         {/* 主要樂譜區域 */}
-        <div className="bg-white border border-stone-100 shadow-sm rounded-3xl p-6 md:p-10 min-h-[500px]">
+        <div className={`bg-white border shadow-sm rounded-3xl p-6 md:p-10 min-h-[500px] ${isPlayingMode ? 'border-none shadow-none !bg-transparent !p-0' : 'border-stone-100'} print:border-none print:shadow-none print:p-0`}>
           {isEditing ? (
              <div className="space-y-6">
                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pb-6 border-b border-stone-100">
@@ -417,17 +421,9 @@ export default function SongPage() {
                      {TIME_SIGNATURES.map(ts => <option key={ts} value={ts}>{ts}</option>)}
                    </select>
                  </div>
-
-                 {/* 🌟 編輯模式下顯示 YouTube 網址輸入框 */}
                  <div className="col-span-1 md:col-span-4 mt-2">
                    <label className="block text-xs font-bold text-stone-400 mb-2 uppercase tracking-widest">YouTube 示範影片網址 (選填)</label>
-                   <input 
-                     type="text" 
-                     value={editYoutubeUrl} 
-                     onChange={e => setEditYoutubeUrl(e.target.value)} 
-                     placeholder="例如：https://www.youtube.com/watch?v=..." 
-                     className="w-full border border-stone-200 rounded-lg px-4 py-2 bg-stone-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-stone-300 transition-all" 
-                   />
+                   <input type="text" value={editYoutubeUrl} onChange={e => setEditYoutubeUrl(e.target.value)} placeholder="例如：https://www.youtube.com/watch?v=..." className="w-full border border-stone-200 rounded-lg px-4 py-2 bg-stone-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-stone-300 transition-all" />
                  </div>
                </div>
                
@@ -445,13 +441,13 @@ export default function SongPage() {
           )}
         </div>
 
-        {/* 留言與討論區塊 */}
-        {!isEditing && songId !== 'new' && (
-          <div className="mt-12 bg-white border border-stone-100 shadow-sm rounded-3xl p-6 md:p-10">
+        {/* 留言與討論區塊：演奏模式與列印時隱藏 */}
+        {!isEditing && !isPlayingMode && songId !== 'new' && (
+          <div className="mt-12 bg-white border border-stone-100 shadow-sm rounded-3xl p-6 md:p-10 print:hidden">
             <h3 className="text-xl font-medium text-stone-800 mb-8 flex items-center gap-3">
               <span className="text-2xl">💬</span> 詩歌討論與分享
             </h3>
-
+            {/* 留言內容 */}
             <div className="space-y-6 mb-8">
               {comments.length > 0 ? (
                 comments.map((comment) => (
@@ -466,26 +462,16 @@ export default function SongPage() {
                   </div>
                 ))
               ) : (
-                <div className="text-center py-10 text-stone-400 text-sm">
-                  目前還沒有留言，來當第一個分享的人吧！
-                </div>
+                <div className="text-center py-10 text-stone-400 text-sm">目前還沒有留言，來當第一個分享的人吧！</div>
               )}
             </div>
 
+            {/* 留言輸入 */}
             <div className="border-t border-stone-100 pt-8 mt-4">
               {user ? (
                 <div className="flex flex-col gap-3">
-                  <textarea
-                    value={newCommentText}
-                    onChange={(e) => setNewCommentText(e.target.value)}
-                    placeholder="分享你的感動、彈奏問題，或是貼上 YouTube 示範連結..."
-                    className="w-full p-4 bg-stone-50 border border-stone-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-stone-300 transition-all resize-none h-28"
-                  />
-                  <button 
-                    onClick={handleAddComment}
-                    disabled={!newCommentText.trim() || isSubmittingComment}
-                    className="self-end px-6 py-2.5 bg-stone-800 hover:bg-stone-900 text-white rounded-full text-sm font-medium transition-all disabled:bg-stone-300 disabled:cursor-not-allowed shadow-sm"
-                  >
+                  <textarea value={newCommentText} onChange={(e) => setNewCommentText(e.target.value)} placeholder="分享你的感動、彈奏問題，或是貼上 YouTube 示範連結..." className="w-full p-4 bg-stone-50 border border-stone-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-stone-300 transition-all resize-none h-28" />
+                  <button onClick={handleAddComment} disabled={!newCommentText.trim() || isSubmittingComment} className="self-end px-6 py-2.5 bg-stone-800 hover:bg-stone-900 text-white rounded-full text-sm font-medium transition-all disabled:bg-stone-300 disabled:cursor-not-allowed shadow-sm">
                     {isSubmittingComment ? '送出中...' : '送出留言'}
                   </button>
                 </div>

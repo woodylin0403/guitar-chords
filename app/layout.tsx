@@ -14,8 +14,16 @@ export const metadata: Metadata = {
   // 3. 關鍵字加上你的名字
   keywords: "烏鴉Lin, 吉他譜, 詩歌, 敬拜, 轉調, 和弦, 舉目仰望, 團契, 老詩歌吉他譜",
   
+  // 4. Google 搜尋引擎驗證碼 (請保持你原本填寫的真實亂碼)
   verification: {
-    google: "你的Google驗證碼請保留在這裡", // 👈 這裡維持你剛才貼的亂碼不要動喔！
+    google: "tAqrHN-QWf94SGf9R3t5NHqkv5nC2nneq6seJ3dLyGE", 
+  },
+  
+  // 🌟 新增：Open Graph 設定 (當別人把你的網址貼到 Line 或 FB 時，會顯示漂亮的預覽)
+  openGraph: {
+    title: '烏鴉Lin 的老詩歌吉他譜',
+    description: '專為教會敬拜與小組聚會打造的老詩歌吉他譜網站。提供智能和弦轉調、吉他彈唱譜、YouTube 示範影片，讓敬拜更順暢。',
+    type: 'website',
   }
 };
 
@@ -26,7 +34,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-TW">
-      <body className={inter.className}>{children}</body>
+      {/* 🌟 融合了字體 (inter.className) 與我們原本設定好的網站背景色與抗鋸齒 */}
+      <body className={`${inter.className} bg-[#FDFBF7] antialiased`}>
+        {children}
+      </body>
     </html>
   );
 }
