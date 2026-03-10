@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { initialSongList, Song } from '@/data/songs';
 import { importSongs } from '@/data/importSongs';
-import { collection, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, deleteDoc, updateDoc, increment, getDoc } from 'firebase/firestore';
 import { db, auth, googleProvider } from '@/lib/firebase';
 import { signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
 
@@ -31,6 +31,7 @@ export default function Home() {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [showMode, setShowMode] = useState<'instructions' | 'list'>('instructions');
+  const [siteViews, setSiteViews] = useState(0); // 🌟 新增：網站總瀏覽次數狀態
   
   const [selectedSongs, setSelectedSongs] = useState<string[]>([]);
 
@@ -67,6 +68,28 @@ export default function Home() {
   };
 
   useEffect(() => { fetchSongs(); }, []);
+
+  // 🌟 新增：追蹤並讀取網站總瀏覽量
+  useEffect(() => {
+    const fetchAndTrackSiteViews = async () => {
+      const statsRef = doc(db, 'stats', 'global');
+      try {
+        // 利用 sessionStorage 避免同一人同一次瀏覽狂刷首頁增加瀏覽量
+        const hasVisited = sessionStorage.getItem('hasVisited');
+        if (!hasVisited) {
+          await setDoc(statsRef, { views: increment(1) }, { merge: true });
+          sessionStorage.setItem('hasVisited', 'true');
+        }
+        const snap = await getDoc(statsRef);
+        if (snap.exists()) {
+          setSiteViews(snap.data().views || 0);
+        }
+      } catch (error) {
+        console.error("無法讀取網站瀏覽量", error);
+      }
+    };
+    fetchAndTrackSiteViews();
+  }, []);
 
   const handleLogin = async () => {
     try { await signInWithPopup(auth, googleProvider); } 
@@ -193,6 +216,10 @@ export default function Home() {
           </h1>
         </div>
         <div className="flex items-center gap-6">
+          {/* 🌟 新增：總瀏覽量顯示區塊 */}
+          <div className="hidden md:flex items-center gap-1 text-sm font-medium text-stone-500 bg-stone-100 px-3 py-1.5 rounded-full shadow-sm">
+            👁️ 總瀏覽：{siteViews}
+          </div>
           <a href="mailto:coolcrow0403@gmail.com?subject=老詩歌吉他譜-回饋" className="text-sm font-medium text-stone-400 hover:text-stone-800 transition-colors">✉️ 聯絡站長</a>
           <div className="w-px h-4 bg-stone-300"></div>
           {user ? (
@@ -262,7 +289,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 🌟 新增：實用功能指南 / 網站特色區塊 */}
+      {/* 🌟 實用功能指南 / 網站特色區塊 */}
       <section className="max-w-5xl mx-auto px-6 mb-12">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-white p-5 rounded-2xl border border-stone-100 shadow-sm flex flex-col items-center text-center hover:shadow-md transition-shadow">
@@ -347,8 +374,12 @@ export default function Home() {
                         <span className="text-stone-400 text-xs font-mono border border-stone-200 px-2 py-1 rounded-md shrink-0 ml-2">{song.originalKey}</span>
                       </div>
                       
+                      {/* 🌟 樂譜底部資訊 (加入觀看次數) */}
                       <div className="mt-auto pt-6 flex justify-between items-center text-xs text-stone-400 pr-10">
-                        <span className="bg-stone-50 px-2 py-1 rounded">編：{song.editor}</span>
+                        <div className="flex gap-2">
+                          <span className="bg-stone-50 px-2 py-1 rounded">編：{song.editor}</span>
+                          <span className="bg-stone-50 px-2 py-1 rounded flex items-center gap-1 font-medium">👁️ {(song as any).views || 0}</span>
+                        </div>
                         <span className="font-mono">{getUploadDate(song.id)}</span>
                       </div>
 

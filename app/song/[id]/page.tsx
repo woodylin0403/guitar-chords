@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Song } from '@/data/songs';
-import { doc, getDoc, setDoc, deleteDoc, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, deleteDoc, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, updateDoc, increment } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 
@@ -151,6 +151,20 @@ export default function SongPage() {
         const docSnap = await getDoc(doc(db, "songs", songId));
         if (docSnap.exists()) {
           const foundSong = docSnap.data() as Song;
+          
+          // 🌟 新增：單曲瀏覽次數 +1 (加入防護機制)
+          try {
+            const viewKey = `viewed_${songId}`;
+            // 如果這個視窗還沒看過這首歌，才算一次新的瀏覽
+            if (!sessionStorage.getItem(viewKey)) {
+              await updateDoc(doc(db, "songs", songId), { views: increment(1) });
+              sessionStorage.setItem(viewKey, 'true');
+              (foundSong as any).views = ((foundSong as any).views || 0) + 1; // 讓畫面即時更新
+            }
+          } catch (e) {
+            console.error("更新觀看次數失敗", e);
+          }
+
           setSong(foundSong); 
           setTargetKey(foundSong.originalKey); 
           setEditTitle(foundSong.title); 
@@ -319,6 +333,14 @@ export default function SongPage() {
             <div className="flex flex-wrap items-center gap-3 text-sm text-stone-500">
               {song.editor && <span className="border border-stone-200 px-3 py-1 rounded-full bg-white shadow-sm">編譜：{song.editor}</span>}
               {!isEditing && song.timeSignature && <span className="border border-stone-200 px-3 py-1 rounded-full bg-white shadow-sm">拍號：{song.timeSignature}</span>}
+              
+              {/* 🌟 顯示單曲觀看次數（使用安全的轉型避免報錯） */}
+              {!isEditing && (
+                <span className="border border-stone-200 px-3 py-1 rounded-full bg-white shadow-sm flex items-center gap-1">
+                  👁️ {(song as any).views || 1} 次觀看
+                </span>
+              )}
+
               {/* 🌟 提示目前轉出的調性，列印時也看得到 */}
               {!isEditing && targetKey !== song.originalKey && <span className="border border-red-200 text-red-600 px-3 py-1 rounded-full bg-red-50 shadow-sm font-medium">彈奏調性：{targetKey}</span>}
             </div>
