@@ -154,7 +154,6 @@ export default function Home() {
     }
   };
 
-  // ✅ 修正了打勾反應慢半拍的問題
   const toggleSelection = (songId: string) => {
     setSelectedSongs(prev => 
       prev.includes(songId) 
@@ -207,7 +206,7 @@ export default function Home() {
         </div>
       </nav>
 
-      <section className="max-w-4xl mx-auto px-6 pt-6 pb-12 text-center">
+      <section className="max-w-4xl mx-auto px-6 pt-6 pb-8 text-center">
         <h2 className="text-3xl md:text-4xl font-light text-stone-700 mb-8 tracking-wide">尋找那一首感動你的旋律</h2>
         
         <div className="relative mb-8 max-w-2xl mx-auto">
@@ -260,6 +259,32 @@ export default function Home() {
           {MINOR_KEYS.map(key => (
             <button key={key} onClick={() => handleKeySelect(key)} className={`px-4 py-2 rounded-2xl text-sm font-medium transition-all ${showMode === 'list' && selectedKey === key ? 'bg-stone-500 text-white' : 'text-stone-500 hover:bg-stone-50'}`}>{key}</button>
           ))}
+        </div>
+      </section>
+
+      {/* 🌟 新增：實用功能指南 / 網站特色區塊 */}
+      <section className="max-w-5xl mx-auto px-6 mb-12">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-white p-5 rounded-2xl border border-stone-100 shadow-sm flex flex-col items-center text-center hover:shadow-md transition-shadow">
+            <div className="text-3xl mb-2">🎸</div>
+            <h3 className="text-stone-800 font-bold mb-1 text-sm md:text-base">一鍵智能轉調</h3>
+            <p className="text-stone-500 text-xs md:text-sm">隨心所欲切換調性，完美配合個人音域。</p>
+          </div>
+          <div className="bg-white p-5 rounded-2xl border border-stone-100 shadow-sm flex flex-col items-center text-center hover:shadow-md transition-shadow">
+            <div className="text-3xl mb-2">📱</div>
+            <h3 className="text-stone-800 font-bold mb-1 text-sm md:text-base">沉浸演奏模式</h3>
+            <p className="text-stone-500 text-xs md:text-sm">隱藏所有干擾介面，專注於吉他彈唱。</p>
+          </div>
+          <div className="bg-white p-5 rounded-2xl border border-stone-100 shadow-sm flex flex-col items-center text-center hover:shadow-md transition-shadow">
+            <div className="text-3xl mb-2">🖨️</div>
+            <h3 className="text-stone-800 font-bold mb-1 text-sm md:text-base">純淨列印功能</h3>
+            <p className="text-stone-500 text-xs md:text-sm">一鍵匯出或列印完美白底黑字的乾淨樂譜。</p>
+          </div>
+          <div className="bg-white p-5 rounded-2xl border border-stone-100 shadow-sm flex flex-col items-center text-center hover:shadow-md transition-shadow">
+            <div className="text-3xl mb-2">▶️</div>
+            <h3 className="text-stone-800 font-bold mb-1 text-sm md:text-base">YouTube 整合</h3>
+            <p className="text-stone-500 text-xs md:text-sm">結合影音示範，隨時聆聽原曲或跟著練彈。</p>
+          </div>
         </div>
       </section>
 
