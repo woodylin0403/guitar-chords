@@ -152,14 +152,13 @@ export default function SongPage() {
         if (docSnap.exists()) {
           const foundSong = docSnap.data() as Song;
           
-          // 🌟 新增：單曲瀏覽次數 +1 (加入防護機制)
+          // 🌟 單曲瀏覽次數 +1 (加入防護機制)
           try {
             const viewKey = `viewed_${songId}`;
-            // 如果這個視窗還沒看過這首歌，才算一次新的瀏覽
             if (!sessionStorage.getItem(viewKey)) {
               await updateDoc(doc(db, "songs", songId), { views: increment(1) });
               sessionStorage.setItem(viewKey, 'true');
-              (foundSong as any).views = ((foundSong as any).views || 0) + 1; // 讓畫面即時更新
+              (foundSong as any).views = ((foundSong as any).views || 0) + 1; 
             }
           } catch (e) {
             console.error("更新觀看次數失敗", e);
@@ -179,7 +178,6 @@ export default function SongPage() {
     fetchSong();
   }, [songId, router, user]);
 
-  // 🌟 SEO 優化：當歌曲載入完成後，動態更新網頁標題
   useEffect(() => {
     if (song && song.title) {
       document.title = `${song.title} 吉他譜 - 老詩歌吉他譜`;
@@ -259,6 +257,7 @@ export default function SongPage() {
 
   const steps = getNoteIndex(getRootNote(targetKey)) - getNoteIndex(getRootNote(song.originalKey));
 
+  // 🌟 升級版：精準對齊與底線渲染邏輯
   const renderPreview = (text: string) => {
     return (
       <div className="overflow-x-auto pb-6">
@@ -267,21 +266,54 @@ export default function SongPage() {
             if (/\[.*?\]/.test(line)) {
               const parts = line.split(/\[(.*?)\]/);
               const elements = [];
-              for (let i = 0; i < parts.length; i += 2) {
-                const lyric = parts[i];
-                const chord = i > 0 ? parts[i - 1] : null;
-                if (!chord && !lyric) continue;
-                const isLyricEmpty = lyric === '';
+
+              if (parts[0]) {
                 elements.push(
-                  <div key={i} className={`flex flex-col justify-end ${isLyricEmpty ? 'mr-3' : ''}`}>
-                    <span className={`font-bold pr-1 ${chord === '|' ? 'text-stone-300' : 'text-stone-600'}`} style={{ fontSize: '0.85em', minHeight: '1.25em' }}>
-                      {chord ? transposeChord(chord, steps, targetKey) : ''}
-                    </span>
-                    <span className="whitespace-pre" style={{ minHeight: '1.25em' }}>{isLyricEmpty ? ' ' : lyric}</span>
-                  </div>
+                  <span key={`text-init`} className="whitespace-pre">
+                    {parts[0]}
+                  </span>
                 );
               }
-              return <div key={lineIndex} className="flex items-end mb-2">{elements}</div>;
+
+              for (let i = 1; i < parts.length; i += 2) {
+                const chord = parts[i];
+                const lyricSegment = parts[i + 1] || '';
+                const isBarline = chord === '|' || chord === '｜';
+                const chordDisplay = transposeChord(chord, steps, targetKey);
+
+                if (lyricSegment.length > 0) {
+                  const firstChar = lyricSegment.charAt(0);
+                  const restText = lyricSegment.substring(1);
+
+                  elements.push(
+                    <div key={`chord-${i}`} className="inline-flex items-end">
+                      <div className="flex flex-col items-center">
+                        <span className={`font-bold ${isBarline ? 'text-stone-300' : 'text-stone-600'}`} style={{ fontSize: '0.85em', marginBottom: '0.1em' }}>
+                          {chordDisplay}
+                        </span>
+                        <span className={`whitespace-pre ${!isBarline && firstChar.trim() !== '' ? 'underline decoration-stone-400 decoration-[2.5px] underline-offset-[5px]' : ''}`}>
+                          {firstChar}
+                        </span>
+                      </div>
+                      {restText && (
+                        <span className="whitespace-pre">
+                          {restText}
+                        </span>
+                      )}
+                    </div>
+                  );
+                } else {
+                  elements.push(
+                    <div key={`chord-${i}`} className="inline-flex flex-col items-center mr-2">
+                      <span className={`font-bold ${isBarline ? 'text-stone-300' : 'text-stone-600'}`} style={{ fontSize: '0.85em', marginBottom: '0.1em' }}>
+                        {chordDisplay}
+                      </span>
+                      <span className="whitespace-pre"> </span>
+                    </div>
+                  );
+                }
+              }
+              return <div key={lineIndex} className="flex items-end mb-3 min-h-[2.5em]">{elements}</div>;
             } else {
               const tokens = line.split(/(\s+|[|()[\]{}<>,.:;~\-｜（）【】《》，。：；～]+)/);
               return (
@@ -303,10 +335,8 @@ export default function SongPage() {
   const canEdit = !song.ownerId || (user && user.uid === song.ownerId) || (user && user.displayName === "烏鴉Lin");
 
   return (
-    // 🌟 在演奏模式時，隱藏多餘背景，填滿螢幕
     <main className={`min-h-screen bg-[#FDFBF7] text-stone-800 font-sans selection:bg-stone-200 pb-20 ${isPlayingMode ? 'fixed inset-0 z-50 overflow-y-auto !pb-0' : ''}`}>
       
-      {/* 🌟 離開演奏模式的懸浮按鈕 (只在演奏模式顯示，列印時隱藏) */}
       {isPlayingMode && (
         <button 
           onClick={() => setIsPlayingMode(false)}
@@ -316,7 +346,6 @@ export default function SongPage() {
         </button>
       )}
 
-      {/* 導覽列：演奏模式與列印時隱藏 (print:hidden) */}
       {!isPlayingMode && (
         <nav className="max-w-5xl mx-auto px-6 py-6 flex justify-between items-center border-b border-stone-200 mb-8 print:hidden">
           <Link href="/" className="text-stone-500 hover:text-stone-800 text-sm font-medium tracking-widest transition-colors">← 返回目錄</Link>
@@ -326,27 +355,21 @@ export default function SongPage() {
 
       <div className={`mx-auto px-6 ${isPlayingMode ? 'max-w-6xl pt-12' : 'max-w-4xl'}`}>
         
-        {/* 標題與操作按鈕區塊 */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-6">
           <div className="flex-1 w-full md:w-auto">
             <h1 className="text-3xl md:text-5xl font-light text-stone-800 mb-4 tracking-wide break-words">{songId === 'new' ? '新增詩歌' : song.title}</h1>
             <div className="flex flex-wrap items-center gap-3 text-sm text-stone-500">
               {song.editor && <span className="border border-stone-200 px-3 py-1 rounded-full bg-white shadow-sm">編譜：{song.editor}</span>}
               {!isEditing && song.timeSignature && <span className="border border-stone-200 px-3 py-1 rounded-full bg-white shadow-sm">拍號：{song.timeSignature}</span>}
-              
-              {/* 🌟 顯示單曲觀看次數（使用安全的轉型避免報錯） */}
               {!isEditing && (
                 <span className="border border-stone-200 px-3 py-1 rounded-full bg-white shadow-sm flex items-center gap-1">
                   👁️ {(song as any).views || 1} 次觀看
                 </span>
               )}
-
-              {/* 🌟 提示目前轉出的調性，列印時也看得到 */}
               {!isEditing && targetKey !== song.originalKey && <span className="border border-red-200 text-red-600 px-3 py-1 rounded-full bg-red-50 shadow-sm font-medium">彈奏調性：{targetKey}</span>}
             </div>
           </div>
           
-          {/* 編輯按鈕：演奏模式與列印時隱藏 */}
           {!isPlayingMode && (
             <div className="shrink-0 print:hidden">
               {canEdit ? (
@@ -362,7 +385,6 @@ export default function SongPage() {
           )}
         </div>
 
-        {/* 控制面板：演奏模式與列印時隱藏 */}
         {!isEditing && !isPlayingMode && (
           <div className="bg-white border border-stone-100 shadow-sm rounded-2xl p-4 md:p-6 mb-8 flex flex-wrap items-center justify-between gap-6 print:hidden">
             <div className="flex flex-wrap items-center gap-6">
@@ -383,7 +405,6 @@ export default function SongPage() {
               </div>
             </div>
 
-            {/* 🌟 實用工具區塊 */}
             <div className="flex gap-3">
               <button 
                 onClick={() => setIsPlayingMode(true)}
@@ -401,7 +422,6 @@ export default function SongPage() {
           </div>
         )}
 
-        {/* YouTube 影片：演奏模式與列印時隱藏 */}
         {!isEditing && !isPlayingMode && song.youtubeUrl && getYouTubeId(song.youtubeUrl) && (
           <div className="mb-8 rounded-2xl overflow-hidden shadow-sm border border-stone-100 bg-white p-2 print:hidden">
             <div className="aspect-video w-full rounded-xl overflow-hidden">
@@ -410,7 +430,6 @@ export default function SongPage() {
           </div>
         )}
 
-        {/* 和弦指法：列印時可以保留，但如果你不想印出來可以加上 print:hidden */}
         {!isEditing && uniqueChords.length > 0 && (
           <div className={`mb-8 p-6 bg-white border border-stone-100 rounded-2xl shadow-sm ${isPlayingMode ? 'hidden' : ''} print:border-none print:shadow-none print:p-0 print:mb-4`}>
             <h3 className="text-sm font-bold text-stone-400 mb-4 tracking-widest uppercase">本曲使用和弦</h3>
@@ -422,7 +441,6 @@ export default function SongPage() {
           </div>
         )}
 
-        {/* 主要樂譜區域 */}
         <div className={`bg-white border shadow-sm rounded-3xl p-6 md:p-10 min-h-[500px] ${isPlayingMode ? 'border-none shadow-none !bg-transparent !p-0' : 'border-stone-100'} print:border-none print:shadow-none print:p-0`}>
           {isEditing ? (
              <div className="space-y-6">
@@ -463,13 +481,11 @@ export default function SongPage() {
           )}
         </div>
 
-        {/* 留言與討論區塊：演奏模式與列印時隱藏 */}
         {!isEditing && !isPlayingMode && songId !== 'new' && (
           <div className="mt-12 bg-white border border-stone-100 shadow-sm rounded-3xl p-6 md:p-10 print:hidden">
             <h3 className="text-xl font-medium text-stone-800 mb-8 flex items-center gap-3">
               <span className="text-2xl">💬</span> 詩歌討論與分享
             </h3>
-            {/* 留言內容 */}
             <div className="space-y-6 mb-8">
               {comments.length > 0 ? (
                 comments.map((comment) => (
@@ -488,7 +504,6 @@ export default function SongPage() {
               )}
             </div>
 
-            {/* 留言輸入 */}
             <div className="border-t border-stone-100 pt-8 mt-4">
               {user ? (
                 <div className="flex flex-col gap-3">
