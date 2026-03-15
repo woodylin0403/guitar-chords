@@ -337,13 +337,40 @@ export default function SongPage() {
   return (
     <main className={`min-h-screen bg-[#FDFBF7] text-stone-800 font-sans selection:bg-stone-200 pb-20 ${isPlayingMode ? 'fixed inset-0 z-50 overflow-y-auto !pb-0' : ''}`}>
       
+      {/* 🌟 演奏模式的懸浮控制列 (包含字體調整與結束按鈕) */}
       {isPlayingMode && (
-        <button 
-          onClick={() => setIsPlayingMode(false)}
-          className="fixed top-6 right-6 z-[60] bg-stone-800/80 hover:bg-stone-900 text-white px-5 py-2.5 rounded-full shadow-lg backdrop-blur-sm transition-all print:hidden flex items-center gap-2"
-        >
-          <span>✕</span> 結束演奏
-        </button>
+        <div className="fixed top-6 right-6 z-[60] flex items-center bg-stone-800/90 text-white rounded-full shadow-lg backdrop-blur-md print:hidden overflow-hidden border border-stone-700/50">
+          
+          {/* 字體調整區塊 */}
+          <div className="flex items-center px-2 py-1">
+            <button 
+              onClick={() => setFontSize(p => Math.max(12, p - 2))} 
+              className="w-9 h-9 flex items-center justify-center hover:bg-stone-700 rounded-full transition-colors text-stone-300 hover:text-white"
+              title="縮小字體"
+            >
+              －
+            </button>
+            <span className="w-8 text-center text-sm font-medium font-mono text-stone-200">{fontSize}</span>
+            <button 
+              onClick={() => setFontSize(p => Math.min(60, p + 2))} 
+              className="w-9 h-9 flex items-center justify-center hover:bg-stone-700 rounded-full transition-colors text-stone-300 hover:text-white"
+              title="放大字體"
+            >
+              ＋
+            </button>
+          </div>
+          
+          {/* 分隔線 */}
+          <div className="w-px h-6 bg-stone-600 mx-1"></div>
+          
+          {/* 結束按鈕 */}
+          <button 
+            onClick={() => setIsPlayingMode(false)}
+            className="px-5 py-2.5 hover:bg-stone-700 text-stone-200 hover:text-white transition-all flex items-center gap-2 text-sm font-medium"
+          >
+            <span>✕</span> 結束
+          </button>
+        </div>
       )}
 
       {!isPlayingMode && (
