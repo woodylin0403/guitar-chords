@@ -31,7 +31,7 @@ export default function Home() {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [showMode, setShowMode] = useState<'instructions' | 'list'>('instructions');
-  const [siteViews, setSiteViews] = useState(0); // 🌟 新增：網站總瀏覽次數狀態
+  const [siteViews, setSiteViews] = useState(0); 
   
   const [selectedSongs, setSelectedSongs] = useState<string[]>([]);
 
@@ -43,7 +43,6 @@ export default function Home() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      // 登出時，自動清空所有已勾選的歌曲
       if (!currentUser) setSelectedSongs([]); 
     });
     return () => unsubscribe();
@@ -69,12 +68,10 @@ export default function Home() {
 
   useEffect(() => { fetchSongs(); }, []);
 
-  // 🌟 新增：追蹤並讀取網站總瀏覽量
   useEffect(() => {
     const fetchAndTrackSiteViews = async () => {
       const statsRef = doc(db, 'stats', 'global');
       try {
-        // 利用 sessionStorage 避免同一人同一次瀏覽狂刷首頁增加瀏覽量
         const hasVisited = sessionStorage.getItem('hasVisited');
         if (!hasVisited) {
           await setDoc(statsRef, { views: increment(1) }, { merge: true });
@@ -137,7 +134,6 @@ export default function Home() {
     e.preventDefault(); 
     e.stopPropagation(); 
 
-    // ✅ 嚴格的權限檢查：必須登入，且(是管理員 或 是烏鴉Lin 或 是樂譜建立者)
     if (!user) {
       alert("請先登入才能執行此動作！");
       return;
@@ -215,16 +211,24 @@ export default function Home() {
             老詩歌<span className="text-stone-400 font-light">吉他譜</span>
           </h1>
         </div>
-        <div className="flex items-center gap-6">
-          {/* 🌟 新增：總瀏覽量顯示區塊 */}
+        <div className="flex items-center gap-4 md:gap-6 flex-wrap justify-end">
+          
+          {/* 🌟 這是通往你新網頁的按鈕！ */}
+          <Link 
+            href="/tools" 
+            className="text-sm font-bold text-white bg-[#D97757] hover:bg-[#C66242] px-4 py-1.5 rounded-full shadow-sm hover:shadow-md transition-all flex items-center gap-1"
+          >
+            🎁 救恩的禮物
+          </Link>
+
           <div className="hidden md:flex items-center gap-1 text-sm font-medium text-stone-500 bg-stone-100 px-3 py-1.5 rounded-full shadow-sm">
             👁️ 總瀏覽：{siteViews}
           </div>
-          <a href="mailto:coolcrow0403@gmail.com?subject=老詩歌吉他譜-回饋" className="text-sm font-medium text-stone-400 hover:text-stone-800 transition-colors">✉️ 聯絡站長</a>
-          <div className="w-px h-4 bg-stone-300"></div>
+          <a href="mailto:coolcrow0403@gmail.com?subject=老詩歌吉他譜-回饋" className="text-sm font-medium text-stone-400 hover:text-stone-800 transition-colors hidden sm:block">✉️ 聯絡站長</a>
+          <div className="w-px h-4 bg-stone-300 hidden sm:block"></div>
           {user ? (
             <div className="flex items-center gap-4 text-sm font-medium text-stone-600">
-              <span>{user.displayName}</span>
+              <span className="hidden sm:block">{user.displayName}</span>
               <button onClick={handleLogout} className="hover:text-stone-900 transition-colors">登出</button>
             </div>
           ) : (
@@ -289,7 +293,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 🌟 實用功能指南 / 網站特色區塊 */}
       <section className="max-w-5xl mx-auto px-6 mb-12">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-white p-5 rounded-2xl border border-stone-100 shadow-sm flex flex-col items-center text-center hover:shadow-md transition-shadow">
@@ -341,7 +344,6 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredSongs.length > 0 ? (
               filteredSongs.map((song) => {
-                // ✅ 權限防護：未登入者絕對無法編輯或刪除
                 const canEdit = !!user && (isAdmin || user.displayName === "烏鴉Lin" || song.ownerId === user.uid);
                 const isSelected = selectedSongs.includes(song.id);
 
@@ -349,12 +351,11 @@ export default function Home() {
                   <Link href={`/song/${song.id}`} key={song.id} className="group block">
                     <div className={`bg-white p-6 rounded-2xl border ${isSelected ? 'border-red-400 shadow-md ring-1 ring-red-400' : 'border-stone-100 shadow-sm hover:shadow-md'} transition-all h-full flex flex-col relative`}>
                       
-                      {/* ✅ 修正的核取方塊區塊 */}
                       {canEdit && (
                         <div 
                           onClick={(e) => {
-                            e.preventDefault();  // 阻擋 Link 換頁
-                            e.stopPropagation(); // 阻擋事件冒泡
+                            e.preventDefault();  
+                            e.stopPropagation(); 
                             toggleSelection(song.id);
                           }}
                           className="absolute top-4 right-4 z-20 bg-white/80 p-1.5 rounded-md cursor-pointer hover:bg-stone-100 transition-colors"
@@ -374,7 +375,6 @@ export default function Home() {
                         <span className="text-stone-400 text-xs font-mono border border-stone-200 px-2 py-1 rounded-md shrink-0 ml-2">{song.originalKey}</span>
                       </div>
                       
-                      {/* 🌟 樂譜底部資訊 (加入觀看次數) */}
                       <div className="mt-auto pt-6 flex justify-between items-center text-xs text-stone-400 pr-10">
                         <div className="flex gap-2">
                           <span className="bg-stone-50 px-2 py-1 rounded">編：{song.editor}</span>
