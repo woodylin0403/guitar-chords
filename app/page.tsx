@@ -213,13 +213,22 @@ export default function Home() {
         </div>
         <div className="flex items-center gap-4 md:gap-6 flex-wrap justify-end">
           
-          {/* 🌟 這是通往你新網頁的按鈕！ */}
-          <Link 
-            href="/tools" 
-            className="text-sm font-bold text-white bg-[#D97757] hover:bg-[#C66242] px-4 py-1.5 rounded-full shadow-sm hover:shadow-md transition-all flex items-center gap-1"
-          >
-            🎁 救恩的禮物
-          </Link>
+          {/* 🌟 兩個主題工具按鈕並排 */}
+          <div className="flex items-center gap-2">
+            <Link 
+              href="/tools" 
+              className="text-sm font-bold text-white bg-[#D97757] hover:bg-[#C66242] px-4 py-1.5 rounded-full shadow-sm hover:shadow-md transition-all flex items-center gap-1"
+            >
+              🎁 救恩的禮物
+            </Link>
+            
+            <Link 
+              href="/prayer" 
+              className="text-sm font-bold text-white bg-[#5C8CA6] hover:bg-[#4A7A94] px-4 py-1.5 rounded-full shadow-sm hover:shadow-md transition-all flex items-center gap-1"
+            >
+              🕊️ 禱告的大能
+            </Link>
+          </div>
 
           <div className="hidden md:flex items-center gap-1 text-sm font-medium text-stone-500 bg-stone-100 px-3 py-1.5 rounded-full shadow-sm">
             👁️ 總瀏覽：{siteViews}
