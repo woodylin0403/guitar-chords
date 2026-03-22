@@ -58,48 +58,63 @@ export default function PortalHome() {
         </p>
       </section>
 
-      {/* 4 大分類卡片區塊 */}
-      <section className="max-w-5xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* 4 大分類卡片區塊 — bento：多層陰影 + 流暢懸浮 */}
+      <section className="max-w-5xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-7">
         
-        {/* 1. 認識基督教 */}
-        <Link href="/christianity" className="group rounded-3xl bg-[#D97757] p-8 transition-transform hover:-translate-y-1 hover:shadow-xl shadow-sm text-white flex flex-col justify-between min-h-[220px]">
-          <div>
-            <div className="text-4xl mb-4">✝️</div>
-            <h3 className="text-2xl font-bold mb-2">認識基督教</h3>
-            <p className="text-white/80 text-base leading-relaxed">救恩的禮物、禱告的大能、神是你的牧者。探索信仰的核心基礎。</p>
-          </div>
-          <div className="mt-6 font-medium bg-white/20 w-fit px-4 py-1.5 rounded-full backdrop-blur-sm group-hover:bg-white/30 transition-colors text-sm">進入探索 →</div>
-        </Link>
-
-        {/* 2. 慕道裝備三本書 */}
-        <Link href="/seekers-books" className="group rounded-3xl bg-[#5C8CA6] p-8 transition-transform hover:-translate-y-1 hover:shadow-xl shadow-sm text-white flex flex-col justify-between min-h-[220px]">
-          <div>
-            <div className="text-4xl mb-4">📚</div>
-            <h3 className="text-2xl font-bold mb-2">慕道裝備三本書</h3>
-            <p className="text-white/80 text-base leading-relaxed">到底有沒有神？聖經是神默示的嗎？耶穌是神的兒子嗎？</p>
-          </div>
-          <div className="mt-6 font-medium bg-white/20 w-fit px-4 py-1.5 rounded-full backdrop-blur-sm group-hover:bg-white/30 transition-colors text-sm">進入探索 →</div>
-        </Link>
-
-        {/* 3. 認識耶穌基督：神蹟奇事 */}
-        <Link href="/miracles" className="group rounded-3xl bg-[#8E9AAF] p-8 transition-transform hover:-translate-y-1 hover:shadow-xl shadow-sm text-white flex flex-col justify-between min-h-[220px]">
-          <div>
-            <div className="text-4xl mb-4">✨</div>
-            <h3 className="text-2xl font-bold mb-2">認識耶穌基督</h3>
-            <p className="text-white/80 text-base leading-relaxed">走進福音書，看見耶穌大能的作為、憐憫與神蹟奇事。</p>
-          </div>
-          <div className="mt-6 font-medium bg-white/20 w-fit px-4 py-1.5 rounded-full backdrop-blur-sm group-hover:bg-white/30 transition-colors text-sm">進入探索 →</div>
-        </Link>
-
-        {/* 4. 聚會 & 佈道小工具 */}
-        <Link href="/tools-hub" className="group rounded-3xl bg-[#3A4A5A] p-8 transition-transform hover:-translate-y-1 hover:shadow-xl shadow-sm text-white flex flex-col justify-between min-h-[220px] overflow-hidden relative">
-          <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
+        <Link href="/christianity" className="group bento-card bento-card--coral">
+          <span className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-white/15 blur-3xl transition-all duration-700 ease-out group-hover:bg-white/22 group-hover:scale-110 motion-reduce:transition-none" aria-hidden />
+          <span className="pointer-events-none absolute -bottom-24 -left-12 h-48 w-48 rounded-full bg-black/10 blur-3xl transition-opacity duration-500 group-hover:opacity-80 motion-reduce:transition-none" aria-hidden />
           <div className="relative z-10">
-            <div className="text-4xl mb-4">🛠️</div>
-            <h3 className="text-2xl font-bold mb-2">聚會 & 佈道小工具</h3>
-            <p className="text-white/70 text-base leading-relaxed">短詩歌智能吉他譜、天父的信。專為小組聚會與破冰打造的實用工具庫。</p>
+            <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 text-3xl shadow-[0_2px_8px_rgb(0_0_0_/0.08),inset_0_1px_0_rgb(255_255_255_/0.35)] backdrop-blur-md transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110 group-hover:-rotate-3 motion-reduce:group-hover:scale-100 motion-reduce:group-hover:rotate-0" aria-hidden>✝️</div>
+            <h3 className="text-2xl font-bold tracking-tight mb-2 drop-shadow-sm">認識基督教</h3>
+            <p className="text-[0.95rem] leading-relaxed text-white/85 max-w-[28ch]">救恩的禮物、禱告的大能、神是你的牧者。探索信仰的核心基礎。</p>
           </div>
-          <div className="relative z-10 mt-6 font-medium bg-white/20 w-fit px-4 py-1.5 rounded-full backdrop-blur-sm group-hover:bg-white/30 transition-colors text-sm">開啟工具箱 →</div>
+          <div className="relative z-10 mt-6 inline-flex items-center gap-1.5 rounded-full bg-white/18 px-4 py-2 text-sm font-medium backdrop-blur-md shadow-[0_2px_12px_rgb(0_0_0_/0.1),inset_0_1px_0_rgb(255_255_255_/0.35)] transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:bg-white/28 group-hover:pl-5 group-hover:shadow-[0_6px_20px_rgb(0_0_0_/0.12)] motion-reduce:transition-none">
+            進入探索
+            <span className="inline-block transition-transform duration-500 ease-out group-hover:translate-x-1 motion-reduce:group-hover:translate-x-0" aria-hidden>→</span>
+          </div>
+        </Link>
+
+        <Link href="/seekers-books" className="group bento-card bento-card--ocean">
+          <span className="pointer-events-none absolute -right-12 top-1/2 h-64 w-64 -translate-y-1/2 rounded-full bg-sky-200/25 blur-3xl transition-all duration-700 ease-out group-hover:scale-125 group-hover:bg-sky-100/30 motion-reduce:transition-none" aria-hidden />
+          <span className="pointer-events-none absolute right-8 top-8 h-24 w-24 rounded-full bg-white/10 blur-2xl" aria-hidden />
+          <div className="relative z-10">
+            <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 text-3xl shadow-[0_2px_8px_rgb(0_0_0_/0.08),inset_0_1px_0_rgb(255_255_255_/0.35)] backdrop-blur-md transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110 group-hover:rotate-3 motion-reduce:group-hover:scale-100 motion-reduce:group-hover:rotate-0" aria-hidden>📚</div>
+            <h3 className="text-2xl font-bold tracking-tight mb-2 drop-shadow-sm">慕道裝備三本書</h3>
+            <p className="text-[0.95rem] leading-relaxed text-white/85 max-w-[28ch]">到底有沒有神？聖經是神默示的嗎？耶穌是神的兒子嗎？</p>
+          </div>
+          <div className="relative z-10 mt-6 inline-flex items-center gap-1.5 rounded-full bg-white/18 px-4 py-2 text-sm font-medium backdrop-blur-md shadow-[0_2px_12px_rgb(0_0_0_/0.1),inset_0_1px_0_rgb(255_255_255_/0.35)] transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:bg-white/28 group-hover:pl-5 group-hover:shadow-[0_6px_20px_rgb(0_0_0_/0.12)] motion-reduce:transition-none">
+            進入探索
+            <span className="inline-block transition-transform duration-500 ease-out group-hover:translate-x-1 motion-reduce:group-hover:translate-x-0" aria-hidden>→</span>
+          </div>
+        </Link>
+
+        <Link href="/miracles" className="group bento-card bento-card--lilac">
+          <span className="pointer-events-none absolute -left-20 top-0 h-72 w-72 rounded-full bg-violet-200/30 blur-3xl transition-all duration-700 ease-out group-hover:scale-110 group-hover:bg-violet-100/35 motion-reduce:transition-none" aria-hidden />
+          <span className="pointer-events-none absolute bottom-0 right-0 h-40 w-40 translate-x-1/4 translate-y-1/4 rounded-full bg-amber-200/20 blur-3xl transition-opacity duration-500 group-hover:opacity-100 motion-reduce:transition-none" aria-hidden />
+          <div className="relative z-10">
+            <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 text-3xl shadow-[0_2px_8px_rgb(0_0_0_/0.08),inset_0_1px_0_rgb(255_255_255_/0.35)] backdrop-blur-md transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110 group-hover:rotate-6 motion-reduce:group-hover:scale-100 motion-reduce:group-hover:rotate-0" aria-hidden>✨</div>
+            <h3 className="text-2xl font-bold tracking-tight mb-2 drop-shadow-sm">認識耶穌基督</h3>
+            <p className="text-[0.95rem] leading-relaxed text-white/85 max-w-[28ch]">走進福音書，看見耶穌大能的作為、憐憫與神蹟奇事。</p>
+          </div>
+          <div className="relative z-10 mt-6 inline-flex items-center gap-1.5 rounded-full bg-white/18 px-4 py-2 text-sm font-medium backdrop-blur-md shadow-[0_2px_12px_rgb(0_0_0_/0.1),inset_0_1px_0_rgb(255_255_255_/0.35)] transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:bg-white/28 group-hover:pl-5 group-hover:shadow-[0_6px_20px_rgb(0_0_0_/0.12)] motion-reduce:transition-none">
+            進入探索
+            <span className="inline-block transition-transform duration-500 ease-out group-hover:translate-x-1 motion-reduce:group-hover:translate-x-0" aria-hidden>→</span>
+          </div>
+        </Link>
+
+        <Link href="/tools-hub" className="group bento-card bento-card--slate">
+          <span className="pointer-events-none absolute -right-8 -top-16 h-52 w-52 rounded-full bg-cyan-300/15 blur-3xl transition-all duration-700 ease-out group-hover:scale-125 motion-reduce:transition-none" aria-hidden />
+          <span className="pointer-events-none absolute bottom-0 left-1/2 h-40 w-[120%] -translate-x-1/2 translate-y-1/3 rounded-[100%] bg-white/5 blur-3xl" aria-hidden />
+          <div className="relative z-10">
+            <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white/12 text-3xl shadow-[0_2px_10px_rgb(0_0_0_/0.2),inset_0_1px_0_rgb(255_255_255_/0.2)] backdrop-blur-md transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110 group-hover:-rotate-6 motion-reduce:group-hover:scale-100 motion-reduce:group-hover:rotate-0" aria-hidden>🛠️</div>
+            <h3 className="text-2xl font-bold tracking-tight mb-2 drop-shadow-sm">聚會 & 佈道小工具</h3>
+            <p className="text-[0.95rem] leading-relaxed text-white/75 max-w-[30ch]">短詩歌智能吉他譜、天父的信。專為小組聚會與破冰打造的實用工具庫。</p>
+          </div>
+          <div className="relative z-10 mt-6 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-4 py-2 text-sm font-medium backdrop-blur-md shadow-[0_2px_12px_rgb(0_0_0_/0.15),inset_0_1px_0_rgb(255_255_255_/0.2)] transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:bg-white/25 group-hover:pl-5 group-hover:shadow-[0_6px_24px_rgb(0_0_0_/0.2)] motion-reduce:transition-none">
+            開啟工具箱
+            <span className="inline-block transition-transform duration-500 ease-out group-hover:translate-x-1 motion-reduce:group-hover:translate-x-0" aria-hidden>→</span>
+          </div>
         </Link>
 
       </section>

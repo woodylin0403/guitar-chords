@@ -24,3 +24,105 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Portal home — bento category cards: layered soft shadows + smooth hover */
+@layer components {
+  .bento-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1.75rem;
+    min-height: 240px;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    color: #fff;
+    isolation: isolate;
+    transition:
+      transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform;
+  }
+
+  .bento-card:hover {
+    transform: translateY(-10px) scale(1.02);
+  }
+
+  .bento-card:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bento-card {
+      transition-duration: 0.01ms;
+    }
+    .bento-card:hover {
+      transform: none;
+    }
+  }
+
+  .bento-card--coral {
+    background: linear-gradient(150deg, #eb9274 0%, #d97757 42%, #c46346 100%);
+    box-shadow:
+      0 1px 2px rgb(58 52 46 / 0.06),
+      0 6px 16px rgb(217 119 87 / 0.14),
+      0 16px 40px rgb(217 119 87 / 0.1),
+      0 1px 0 rgb(255 255 255 / 0.22) inset;
+  }
+  .bento-card--coral:hover {
+    box-shadow:
+      0 2px 6px rgb(58 52 46 / 0.08),
+      0 12px 28px rgb(217 119 87 / 0.22),
+      0 28px 56px rgb(217 119 87 / 0.14),
+      0 1px 0 rgb(255 255 255 / 0.28) inset;
+  }
+
+  .bento-card--ocean {
+    background: linear-gradient(150deg, #6fa0bc 0%, #5c8ca6 42%, #4a758c 100%);
+    box-shadow:
+      0 1px 2px rgb(45 55 62 / 0.07),
+      0 6px 16px rgb(92 140 166 / 0.16),
+      0 16px 40px rgb(92 140 166 / 0.11),
+      0 1px 0 rgb(255 255 255 / 0.2) inset;
+  }
+  .bento-card--ocean:hover {
+    box-shadow:
+      0 2px 6px rgb(45 55 62 / 0.09),
+      0 12px 28px rgb(92 140 166 / 0.24),
+      0 28px 56px rgb(92 140 166 / 0.15),
+      0 1px 0 rgb(255 255 255 / 0.26) inset;
+  }
+
+  .bento-card--lilac {
+    background: linear-gradient(150deg, #a3b0c4 0%, #8e9aaf 45%, #76829a 100%);
+    box-shadow:
+      0 1px 2px rgb(52 56 64 / 0.06),
+      0 6px 16px rgb(142 154 175 / 0.15),
+      0 16px 40px rgb(142 154 175 / 0.1),
+      0 1px 0 rgb(255 255 255 / 0.2) inset;
+  }
+  .bento-card--lilac:hover {
+    box-shadow:
+      0 2px 6px rgb(52 56 64 / 0.08),
+      0 12px 28px rgb(142 154 175 / 0.22),
+      0 28px 56px rgb(142 154 175 / 0.14),
+      0 1px 0 rgb(255 255 255 / 0.26) inset;
+  }
+
+  .bento-card--slate {
+    background: linear-gradient(150deg, #4a5d72 0%, #3a4a5a 42%, #2d3946 100%);
+    box-shadow:
+      0 1px 2px rgb(20 24 30 / 0.12),
+      0 6px 18px rgb(58 74 90 / 0.28),
+      0 18px 44px rgb(58 74 90 / 0.18),
+      0 1px 0 rgb(255 255 255 / 0.12) inset;
+  }
+  .bento-card--slate:hover {
+    box-shadow:
+      0 2px 8px rgb(20 24 30 / 0.16),
+      0 14px 32px rgb(58 74 90 / 0.35),
+      0 32px 64px rgb(58 74 90 / 0.22),
+      0 1px 0 rgb(255 255 255 / 0.16) inset;
+  }
+}
