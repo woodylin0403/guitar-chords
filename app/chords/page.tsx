@@ -7,6 +7,7 @@ import { importSongs } from '@/data/importSongs';
 import { collection, getDocs, doc, setDoc, deleteDoc, updateDoc, increment, getDoc } from 'firebase/firestore';
 import { db, auth, googleProvider } from '@/lib/firebase';
 import { signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
+import { Search, Plus, Download, Trash2, BookOpen, Music, Smartphone, Printer, Youtube, ArrowLeft, Activity, Mail, LogOut, LogIn, Eye } from 'lucide-react';
 
 const MAJOR_KEYS = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
 const MINOR_KEYS = ['Cm', 'Dm', 'Em', 'Fm', 'Gm', 'Am', 'Bm'];
@@ -30,7 +31,7 @@ export default function ChordsHome() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
-  const [showMode, setShowMode] = useState<'instructions' | 'list'>('instructions');
+  const [showMode, setShowMode] = useState<'instructions' | 'list'>('list');
   const [siteViews, setSiteViews] = useState(0); 
   
   const [selectedSongs, setSelectedSongs] = useState<string[]>([]);
@@ -197,132 +198,154 @@ export default function ChordsHome() {
     return matchSearch && matchKey;
   });
 
-  if (isLoading) return <div className="min-h-screen flex items-center justify-center text-xl font-medium text-stone-400 bg-[#FDFBF7] tracking-widest">載入中...</div>;
+  if (isLoading) return <div className="min-h-screen flex items-center justify-center text-xl font-medium text-slate-400 bg-slate-50 tracking-widest">載入中...</div>;
 
   return (
-    <main className="min-h-screen bg-[#FDFBF7] text-stone-800 font-sans selection:bg-stone-200">
+    <main className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-violet-500 selection:text-white pb-20 relative overflow-hidden">
       
-      <nav className="flex justify-between items-center max-w-5xl mx-auto px-6 py-8">
-        <div className="flex items-center gap-4">
+      {/* 現代感背景光暈 */}
+      <div className="absolute top-[-10%] right-[-5%] w-[40%] h-[40%] bg-violet-400/10 rounded-full blur-[120px] pointer-events-none"></div>
+      <div className="absolute top-[20%] left-[-10%] w-[30%] h-[30%] bg-blue-400/10 rounded-full blur-[100px] pointer-events-none"></div>
+
+      {/* 導覽列：毛玻璃浮動效果 */}
+      <nav className="max-w-6xl mx-auto px-4 md:px-6 py-6 sticky top-0 z-50">
+        <div className="bg-white/70 backdrop-blur-xl border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-full px-4 md:px-6 py-3 flex justify-between items-center">
           
-          {/* 🌟 新增：返回大首頁的按鈕 */}
-          <Link href="/tools-hub" className="text-sm font-medium text-[#8E867A] hover:text-[#3A4A5A] transition-colors bg-white px-3 py-1.5 rounded-full shadow-sm border border-[#E0E0E0] hidden sm:block mr-2">
-            ← 工具箱
-          </Link>
+          <div className="flex items-center gap-2 md:gap-4">
+            {/* 返回按鈕 */}
+            <Link href="/tools-hub" className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-violet-600 hover:bg-violet-50 px-3 py-1.5 rounded-full transition-colors">
+              <ArrowLeft className="w-4 h-4" /> <span className="hidden sm:block">工具箱</span>
+            </Link>
+            
+            <div className="w-px h-5 bg-slate-200 hidden sm:block"></div>
 
-          <div className="w-12 h-12 rounded-full overflow-hidden shadow-sm border border-stone-200">
-            <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
+            {/* 回到大首頁的 Logo */}
+            <Link href="/" className="flex items-center gap-3 group">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-slate-800 to-slate-950 p-[2px] shadow-sm group-hover:scale-105 transition-transform">
+                <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover rounded-full border-2 border-slate-900" />
+              </div>
+              <h1 className="text-xl font-bold tracking-tight text-slate-900 hidden md:block">
+                老詩歌 <span className="font-medium text-slate-400 text-sm ml-0.5">吉他譜</span>
+              </h1>
+            </Link>
           </div>
-          <h1 className="text-2xl font-bold tracking-widest text-stone-800 hidden sm:block">
-            老詩歌<span className="text-stone-400 font-light">吉他譜</span>
-          </h1>
-        </div>
 
-        <div className="flex items-center gap-4 md:gap-6 flex-wrap justify-end">
-          
-          {/* 🌟 移除：原本在這裡的兩個主題按鈕已經被刪除了 */}
-
-          <div className="hidden md:flex items-center gap-1 text-sm font-medium text-stone-500 bg-stone-100 px-3 py-1.5 rounded-full shadow-sm">
-            👁️ 總瀏覽：{siteViews}
-          </div>
-          <a href="mailto:coolcrow0403@gmail.com?subject=老詩歌吉他譜-回饋" className="text-sm font-medium text-stone-400 hover:text-stone-800 transition-colors hidden sm:block">✉️ 聯絡站長</a>
-          <div className="w-px h-4 bg-stone-300 hidden sm:block"></div>
-          {user ? (
-            <div className="flex items-center gap-4 text-sm font-medium text-stone-600">
-              <span className="hidden sm:block">{user.displayName}</span>
-              <button onClick={handleLogout} className="hover:text-stone-900 transition-colors">登出</button>
+          <div className="flex items-center gap-3 md:gap-5">
+            <div className="hidden md:flex items-center gap-1.5 text-sm font-medium text-slate-500 bg-slate-100/80 px-3 py-1.5 rounded-full">
+              <Activity className="w-4 h-4 text-violet-500" />
+              <span>{siteViews} Views</span>
             </div>
-          ) : (
-            <button onClick={handleLogin} className="text-sm font-medium text-stone-500 hover:text-stone-900 transition-colors">登入編輯</button>
-          )}
+            
+            {user ? (
+              <div className="flex items-center gap-3 text-sm font-medium text-slate-600 bg-slate-100/50 pl-3 pr-1 py-1 rounded-full border border-slate-200/50">
+                <span className="hidden sm:block">{user.displayName}</span>
+                <button onClick={handleLogout} className="p-1.5 bg-white rounded-full hover:text-red-500 hover:bg-red-50 transition-colors shadow-sm" title="登出">
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <button onClick={handleLogin} className="flex items-center gap-1.5 text-sm font-medium text-white bg-slate-800 hover:bg-slate-900 px-4 py-2 rounded-full shadow-sm transition-colors">
+                <LogIn className="w-4 h-4" /> 登入編輯
+              </button>
+            )}
+          </div>
         </div>
       </nav>
 
-      <section className="max-w-4xl mx-auto px-6 pt-6 pb-8 text-center">
-        <h2 className="text-3xl md:text-4xl font-light text-stone-700 mb-8 tracking-wide">尋找那一首感動你的旋律</h2>
+      <section className="max-w-4xl mx-auto px-6 pt-10 pb-8 text-center relative z-10">
+        <h2 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-6 tracking-tighter leading-tight">
+          尋找專屬你的 <br className="sm:hidden"/><span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-blue-500">敬拜旋律</span>
+        </h2>
         
-        <div className="relative mb-8 max-w-2xl mx-auto">
+        <div className="relative mb-8 max-w-2xl mx-auto group">
+          <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+            <Search className="w-5 h-5 text-slate-400 group-focus-within:text-violet-500 transition-colors" />
+          </div>
           <input 
             type="text" 
             placeholder="輸入歌名找譜..." 
             value={searchQuery} 
             onChange={handleSearch} 
-            className="w-full px-8 py-4 rounded-full bg-white border border-stone-200 shadow-sm text-lg focus:outline-none focus:ring-2 focus:ring-stone-300 transition-all placeholder:text-stone-300" 
+            className="w-full pl-12 pr-6 py-4 rounded-full bg-white/80 backdrop-blur-md border border-slate-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] text-lg focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all placeholder:text-slate-400" 
           />
         </div>
 
-        <div className="flex flex-wrap justify-center gap-4 mb-8">
+        <div className="flex flex-wrap justify-center gap-3 mb-10">
           <button 
-            onClick={() => setShowMode('instructions')} 
-            className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all shadow-sm ${showMode === 'instructions' ? 'bg-stone-800 text-white' : 'bg-white border border-stone-200 text-stone-700 hover:bg-stone-50'}`}
+            onClick={() => setShowMode(showMode === 'instructions' ? 'list' : 'instructions')} 
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all shadow-sm ${showMode === 'instructions' ? 'bg-slate-800 text-white' : 'bg-white border border-slate-200/80 text-slate-600 hover:bg-slate-50'}`}
           >
-            📖 首頁 / 編輯教學
+            <BookOpen className="w-4 h-4" /> 編輯教學
           </button>
           
           {user && (
-            <button onClick={handleCreateNewSong} className="px-6 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-full text-sm font-medium transition-all">
-              ＋ 新增詩歌
+            <button onClick={handleCreateNewSong} className="flex items-center gap-2 px-5 py-2.5 bg-violet-50 hover:bg-violet-100 text-violet-700 border border-violet-100 rounded-full text-sm font-medium transition-all shadow-sm">
+              <Plus className="w-4 h-4" /> 新增詩歌
             </button>
           )}
 
           {isAdmin && importSongs.length > 0 && (
-            <button onClick={handleBatchImport} disabled={isImporting} className="px-6 py-2.5 bg-green-700 hover:bg-green-800 text-white rounded-full text-sm font-medium transition-all shadow-md">
-              {isImporting ? "⏳ 匯入中..." : `🚀 批次匯入 (${importSongs.length})`}
+            <button onClick={handleBatchImport} disabled={isImporting} className="flex items-center gap-2 px-5 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-100 rounded-full text-sm font-medium transition-all shadow-sm">
+              <Download className="w-4 h-4" /> {isImporting ? "匯入中..." : `匯入 (${importSongs.length})`}
             </button>
           )}
 
           {selectedSongs.length > 0 && user && (isAdmin || user.displayName === "烏鴉Lin") && (
             <button 
               onClick={handleBatchDelete} 
-              className="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-full text-sm font-medium transition-all shadow-md"
+              className="flex items-center gap-2 px-5 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 rounded-full text-sm font-medium transition-all shadow-sm"
             >
-              🗑️ 刪除已選 ({selectedSongs.length})
+              <Trash2 className="w-4 h-4" /> 刪除已選 ({selectedSongs.length})
             </button>
           )}
         </div>
 
-        <div className="flex flex-wrap justify-center items-center gap-2 md:gap-3 bg-white p-2 rounded-3xl border border-stone-100 shadow-sm inline-flex mx-auto">
-          <button onClick={() => handleKeySelect(null)} className={`px-5 py-2 rounded-2xl text-sm font-medium transition-all ${showMode === 'list' && selectedKey === null ? 'bg-stone-800 text-white' : 'text-stone-500 hover:bg-stone-50'}`}>全部詩歌</button>
-          <div className="w-px h-6 bg-stone-200 mx-1"></div>
+        {/* 音調選擇器 */}
+        <div className="flex flex-wrap justify-center items-center gap-1.5 md:gap-2 bg-white/60 backdrop-blur-md p-2 rounded-3xl border border-slate-200/60 shadow-sm inline-flex mx-auto">
+          <button onClick={() => handleKeySelect(null)} className={`px-4 py-2 rounded-2xl text-sm font-semibold transition-all ${showMode === 'list' && selectedKey === null ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100/80'}`}>全部</button>
+          <div className="w-px h-5 bg-slate-200 mx-1"></div>
           {MAJOR_KEYS.map(key => (
-            <button key={key} onClick={() => handleKeySelect(key)} className={`px-4 py-2 rounded-2xl text-sm font-medium transition-all ${showMode === 'list' && selectedKey === key ? 'bg-stone-600 text-white' : 'text-stone-600 hover:bg-stone-50'}`}>{key}</button>
+            <button key={key} onClick={() => handleKeySelect(key)} className={`px-3 md:px-4 py-2 rounded-2xl text-sm font-semibold transition-all ${showMode === 'list' && selectedKey === key ? 'bg-violet-600 text-white shadow-md shadow-violet-500/20' : 'text-slate-600 hover:bg-slate-100/80'}`}>{key}</button>
           ))}
-          <div className="w-px h-6 bg-stone-200 mx-1"></div>
+          <div className="w-px h-5 bg-slate-200 mx-1"></div>
           {MINOR_KEYS.map(key => (
-            <button key={key} onClick={() => handleKeySelect(key)} className={`px-4 py-2 rounded-2xl text-sm font-medium transition-all ${showMode === 'list' && selectedKey === key ? 'bg-stone-500 text-white' : 'text-stone-500 hover:bg-stone-50'}`}>{key}</button>
+            <button key={key} onClick={() => handleKeySelect(key)} className={`px-3 md:px-4 py-2 rounded-2xl text-sm font-semibold transition-all ${showMode === 'list' && selectedKey === key ? 'bg-blue-500 text-white shadow-md shadow-blue-500/20' : 'text-slate-500 hover:bg-slate-100/80'}`}>{key}</button>
           ))}
         </div>
       </section>
 
+      {/* 亮點功能卡片 */}
       <section className="max-w-5xl mx-auto px-6 mb-12">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white p-5 rounded-2xl border border-stone-100 shadow-sm flex flex-col items-center text-center hover:shadow-md transition-shadow">
-            <div className="text-3xl mb-2">🎸</div>
-            <h3 className="text-stone-800 font-bold mb-1 text-sm md:text-base">一鍵智能轉調</h3>
-            <p className="text-stone-500 text-xs md:text-sm">隨心所欲切換調性，完美配合個人音域。</p>
+          <div className="bg-white/80 backdrop-blur-sm p-5 rounded-[1.5rem] border border-slate-200/60 shadow-[0_4px_20px_rgb(0,0,0,0.02)] flex flex-col items-center text-center hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all">
+            <div className="w-10 h-10 rounded-full bg-violet-100 flex items-center justify-center mb-3 text-violet-600"><Music className="w-5 h-5" /></div>
+            <h3 className="text-slate-800 font-bold mb-1 text-sm md:text-base">智能轉調</h3>
+            <p className="text-slate-500 text-xs font-medium">完美配合個人音域</p>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-stone-100 shadow-sm flex flex-col items-center text-center hover:shadow-md transition-shadow">
-            <div className="text-3xl mb-2">📱</div>
-            <h3 className="text-stone-800 font-bold mb-1 text-sm md:text-base">沉浸演奏模式</h3>
-            <p className="text-stone-500 text-xs md:text-sm">隱藏所有干擾介面，專注於吉他彈唱。</p>
+          <div className="bg-white/80 backdrop-blur-sm p-5 rounded-[1.5rem] border border-slate-200/60 shadow-[0_4px_20px_rgb(0,0,0,0.02)] flex flex-col items-center text-center hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all">
+            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mb-3 text-blue-600"><Smartphone className="w-5 h-5" /></div>
+            <h3 className="text-slate-800 font-bold mb-1 text-sm md:text-base">沉浸演奏</h3>
+            <p className="text-slate-500 text-xs font-medium">隱藏干擾專注彈唱</p>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-stone-100 shadow-sm flex flex-col items-center text-center hover:shadow-md transition-shadow">
-            <div className="text-3xl mb-2">🖨️</div>
-            <h3 className="text-stone-800 font-bold mb-1 text-sm md:text-base">純淨列印功能</h3>
-            <p className="text-stone-500 text-xs md:text-sm">一鍵匯出或列印完美白底黑字的乾淨樂譜。</p>
+          <div className="bg-white/80 backdrop-blur-sm p-5 rounded-[1.5rem] border border-slate-200/60 shadow-[0_4px_20px_rgb(0,0,0,0.02)] flex flex-col items-center text-center hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all">
+            <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center mb-3 text-emerald-600"><Printer className="w-5 h-5" /></div>
+            <h3 className="text-slate-800 font-bold mb-1 text-sm md:text-base">純淨列印</h3>
+            <p className="text-slate-500 text-xs font-medium">一鍵匯出白底黑字</p>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-stone-100 shadow-sm flex flex-col items-center text-center hover:shadow-md transition-shadow">
-            <div className="text-3xl mb-2">▶️</div>
-            <h3 className="text-stone-800 font-bold mb-1 text-sm md:text-base">YouTube 整合</h3>
-            <p className="text-stone-500 text-xs md:text-sm">結合影音示範，隨時聆聽原曲或跟著練彈。</p>
+          <div className="bg-white/80 backdrop-blur-sm p-5 rounded-[1.5rem] border border-slate-200/60 shadow-[0_4px_20px_rgb(0,0,0,0.02)] flex flex-col items-center text-center hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all">
+            <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center mb-3 text-rose-600"><Youtube className="w-5 h-5" /></div>
+            <h3 className="text-slate-800 font-bold mb-1 text-sm md:text-base">影音整合</h3>
+            <p className="text-slate-500 text-xs font-medium">隨時聆聽原曲示範</p>
           </div>
         </div>
       </section>
 
       {showMode === 'list' ? (
         <div className="max-w-5xl mx-auto px-6 pb-20">
-          <div className="mb-6 flex justify-between items-end border-b border-stone-200 pb-2">
-            <span className="text-stone-500 text-sm tracking-widest">{selectedKey ? `調性：${selectedKey}` : '所有詩歌'} · 共 {filteredSongs.length} 首</span>
+          <div className="mb-6 flex justify-between items-end border-b border-slate-200 pb-3 px-2">
+            <span className="text-slate-500 text-sm font-medium tracking-wide">
+              {selectedKey ? `調性：${selectedKey}` : '所有詩歌'} · 共 <span className="text-slate-800 font-bold">{filteredSongs.length}</span> 首
+            </span>
             
             {filteredSongs.length > 0 && user && (user.displayName === "烏鴉Lin" || isAdmin) && (
               <button 
@@ -336,12 +359,13 @@ export default function ChordsHome() {
                     setSelectedSongs(allVisibleIds); 
                   }
                 }}
-                className="text-xs text-stone-400 hover:text-stone-600 transition-colors"
+                className="text-xs font-medium text-slate-400 hover:text-violet-600 transition-colors"
               >
                 {selectedSongs.length === filteredSongs.length && filteredSongs.length > 0 ? "取消全選" : "全選本頁"}
               </button>
             )}
           </div>
+          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredSongs.length > 0 ? (
               filteredSongs.map((song) => {
@@ -349,9 +373,12 @@ export default function ChordsHome() {
                 const isSelected = selectedSongs.includes(song.id);
 
                 return (
-                  <Link href={`/song/${song.id}`} key={song.id} className="group block">
-                    <div className={`bg-white p-6 rounded-2xl border ${isSelected ? 'border-red-400 shadow-md ring-1 ring-red-400' : 'border-stone-100 shadow-sm hover:shadow-md'} transition-all h-full flex flex-col relative`}>
+                  <Link href={`/song/${song.id}`} key={song.id} className="group block outline-none">
+                    <div className={`relative overflow-hidden bg-white/90 backdrop-blur-xl p-6 rounded-[1.5rem] border ${isSelected ? 'border-violet-500 shadow-md ring-2 ring-violet-500/20' : 'border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] hover:-translate-y-1'} transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] h-full flex flex-col`}>
                       
+                      {/* Hover 光暈效果 */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
                       {canEdit && (
                         <div 
                           onClick={(e) => {
@@ -359,40 +386,40 @@ export default function ChordsHome() {
                             e.stopPropagation(); 
                             toggleSelection(song.id);
                           }}
-                          className="absolute top-4 right-4 z-20 bg-white/80 p-1.5 rounded-md cursor-pointer hover:bg-stone-100 transition-colors"
+                          className="absolute top-4 right-4 z-20 bg-white/80 p-2 rounded-xl cursor-pointer hover:bg-violet-50 transition-colors border border-slate-100 shadow-sm"
                           title="選取以批次刪除"
                         >
                           <input 
                             type="checkbox" 
                             checked={isSelected}
                             readOnly
-                            className="w-5 h-5 cursor-pointer accent-red-500 pointer-events-none"
+                            className="w-4 h-4 cursor-pointer accent-violet-600 pointer-events-none rounded"
                           />
                         </div>
                       )}
 
-                      <div className="flex justify-between items-start mb-4 pr-10">
-                        <h3 className="text-xl font-medium text-stone-800 group-hover:text-stone-600 transition-colors leading-tight">{song.title}</h3>
-                        <span className="text-stone-400 text-xs font-mono border border-stone-200 px-2 py-1 rounded-md shrink-0 ml-2">{song.originalKey}</span>
+                      <div className="flex justify-between items-start mb-4 pr-10 relative z-10">
+                        <h3 className="text-xl font-bold text-slate-800 group-hover:text-violet-600 transition-colors tracking-tight leading-tight">{song.title}</h3>
+                        <span className="text-violet-600 text-xs font-bold bg-violet-50 border border-violet-100 px-2 py-1 rounded-lg shrink-0 ml-3">{song.originalKey}</span>
                       </div>
                       
-                      <div className="mt-auto pt-6 flex justify-between items-center text-xs text-stone-400 pr-10">
+                      <div className="mt-auto pt-6 flex justify-between items-center text-xs text-slate-400 pr-10 relative z-10">
                         <div className="flex gap-2">
-                          <span className="bg-stone-50 px-2 py-1 rounded">編：{song.editor}</span>
-                          <span className="bg-stone-50 px-2 py-1 rounded flex items-center gap-1 font-medium">👁️ {(song as any).views || 0}</span>
+                          <span className="bg-slate-100/80 px-2.5 py-1 rounded-md font-medium text-slate-600">編：{song.editor}</span>
+                          <span className="bg-slate-100/80 px-2.5 py-1 rounded-md font-medium text-slate-600 flex items-center gap-1">
+                            <Eye className="w-3 h-3" /> {(song as any).views || 0}
+                          </span>
                         </div>
-                        <span className="font-mono">{getUploadDate(song.id)}</span>
+                        <span className="font-medium text-slate-400">{getUploadDate(song.id)}</span>
                       </div>
 
                       {canEdit && (
                         <button 
                           onClick={(e) => handleDeleteSong(song.id, song.ownerId, e)}
-                          className="absolute bottom-6 right-4 p-1.5 text-stone-300 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors z-20"
+                          className="absolute bottom-5 right-4 p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors z-20"
                           title="單獨刪除此樂譜"
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       )}
                     </div>
@@ -400,51 +427,55 @@ export default function ChordsHome() {
                 );
               })
             ) : (
-              <div className="col-span-full py-20 text-center text-stone-400">找不到符合條件的詩歌</div>
+              <div className="col-span-full py-24 text-center">
+                <Music className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                <p className="text-slate-500 font-medium text-lg">找不到符合條件的詩歌</p>
+                <p className="text-slate-400 text-sm mt-1">試著更換關鍵字或調性過濾器</p>
+              </div>
             )}
           </div>
         </div>
       ) : (
         <div className="max-w-4xl mx-auto px-6 pb-20">
-          <div className="bg-white p-8 md:p-10 rounded-3xl border border-stone-100 shadow-sm text-stone-600 leading-relaxed relative overflow-hidden">
-            <h3 className="text-2xl font-bold text-stone-800 mb-2 flex items-center gap-3 relative z-10">
-              <span className="text-3xl">📝</span> 樂譜排版秘笈
+          <div className="bg-white/80 backdrop-blur-xl p-8 md:p-12 rounded-[2rem] border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] text-slate-600 leading-relaxed relative overflow-hidden">
+            <h3 className="text-2xl font-bold text-slate-900 mb-3 flex items-center gap-3 relative z-10 tracking-tight">
+              <BookOpen className="w-6 h-6 text-violet-500" /> 樂譜排版秘笈
             </h3>
-            <p className="mb-8 text-stone-500 relative z-10">系統支援兩種編譜方式，你可以自由選擇最習慣的方法：</p>
+            <p className="mb-10 text-slate-500 font-medium relative z-10">系統支援兩種編譜方式，你可以自由選擇最習慣的方法：</p>
             
             <div className="space-y-8 text-sm md:text-base relative z-10">
               
-              <div className="bg-stone-50 p-6 rounded-2xl border border-stone-100">
-                <strong className="block text-lg text-stone-800 mb-2">方式一：傳統文件排版 (純文字對齊)</strong>
-                <p className="mb-4">就像在 Word 或記事本裡打字一樣，把和弦打在第一行，歌詞打在第二行。系統會完美保留你按的所有「空白鍵」，不用擔心跑版！</p>
-                <div className="bg-white border border-stone-200 p-4 rounded-xl font-mono text-stone-700 overflow-x-auto shadow-sm">
+              <div className="bg-slate-50 p-6 md:p-8 rounded-3xl border border-slate-200/60 shadow-sm">
+                <strong className="block text-lg text-slate-800 mb-3">方式一：傳統文件排版 (純文字對齊)</strong>
+                <p className="mb-5 text-slate-500">就像在 Word 或記事本裡打字一樣，把和弦打在第一行，歌詞打在第二行。系統會完美保留你按的所有「空白鍵」，不用擔心跑版！</p>
+                <div className="bg-white border border-slate-200 p-5 rounded-2xl font-mono text-slate-700 overflow-x-auto shadow-sm">
                   <p>| &nbsp;D &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;A7 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Bm &nbsp;&nbsp;&nbsp;&nbsp;|</p>
                   <p>&nbsp;&nbsp;舉目仰望 仰望耶穌</p>
                 </div>
               </div>
 
-              <div className="bg-emerald-50/50 p-6 rounded-2xl border border-emerald-100/50">
-                <strong className="block text-lg text-stone-800 mb-2">方式二：智能標籤排版 (✨ 推薦使用)</strong>
-                <p className="mb-4">將和弦用中括號 <code className="bg-white px-1.5 py-0.5 rounded text-stone-700">[ ]</code> 包起來，緊貼在歌詞前方。系統會自動把和弦浮在歌詞上方，這樣在使用「一鍵轉調」功能時最精準好看！</p>
-                <div className="bg-white border border-stone-200 p-4 rounded-xl font-mono text-stone-700 overflow-x-auto shadow-sm">
+              <div className="bg-gradient-to-br from-violet-50 to-blue-50 p-6 md:p-8 rounded-3xl border border-violet-100 shadow-sm">
+                <strong className="flex items-center gap-2 text-lg text-violet-900 mb-3">
+                  方式二：智能標籤排版 <span className="bg-violet-600 text-white text-xs px-2 py-1 rounded-md">✨ 推薦</span>
+                </strong>
+                <p className="mb-5 text-violet-700/80">將和弦用中括號 <code className="bg-white/60 px-1.5 py-0.5 rounded border border-violet-200 text-violet-800 font-bold">[ ]</code> 包起來，緊貼在歌詞前方。系統會自動把和弦浮在歌詞上方，這樣在使用「一鍵轉調」功能時最精準好看！</p>
+                <div className="bg-white/80 border border-violet-200 p-5 rounded-2xl font-mono text-violet-900 overflow-x-auto shadow-sm backdrop-blur-sm">
                   <p>[D]舉目仰望 [A7]仰望耶[Bm]穌</p>
                 </div>
               </div>
 
-              <hr className="border-stone-100" />
+              <hr className="border-slate-200/60" />
               
               <div>
-                <strong className="block text-stone-800 mb-2">3. 如何標示「小節線」？</strong>
-                <p className="mb-4">音樂中的小節線通常只會出現在和弦那一行。你只需要把直線用中括號包起來 <code className="bg-stone-50 border border-stone-200 px-2 py-1 rounded text-stone-700">[|]</code> 即可！</p>
-                <div className="bg-white border border-stone-200 p-4 rounded-xl font-mono text-stone-700 overflow-x-auto shadow-sm">
-                  <p className="text-stone-400 mb-1">輸入範例：</p>
+                <strong className="block text-slate-800 mb-3">3. 如何標示「小節線」？</strong>
+                <p className="mb-5 text-slate-500">音樂中的小節線通常只會出現在和弦那一行。你只需要把直線用中括號包起來 <code className="bg-slate-100 border border-slate-200 px-2 py-1 rounded font-bold">[|]</code> 即可！</p>
+                <div className="bg-white border border-slate-200 p-5 rounded-2xl font-mono text-slate-700 overflow-x-auto shadow-sm">
+                  <p className="text-slate-400 mb-2 text-sm font-sans">輸入範例：</p>
                   <p>[|] [D]舉目仰望 [A7]仰望耶[Bm]穌 [|]</p>
                 </div>
               </div>
 
             </div>
-            
-            <div className="absolute -bottom-10 -right-10 text-[180px] opacity-[0.03] select-none pointer-events-none">🎸</div>
           </div>
         </div>
       )}
