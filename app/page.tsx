@@ -87,7 +87,7 @@ export default function PortalHome() {
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-fuchsia-500 to-violet-600 flex items-center justify-center mb-6 shadow-lg shadow-violet-500/30 group-hover:scale-110 transition-transform duration-500">
               <HeartHandshake className="w-7 h-7 text-white" />
             </div>
-            <h3 className="text-2xl font-bold mb-3 tracking-tight text-slate-900">認識基督教</h3>
+            <h3 className="text-2xl font-bold mb-3 tracking-tight text-slate-900">認識基督信仰</h3>
             <p className="text-slate-500 text-base leading-relaxed font-medium">救恩的禮物、禱告的大能、神是你的牧者。從這裡開始探索信仰的核心基礎。</p>
           </div>
           <div className="relative z-10 mt-8 text-violet-600 font-semibold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
