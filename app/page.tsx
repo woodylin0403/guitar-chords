@@ -59,18 +59,21 @@ export default function PortalHome() {
       </nav>
 
       {/* 科技感 Hero 區塊 */}
-      <section className="max-w-5xl mx-auto px-6 pt-16 pb-16 text-center relative z-10">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 border border-slate-200/60 shadow-sm mb-6 text-sm font-medium text-violet-600 backdrop-blur-sm">
+      <section className="max-w-5xl mx-auto px-6 pt-12 md:pt-16 pb-16 text-center relative z-10">
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 border border-slate-200/60 shadow-sm mb-8 text-sm font-medium text-violet-600 backdrop-blur-sm">
           <Sparkles className="w-4 h-4" /> 探索全新的聚會體驗
         </div>
-        <h2 className="text-5xl md:text-6xl font-extrabold text-slate-900 mb-6 tracking-tighter leading-[1.1]">
-          裝備自己，<br className="md:hidden" />
+        
+        <h2 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-slate-900 mb-6 tracking-tighter leading-[1.15] md:leading-[1.1]">
+          裝備自己<br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-blue-500">
-            飛耀信仰的旅程。
+            飛耀信仰旅程
           </span>
         </h2>
-        <p className="text-lg md:text-xl text-slate-500 max-w-2xl mx-auto font-medium leading-relaxed">
-          為這世代打造的數位屬靈資源庫。從認識真理到小組帶領，這裡為你準備了最現代、最高效的裝備工具。
+        
+        <p className="text-lg md:text-xl text-slate-500 max-w-2xl mx-auto font-medium leading-relaxed px-4 md:px-0">
+          為這世代打造的數位屬靈資源庫。<br className="hidden sm:block" />
+          從認識真理到小組帶領，這裡為你準備了最現代、高效的裝備工具。
         </p>
       </section>
 
