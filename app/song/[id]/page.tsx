@@ -218,8 +218,8 @@ export default function SongPage() {
   };
 
   const handleDelete = async () => {
-    if (songId === 'new') return router.push('/');
-    if (confirm("確定要刪除這首歌嗎？")) { await deleteDoc(doc(db, "songs", songId)); router.push('/'); }
+    if (songId === 'new') return router.push('/chords');
+    if (confirm("確定要刪除這首歌嗎？")) { await deleteDoc(doc(db, "songs", songId)); router.push('/chords'); }
   };
 
   const handleAddComment = async () => {
@@ -375,7 +375,10 @@ export default function SongPage() {
 
       {!isPlayingMode && (
         <nav className="max-w-5xl mx-auto px-6 py-6 flex justify-between items-center border-b border-stone-200 mb-8 print:hidden">
-          <Link href="/" className="text-stone-500 hover:text-stone-800 text-sm font-medium tracking-widest transition-colors">← 返回目錄</Link>
+          {/* 🌟 修改這裡：導向 /chords */}
+          <Link href="/chords" className="text-stone-500 hover:text-stone-800 text-sm font-medium tracking-widest transition-colors">
+            ← 返回吉他譜目錄
+          </Link>
           {isEditing && <button onClick={handleDelete} className="text-red-400 hover:text-red-600 text-sm font-medium transition-colors">{songId === 'new' ? '放棄編輯' : '刪除樂譜'}</button>}
         </nav>
       )}

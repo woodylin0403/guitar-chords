@@ -153,10 +153,10 @@ export default function SalvationTool() {
         <title>救恩的禮物 - 生命的選擇</title>
       </Head>
 
-      {/* 導覽列：返回吉他譜首頁 */}
+      {/* 導覽列：返回認識基督教分類頁 */}
       <nav className="fixed top-0 w-full p-6 z-50 flex justify-start">
-        <Link href="/" className="text-[#8E867A] hover:text-[#5C5446] font-medium transition-colors bg-white/80 backdrop-blur px-4 py-2 rounded-full shadow-sm text-sm border border-[#E0E0E0]/50">
-          ← 返回老詩歌吉他譜
+        <Link href="/christianity" className="text-[#8E867A] hover:text-[#5C5446] font-medium transition-colors bg-white/80 backdrop-blur px-4 py-2 rounded-full shadow-sm text-sm border border-[#E0E0E0]/50">
+          ← 返回認識基督教
         </Link>
       </nav>
 

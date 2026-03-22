@@ -120,8 +120,8 @@ export default function PrayerTool() {
       </Head>
 
       <nav className="fixed top-0 w-full p-6 z-50 flex justify-start">
-        <Link href="/" className="text-[#7B8B9A] hover:text-[#3A4A5A] font-medium transition-colors bg-white/80 backdrop-blur px-4 py-2 rounded-full shadow-sm text-sm border border-[#E0E0E0]/50">
-          ← 返回老詩歌吉他譜
+        <Link href="/christianity" className="text-[#7B8B9A] hover:text-[#3A4A5A] font-medium transition-colors bg-white/80 backdrop-blur px-4 py-2 rounded-full shadow-sm text-sm border border-[#E0E0E0]/50">
+          ← 返回認識基督教
         </Link>
       </nav>
 
