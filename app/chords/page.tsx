@@ -23,7 +23,7 @@ function getUploadDate(id: string) {
   return '近期建檔';
 }
 
-export default function Home() {
+export default function ChordsHome() {
   const [songs, setSongs] = useState<Song[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
@@ -204,31 +204,23 @@ export default function Home() {
       
       <nav className="flex justify-between items-center max-w-5xl mx-auto px-6 py-8">
         <div className="flex items-center gap-4">
+          
+          {/* 🌟 新增：返回大首頁的按鈕 */}
+          <Link href="/tools-hub" className="text-sm font-medium text-[#8E867A] hover:text-[#3A4A5A] transition-colors bg-white px-3 py-1.5 rounded-full shadow-sm border border-[#E0E0E0] hidden sm:block mr-2">
+            ← 工具箱
+          </Link>
+
           <div className="w-12 h-12 rounded-full overflow-hidden shadow-sm border border-stone-200">
             <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
           </div>
-          <h1 className="text-2xl font-bold tracking-widest text-stone-800">
+          <h1 className="text-2xl font-bold tracking-widest text-stone-800 hidden sm:block">
             老詩歌<span className="text-stone-400 font-light">吉他譜</span>
           </h1>
         </div>
+
         <div className="flex items-center gap-4 md:gap-6 flex-wrap justify-end">
           
-          {/* 🌟 兩個主題工具按鈕並排 */}
-          <div className="flex items-center gap-2">
-            <Link 
-              href="/tools" 
-              className="text-sm font-bold text-white bg-[#D97757] hover:bg-[#C66242] px-4 py-1.5 rounded-full shadow-sm hover:shadow-md transition-all flex items-center gap-1"
-            >
-              🎁 救恩的禮物
-            </Link>
-            
-            <Link 
-              href="/prayer" 
-              className="text-sm font-bold text-white bg-[#5C8CA6] hover:bg-[#4A7A94] px-4 py-1.5 rounded-full shadow-sm hover:shadow-md transition-all flex items-center gap-1"
-            >
-              🕊️ 禱告的大能
-            </Link>
-          </div>
+          {/* 🌟 移除：原本在這裡的兩個主題按鈕已經被刪除了 */}
 
           <div className="hidden md:flex items-center gap-1 text-sm font-medium text-stone-500 bg-stone-100 px-3 py-1.5 rounded-full shadow-sm">
             👁️ 總瀏覽：{siteViews}
