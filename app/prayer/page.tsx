@@ -2,292 +2,273 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
+import { useRouter } from 'next/navigation'; // 🌟 加入轉址功能
 import { ArrowLeft, MessageCircleHeart, Sparkles, ArrowDown } from 'lucide-react';
-import { getMatchedLetter } from '@/data/letters';
 
-// 為了讓滾動動畫生效的自訂 Hook
+// 平滑出現的動畫 Hook
 function useOnScreen(options: IntersectionObserverInit) {
   const [isVisible, setIsVisible] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) {
-        setIsVisible(true);
-      }
+      if (entry.isIntersecting) setIsVisible(true);
     }, options);
-
-    if (ref.current) {
-      observer.observe(ref.current);
-    }
-
-    return () => {
-      if (ref.current) observer.unobserve(ref.current);
-    };
+    if (ref.current) observer.observe(ref.current);
+    return () => { if (ref.current) observer.unobserve(ref.current); };
   }, [options]);
 
   return [ref, isVisible] as const;
 }
 
-// 提取區塊元件來處理各自的 fade-up
+// 質感淡入區塊元件
 function FadeSection({ children }: { children: React.ReactNode }) {
-  const [ref, isVisible] = useOnScreen({ threshold: 0.2 });
+  const [ref, isVisible] = useOnScreen({ threshold: 0.15 });
   return (
-    <div ref={ref} className={`w-full flex flex-col items-center transition-all duration-1000 ease-[cubic-bezier(0.23,1,0.32,1)] transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
+    <div ref={ref} className={`w-full flex flex-col items-center transition-all duration-[1200ms] ease-[cubic-bezier(0.16,1,0.3,1)] transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}>
       {children}
     </div>
   );
 }
 
 export default function PrayerTool() {
+  const router = useRouter(); // 🌟 初始化 router
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalState, setModalState] = useState<'input' | 'loading' | 'letter'>('input');
   const [prayerText, setPrayerText] = useState('');
-  const [letterData, setLetterData] = useState<any>(null);
-  const [letterImage, setLetterImage] = useState('');
+  const [isRedirecting, setIsRedirecting] = useState(false); // 🌟 新增轉址狀態
 
   const handleSubmit = () => {
     if (prayerText.trim() === '') return;
-    setModalState('loading');
+    
+    // 🌟 直接進入轉址狀態，帶參數跳轉去 /letters 觸發抽卡動畫
+    setIsRedirecting(true);
+    const encodedPrayer = encodeURIComponent(prayerText);
+    
     setTimeout(() => {
-      const result = getMatchedLetter(prayerText);
-      setLetterData(result.letter);
-      setLetterImage(result.image);
-      setModalState('letter');
-    }, 2000);
+      router.push(`/letters?prayer=${encodedPrayer}`);
+    }, 500); 
   };
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-  };
+  const closeModal = () => setIsModalOpen(false);
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-cyan-500 selection:text-white relative overflow-hidden">
+    <main className="min-h-screen bg-[#fafaf9] text-stone-800 font-sans selection:bg-cyan-500 selection:text-white relative overflow-hidden pb-32">
       <Head>
         <title>禱告的大能 | 烏鴉的嗎哪</title>
       </Head>
 
-      {/* 寧靜深邃光暈 */}
-      <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-cyan-600/15 rounded-full blur-[160px] pointer-events-none"></div>
-      <div className="absolute bottom-[0%] right-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[140px] pointer-events-none"></div>
+      {/* 明亮、清爽的背景光暈 (天空藍/水藍色系) */}
+      <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[50%] bg-cyan-400/15 rounded-full blur-[120px] pointer-events-none"></div>
+      <div className="absolute bottom-[20%] right-[-10%] w-[50%] h-[40%] bg-blue-400/10 rounded-full blur-[120px] pointer-events-none"></div>
 
-      {/* 現代化毛玻璃導覽列 */}
-      <nav className="p-6 md:px-12 md:py-8 max-w-6xl mx-auto flex justify-start relative z-10 sticky top-0">
-        <Link href="/christianity" className="text-slate-400 hover:text-white font-medium transition-all bg-white/5 backdrop-blur-md px-5 py-2.5 rounded-full shadow-sm text-sm border border-white/10 flex items-center gap-2 group">
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> 返回認識基督信仰
+      {/* 水晶質感導覽列 */}
+      <nav className="p-4 md:p-6 lg:px-8 lg:py-8 max-w-6xl mx-auto flex justify-start relative z-50 sticky top-0">
+        <Link href="/christianity" className="group inline-flex items-center gap-2 px-5 py-3 bg-white/70 backdrop-blur-xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-full text-stone-500 hover:text-stone-900 transition-all">
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform duration-300" /> 
+          <span className="font-semibold text-sm tracking-wide">返回認識基督教</span>
         </Link>
       </nav>
 
-      {/* 0. 封面區塊 */}
-      <section className="min-h-screen flex flex-col justify-center items-center py-20 px-6 relative text-center">
+      {/* === 0. 首頁封面區 === */}
+      <section className="min-h-[85vh] flex flex-col justify-center items-center px-6 relative text-center">
         <FadeSection>
-          <div className="z-10 max-w-2xl">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center mx-auto mb-8 shadow-lg shadow-cyan-500/20">
-              <MessageCircleHeart className="w-8 h-8 text-white" />
+          <div className="z-10 max-w-2xl w-full">
+            <div className="w-20 h-20 rounded-[1.5rem] bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center mx-auto mb-8 shadow-xl shadow-cyan-500/20 transform hover:scale-105 transition-transform duration-500">
+              <MessageCircleHeart className="w-10 h-10 text-white" />
             </div>
-            <h1 className="text-4xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-400 mb-10 tracking-tighter leading-[1.1]">
+            
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 mb-12 tracking-tighter leading-tight">
               禱告的大能
             </h1>
             
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 md:p-8 rounded-[2rem] text-left mb-10 shadow-xl">
-              <p className="text-sm font-bold tracking-widest text-cyan-400 mb-3 uppercase">安靜心，讓我們用這首詩歌來到祂面前</p>
-              <div className="text-lg leading-loose font-medium text-slate-300 mb-4">
-                <span className="font-bold text-cyan-300 mb-2 block">《我以禱告來到你面前》</span>
-                我以禱告來到你面前，我要尋求你，<br/>
-                我要站在破口之中，在那裡我尋求你。<br/>
-                每一次我禱告，我搖動你的手，<br/>
-                禱告做的事，我的手不能做。<br/>
-                每一次我禱告，大山被挪移，<br/>
-                道路被鋪平，使列國歸向你。
+            {/* 詩歌與金句質感卡片 */}
+            <div className="bg-white/80 backdrop-blur-xl border border-white shadow-[0_20px_40px_rgb(0,0,0,0.03)] p-8 md:p-12 rounded-[2.5rem] text-left mb-12 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-50 rounded-bl-full -z-10"></div>
+              
+              <div className="mb-10 pb-10 border-b border-stone-100">
+                <p className="flex items-center gap-2 text-xs font-bold tracking-[0.15em] text-cyan-500 mb-4 uppercase">
+                  安靜心，讓我們用這首詩歌來到祂面前
+                </p>
+                <p className="text-2xl font-bold text-stone-900 mb-5 tracking-tight">《我以禱告來到你面前》</p>
+                <div className="text-lg md:text-xl leading-[1.8] font-medium text-stone-500">
+                  我以禱告來到你面前，我要尋求你，<br/>
+                  我要站在破口之中，在那裡我尋求你。<br/>
+                  每一次我禱告，我搖動你的手，<br/>
+                  禱告做的事，我的手不能做。<br/>
+                  每一次我禱告，大山被挪移，<br/>
+                  道路被鋪平，使列國歸向你。
+                </div>
+              </div>
+              
+              <div className="bg-slate-50/50 p-6 md:p-8 rounded-2xl border-l-4 border-cyan-400 text-left">
+                 <p className="text-lg md:text-xl font-bold leading-snug mb-4 text-stone-800 tracking-tight">
+                   「你們祈求，就給你們；尋找，就尋見；叩門，就給你們開門... 何況你們在天上的父，豈不更把好東西給求他的人嗎？」
+                 </p>
+                 <p className="text-base text-stone-400 font-mono italic">— 馬太福音 7:7-11</p>
               </div>
             </div>
-
-            <div className="bg-slate-900/50 p-6 rounded-2xl border-l-4 border-cyan-500 text-left">
-               <p className="text-lg font-medium leading-relaxed mb-3 text-slate-200">「你們祈求，就給你們；尋找，就尋見；叩門，就給你們開門。因為凡祈求的，就得著；尋找的，就尋見；叩門的，就給他開門... 何況你們在天上的父，豈不更把好東西給求他的人嗎？」</p>
-               <p className="text-sm text-slate-400 font-mono italic">— 馬太福音 7:7-11</p>
-            </div>
-          </div>
-          
-          <div className="w-full h-[150px] mt-10 flex justify-center items-center relative mx-auto overflow-visible">
-            {/* 🌟 復原：封面 SVG 裝飾 */}
-            <svg viewBox="0 0 400 150" className="w-full h-full max-w-[500px] overflow-visible mx-auto">
-              <circle cx="200" cy="75" r="4" fill="#22d3ee" className="drop-shadow-[0_0_5px_rgba(34,211,238,0.8)]" /> {/* cyan-400 */}
-              <circle cx="200" cy="75" r="30" fill="none" stroke="#22d3ee" strokeWidth="2" opacity="0.6" strokeDasharray="4 4" />
-              <circle cx="200" cy="75" r="60" fill="none" stroke="#60a5fa" strokeWidth="1.5" opacity="0.3" /> {/* blue-400 */}
-            </svg>
           </div>
         </FadeSection>
-        
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce text-slate-600 flex flex-col items-center">
-          <span className="text-xs tracking-widest mb-2 font-bold uppercase">探索禱告的旅程</span>
+
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce text-stone-400 flex flex-col items-center opacity-70">
+          <span className="text-[10px] tracking-[0.2em] mb-2 font-bold uppercase">探索禱告的旅程</span>
           <ArrowDown className="w-5 h-5" />
         </div>
       </section>
 
-      {/* 1. 祈求 (Ask) */}
-      <section className="min-h-screen flex flex-col justify-center items-center py-20 px-6 relative overflow-hidden">
+      {/* === 1. 祈求 (Ask) === */}
+      <section className="min-h-[80vh] flex flex-col justify-center items-center py-24 px-6 relative">
         <FadeSection>
-          <div className="w-full h-[200px] flex justify-center items-center relative mx-auto overflow-visible mb-12">
-            {/* 🌟 復原：祈求 SVG 結構 */}
+          <div className="w-full h-[200px] flex justify-center items-center relative mx-auto mb-10">
             <svg viewBox="0 0 400 250" className="w-full h-full max-w-[500px] overflow-visible mx-auto">
-              <path d="M120 180 C 150 200, 250 200, 280 180" fill="none" stroke="#475569" strokeWidth="3" strokeLinecap="round"/> {/* slate-600 */}
-              <path d="M150 185 C 170 195, 230 195, 250 185" fill="none" stroke="#475569" strokeWidth="3" strokeLinecap="round"/>
-              <circle cx="200" cy="140" r="12" fill="#22d3ee" className="drop-shadow-[0_0_15px_rgba(34,211,238,0.6)]" />
-              <path d="M190 110 Q 200 90, 210 110" fill="none" stroke="#22d3ee" strokeWidth="2" opacity="0.5"/>
-              <path d="M180 80 Q 200 50, 220 80" fill="none" stroke="#22d3ee" strokeWidth="2" opacity="0.3"/>
-              <text x="200" y="240" textAnchor="middle" className="text-lg font-bold fill-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]">1. 祈求 (Ask)</text>
+              <path d="M120 180 C 150 200, 250 200, 280 180" fill="none" stroke="#d6d3d1" strokeWidth="8" strokeLinecap="round"/> {/* 淺灰色底線 */}
+              <path d="M150 185 C 170 195, 230 195, 250 185" fill="none" stroke="#e7e5e4" strokeWidth="8" strokeLinecap="round"/>
+              <circle cx="200" cy="140" r="16" fill="white" stroke="#22d3ee" strokeWidth="6" className="drop-shadow-md" /> {/* Cyan */}
+              <path d="M190 110 Q 200 90, 210 110" fill="none" stroke="#22d3ee" strokeWidth="4" opacity="0.6"/>
+              <path d="M180 80 Q 200 50, 220 80" fill="none" stroke="#22d3ee" strokeWidth="4" opacity="0.3"/>
             </svg>
           </div>
-          <div className="max-w-xl mx-auto z-10 px-4">
-            <h2 className="text-3xl font-bold mb-6 text-white tracking-tight text-center">第一步：建立信心的根基 <span className="text-cyan-400">(祈求)</span></h2>
-            <ul className="space-y-4 text-slate-300 font-medium mb-6">
-              <li className="flex gap-3"><span className="text-cyan-400 font-bold">•</span> <span><strong className="text-white">信心的約：</strong>神透過應許，將祂自己與我們緊緊綁在一起。</span></li>
-              <li className="flex gap-3"><span className="text-cyan-400 font-bold">•</span> <span><strong className="text-white">信心的對象：</strong>禱告不是對空氣說話，而是向那位與我們立約的神呼求。</span></li>
-              <li className="flex gap-3"><span className="text-cyan-400 font-bold">•</span> <span><strong className="text-white">回轉向神：</strong>當遇到難處，我們的第一步就是求告祂。</span></li>
+          <div className="text-center max-w-2xl mx-auto z-10 px-4">
+            <h2 className="text-3xl md:text-4xl font-extrabold mb-8 text-stone-900 tracking-tight">第一步：建立信心的根基 <span className="text-cyan-500 px-1">(祈求)</span></h2>
+            <ul className="space-y-5 text-lg md:text-xl text-stone-600 font-medium mb-8 text-left max-w-xl mx-auto">
+              <li className="flex gap-4 items-start"><span className="text-cyan-400 font-black mt-1">•</span> <span><strong className="text-stone-900">信心的約：</strong>神透過應許，將祂自己與我們緊緊綁在一起。</span></li>
+              <li className="flex gap-4 items-start"><span className="text-cyan-400 font-black mt-1">•</span> <span><strong className="text-stone-900">信心的對象：</strong>禱告不是對空氣說話，而是向那位與我們立約的神呼求。</span></li>
+              <li className="flex gap-4 items-start"><span className="text-cyan-400 font-black mt-1">•</span> <span><strong className="text-stone-900">回轉向神：</strong>當遇到難處，我們的第一步就是求告祂。</span></li>
             </ul>
-            <p className="text-lg text-cyan-300 font-bold text-center">祂承諾給予，因為祂是守約施慈愛的天父。</p>
+            <p className="text-xl text-cyan-600 font-bold">祂承諾給予，因為祂是守約施慈愛的天父。</p>
           </div>
         </FadeSection>
       </section>
 
-      {/* 2. 尋找 (Seek) */}
-      <section className="min-h-screen flex flex-col justify-center items-center py-20 px-6 relative overflow-hidden">
+      {/* === 2. 尋找 (Seek) === */}
+      <section className="min-h-[80vh] flex flex-col justify-center items-center py-24 px-6 relative">
         <FadeSection>
-          <div className="w-full h-[200px] flex justify-center items-center relative mx-auto overflow-visible mb-12">
-            {/* 🌟 復原：尋找 SVG 結構 */}
+          <div className="w-full h-[200px] flex justify-center items-center relative mx-auto mb-10">
             <svg viewBox="0 0 400 250" className="w-full h-full max-w-[500px] overflow-visible mx-auto">
-              <circle cx="200" cy="120" r="40" fill="none" stroke="#60a5fa" strokeWidth="4" className="drop-shadow-[0_0_10px_rgba(96,165,250,0.5)]"/> {/* blue-400 */}
-              <circle cx="200" cy="120" r="15" fill="#60a5fa" opacity="0.8" className="drop-shadow-[0_0_15px_rgba(96,165,250,0.8)]"/>
-              <line x1="200" y1="30" x2="200" y2="70" stroke="#60a5fa" strokeWidth="3" strokeLinecap="round" opacity="0.5"/>
-              <line x1="200" y1="170" x2="200" y2="210" stroke="#60a5fa" strokeWidth="3" strokeLinecap="round" opacity="0.5"/>
-              <line x1="110" y1="120" x2="150" y2="120" stroke="#60a5fa" strokeWidth="3" strokeLinecap="round" opacity="0.5"/>
-              <line x1="250" y1="120" x2="290" y2="120" stroke="#60a5fa" strokeWidth="3" strokeLinecap="round" opacity="0.5"/>
-              <text x="200" y="240" textAnchor="middle" className="text-lg font-bold fill-blue-400 drop-shadow-[0_0_5px_rgba(96,165,250,0.5)]">2. 尋找 (Seek)</text>
+              <circle cx="200" cy="120" r="50" fill="none" stroke="#60a5fa" strokeWidth="6" opacity="0.2"/> {/* Blue */}
+              <circle cx="200" cy="120" r="20" fill="white" stroke="#60a5fa" strokeWidth="6" className="drop-shadow-md"/>
+              <line x1="200" y1="20" x2="200" y2="60" stroke="#60a5fa" strokeWidth="6" strokeLinecap="round" opacity="0.6"/>
+              <line x1="200" y1="180" x2="200" y2="220" stroke="#60a5fa" strokeWidth="6" strokeLinecap="round" opacity="0.6"/>
+              <line x1="100" y1="120" x2="140" y2="120" stroke="#60a5fa" strokeWidth="6" strokeLinecap="round" opacity="0.6"/>
+              <line x1="260" y1="120" x2="300" y2="120" stroke="#60a5fa" strokeWidth="6" strokeLinecap="round" opacity="0.6"/>
             </svg>
           </div>
-          <div className="max-w-xl mx-auto z-10 px-4">
-            <h2 className="text-3xl font-bold mb-6 text-white tracking-tight text-center">第二步：經歷信心的過程 <span className="text-blue-400">(尋找)</span></h2>
-            <ul className="space-y-4 text-slate-300 font-medium mb-6">
-              <li className="flex gap-3"><span className="text-blue-400 font-bold">•</span> <span><strong className="text-white">不只是求：</strong>不再只停留在求好處，而是主動尋求認識神、親近神。</span></li>
-              <li className="flex gap-3"><span className="text-blue-400 font-bold">•</span> <span><strong className="text-white">信心操練：</strong>在禱告中操練信心，也在信心裡尋求神的心意。</span></li>
-              <li className="flex gap-3"><span className="text-blue-400 font-bold">•</span> <span><strong className="text-white">目光轉向：</strong>將眼光從「律法中的祝福」，轉向「賜恩典的主」。</span></li>
+          <div className="text-center max-w-2xl mx-auto z-10 px-4">
+            <h2 className="text-3xl md:text-4xl font-extrabold mb-8 text-stone-900 tracking-tight">第二步：經歷信心的過程 <span className="text-blue-500 px-1">(尋找)</span></h2>
+            <ul className="space-y-5 text-lg md:text-xl text-stone-600 font-medium mb-8 text-left max-w-xl mx-auto">
+              <li className="flex gap-4 items-start"><span className="text-blue-400 font-black mt-1">•</span> <span><strong className="text-stone-900">不只是求：</strong>不再只停留在求好處，而是主動尋求認識神、親近神。</span></li>
+              <li className="flex gap-4 items-start"><span className="text-blue-400 font-black mt-1">•</span> <span><strong className="text-stone-900">信心操練：</strong>在禱告中操練信心，也在信心裡尋求神的心意。</span></li>
+              <li className="flex gap-4 items-start"><span className="text-blue-400 font-black mt-1">•</span> <span><strong className="text-stone-900">目光轉向：</strong>將眼光從「律法中的祝福」，轉向「賜恩典的主」。</span></li>
             </ul>
-            <p className="text-lg text-blue-300 font-bold text-center">尋找的過程，就是我們與天父關係更深的時刻。</p>
+            <p className="text-xl text-blue-600 font-bold">尋找的過程，就是我們與天父關係更深的時刻。</p>
           </div>
         </FadeSection>
       </section>
 
-      {/* 3. 叩門 (Knock) */}
-      <section className="min-h-screen flex flex-col justify-center items-center py-20 px-6 relative overflow-hidden">
+      {/* === 3. 叩門 (Knock) === */}
+      <section className="min-h-[80vh] flex flex-col justify-center items-center py-24 px-6 relative">
         <FadeSection>
-          <div className="w-full h-[200px] flex justify-center items-center relative mx-auto overflow-visible mb-12">
-            {/* 🌟 復原：叩門 SVG 結構 */}
+          <div className="w-full h-[200px] flex justify-center items-center relative mx-auto mb-10">
             <svg viewBox="0 0 400 250" className="w-full h-full max-w-[500px] overflow-visible mx-auto">
-              <rect x="140" y="50" width="120" height="160" fill="none" stroke="#475569" strokeWidth="3" />
-              <polygon points="140,50 220,30 220,190 140,210" fill="#a78bfa" opacity="0.2" stroke="#a78bfa" strokeWidth="2"/> {/* violet-400 */}
-              <path d="M 220 30 L 300 10 L 300 230 L 220 190 Z" fill="url(#light-gradient)" opacity="0.5"/>
+              <rect x="140" y="50" width="120" height="160" fill="none" stroke="#d6d3d1" strokeWidth="6" rx="4" />
+              <polygon points="140,50 220,30 220,190 140,210" fill="#a855f7" opacity="0.1" /> {/* Violet */}
+              <polygon points="140,50 220,30 220,190 140,210" fill="none" stroke="#a855f7" strokeWidth="4" />
+              
+              <path d="M 220 30 L 320 10 L 320 230 L 220 190 Z" fill="url(#light-gradient)" opacity="0.3"/>
               <defs>
                   <linearGradient id="light-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#a78bfa" stopOpacity="0.8" />
-                      <stop offset="100%" stopColor="#a78bfa" stopOpacity="0" />
+                      <stop offset="0%" stopColor="#a855f7" stopOpacity="1" />
+                      <stop offset="100%" stopColor="#a855f7" stopOpacity="0" />
                   </linearGradient>
               </defs>
-              <circle cx="205" cy="130" r="4" fill="#a78bfa" className="drop-shadow-[0_0_10px_rgba(167,139,250,0.8)]"/>
-              <text x="200" y="240" textAnchor="middle" className="text-lg font-bold fill-violet-400 drop-shadow-[0_0_5px_rgba(167,139,250,0.5)]">3. 叩門 (Knock)</text>
+              <circle cx="205" cy="130" r="6" fill="#a855f7" />
             </svg>
           </div>
-          <div className="max-w-xl mx-auto z-10 px-4">
-            <h2 className="text-3xl font-bold mb-6 text-white tracking-tight text-center">第三步：渴慕天父的同在 <span className="text-violet-400">(叩門)</span></h2>
-            <ul className="space-y-4 text-slate-300 font-medium mb-6">
-              <li className="flex gap-3"><span className="text-violet-400 font-bold">•</span> <span><strong className="text-white">遇見神：</strong>不單單滿足於問題被解決，更是渴望遇見神自己。</span></li>
-              <li className="flex gap-3"><span className="text-violet-400 font-bold">•</span> <span><strong className="text-white">沒有條件：</strong>「因為凡...」代表沒有其他門檻，有求必有回應。</span></li>
-              <li className="flex gap-3"><span className="text-violet-400 font-bold">•</span> <span><strong className="text-white">進入同在：</strong>叩門，是為了要真真實實地進入天父的同在裡。</span></li>
+          <div className="text-center max-w-2xl mx-auto z-10 px-4">
+            <h2 className="text-3xl md:text-4xl font-extrabold mb-8 text-stone-900 tracking-tight">第三步：渴慕天父的同在 <span className="text-violet-500 px-1">(叩門)</span></h2>
+            <ul className="space-y-5 text-lg md:text-xl text-stone-600 font-medium mb-8 text-left max-w-xl mx-auto">
+              <li className="flex gap-4 items-start"><span className="text-violet-400 font-black mt-1">•</span> <span><strong className="text-stone-900">遇見神：</strong>不單單滿足於問題被解決，更是渴望遇見神自己。</span></li>
+              <li className="flex gap-4 items-start"><span className="text-violet-400 font-black mt-1">•</span> <span><strong className="text-stone-900">沒有條件：</strong>「因為凡...」代表沒有其他門檻，有求必有回應。</span></li>
+              <li className="flex gap-4 items-start"><span className="text-violet-400 font-black mt-1">•</span> <span><strong className="text-stone-900">進入同在：</strong>叩門，是為了要真真實實地進入天父的同在裡。</span></li>
             </ul>
-            <p className="text-lg text-violet-300 font-bold text-center">叩開的不是一扇門，而是進入天父永恆的擁抱。</p>
+            <p className="text-xl text-violet-600 font-bold">叩開的不是一扇門，而是進入天父永恆的擁抱。</p>
           </div>
         </FadeSection>
       </section>
 
-      {/* 4. 明白天父的好東西 */}
-      <section className="min-h-screen flex flex-col justify-center items-center py-20 px-6 relative overflow-hidden">
+      {/* === 4. 明白天父的好東西 === */}
+      <section className="min-h-[80vh] flex flex-col justify-center items-center py-24 px-6 relative">
         <FadeSection>
-          <div className="w-full h-[200px] flex justify-center items-center relative mx-auto overflow-visible mb-12">
-            {/* 🌟 復原：好東西 SVG 結構 */}
+          <div className="w-full h-[200px] flex justify-center items-center relative mx-auto mb-10">
             <svg viewBox="0 0 400 250" className="w-full h-full max-w-[500px] overflow-visible mx-auto">
-              <path d="M 200 180 C 200 180, 140 120, 140 85 C 140 50, 190 40, 200 75 C 210 40, 260 50, 260 85 C 260 120, 200 180, 200 180 Z" fill="none" stroke="#2dd4bf" strokeWidth="4" strokeLinejoin="round" className="drop-shadow-[0_0_15px_rgba(45,212,191,0.6)]"/> {/* teal-400 */}
-              <circle cx="200" cy="100" r="25" fill="#2dd4bf" opacity="0.1" />
-              <line x1="200" y1="75" x2="200" y2="125" stroke="#2dd4bf" strokeWidth="3" strokeLinecap="round"/>
-              <line x1="185" y1="95" x2="215" y2="95" stroke="#2dd4bf" strokeWidth="3" strokeLinecap="round"/>
-              <text x="200" y="240" textAnchor="middle" className="text-lg font-bold fill-teal-400 drop-shadow-[0_0_5px_rgba(45,212,191,0.5)]">4. 明白天父的好東西</text>
+              {/* Teal (Gift shape) */}
+              <path d="M 200 180 C 200 180, 120 120, 120 80 C 120 40, 180 30, 200 70 C 220 30, 280 40, 280 80 C 280 120, 200 180, 200 180 Z" fill="none" stroke="#14b8a6" strokeWidth="8" strokeLinejoin="round" />
+              <circle cx="200" cy="95" r="30" fill="#14b8a6" opacity="0.1" />
+              <line x1="200" y1="60" x2="200" y2="130" stroke="#14b8a6" strokeWidth="6" strokeLinecap="round"/>
+              <line x1="180" y1="95" x2="220" y2="95" stroke="#14b8a6" strokeWidth="6" strokeLinecap="round"/>
             </svg>
           </div>
-          <div className="max-w-xl mx-auto z-10 px-4">
-            <h2 className="text-3xl font-bold mb-6 text-white tracking-tight text-center">關鍵：明白天父的 <span className="text-teal-400">「好東西」</span></h2>
-            <ul className="space-y-4 text-slate-300 font-medium mb-6">
-              <li className="flex gap-3"><span className="text-teal-400 font-bold">•</span> <span><strong className="text-white">相同的 DNA：</strong>禱告不是法律規定，而是出自生命與愛的連結，我們是祂的兒女。</span></li>
-              <li className="flex gap-3"><span className="text-teal-400 font-bold">•</span> <span><strong className="text-white">看似堅硬的恩典：</strong>神給的看似辛苦（如耶穌的十字架），其實是生命最需要的養分。</span></li>
-              <li className="flex gap-3"><span className="text-teal-400 font-bold">•</span> <span><strong className="text-white">永恆的預備：</strong>地上的父親為今生打算，但天父為我們預備的是永生與得勝。</span></li>
+          <div className="text-center max-w-2xl mx-auto z-10 px-4">
+            <h2 className="text-3xl md:text-4xl font-extrabold mb-8 text-stone-900 tracking-tight">關鍵：明白天父的 <span className="text-teal-500 px-1">好東西</span></h2>
+            <ul className="space-y-5 text-lg md:text-xl text-stone-600 font-medium mb-8 text-left max-w-xl mx-auto">
+              <li className="flex gap-4 items-start"><span className="text-teal-400 font-black mt-1">•</span> <span><strong className="text-stone-900">相同的 DNA：</strong>禱告不是法律規定，而是出自生命與愛的連結，我們是祂的兒女。</span></li>
+              <li className="flex gap-4 items-start"><span className="text-teal-400 font-bold mt-1">•</span> <span><strong className="text-stone-900">看似堅硬的恩典：</strong>神給的看似辛苦（如耶穌的十字架），其實是生命最需要的養分。</span></li>
+              <li className="flex gap-4 items-start"><span className="text-teal-400 font-bold mt-1">•</span> <span><strong className="text-stone-900">永恆的預備：</strong>地上的父親為今生打算，但天父為我們預備的是永生與得勝。</span></li>
             </ul>
-            <p className="text-lg text-teal-300 font-bold text-center">祂給的不只是短暫的滿足，而是永恆最美好的禮物。</p>
+            <p className="text-xl text-teal-600 font-bold">祂給的不只是短暫的滿足，而是永恆最美好的禮物。</p>
           </div>
         </FadeSection>
       </section>
 
-      {/* 5. 決志行動呼籲 */}
-      <section className="min-h-screen flex flex-col justify-center items-center py-20 px-6 relative overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-blue-600/10 rounded-full blur-[200px] pointer-events-none"></div>
+      {/* === 5. 決志行動呼籲 === */}
+      <section className="min-h-[90vh] flex flex-col justify-center items-center py-24 px-6 relative">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-cyan-400/10 rounded-full blur-[200px] pointer-events-none"></div>
         <FadeSection>
-          <div className="text-center max-w-2xl relative z-10 bg-slate-900/50 p-10 md:p-14 rounded-[3rem] border border-slate-800 backdrop-blur-xl shadow-2xl">
-            <h2 className="text-4xl font-extrabold mb-6 text-white tracking-tight">現在，換你來敲門了</h2>
-            <p className="text-lg text-slate-400 mb-10 leading-relaxed font-medium">天父正在等候聽你的聲音。<br/>不論是你自己正面臨的挑戰、需要做的決定，或是你心裡掛念的家人、朋友... <br/><strong className="text-slate-200 block mt-4">大膽地寫下你最真實的需要，為那個人祈求祝福吧！</strong></p>
+          <div className="text-center max-w-2xl relative z-10 bg-white/60 p-10 md:p-16 rounded-[3rem] border border-white backdrop-blur-xl shadow-[0_20px_60px_rgb(0,0,0,0.05)]">
+            <h2 className="text-4xl md:text-5xl font-extrabold mb-8 text-stone-900 tracking-tight">現在，換你來敲門了</h2>
+            <p className="text-lg md:text-xl text-stone-500 mb-12 leading-relaxed font-medium">
+              天父正在等候聽你的聲音。<br/>不論是你自己正面臨的挑戰、需要做的決定，或是你心裡掛念的家人、朋友... <br/><br/>
+              <span className="text-stone-800 font-bold text-xl block">大膽地寫下你最真實的需要，<br/>為那個人祈求祝福吧！</span>
+            </p>
             
             <button 
               onClick={() => setIsModalOpen(true)}
-              className="group inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-full text-lg font-bold transition-all shadow-[0_0_40px_rgba(6,182,212,0.4)] hover:shadow-[0_0_60px_rgba(6,182,212,0.6)] hover:-translate-y-1"
+              className="group w-full py-5 bg-stone-900 hover:bg-stone-800 text-white rounded-full text-lg md:text-xl font-bold transition-all shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:-translate-y-1 hover:shadow-[0_15px_40px_rgb(0,0,0,0.2)] flex justify-center items-center gap-3"
             >
-              <Sparkles className="w-5 h-5 group-hover:scale-110 transition-transform" /> 我要寫下我的禱告
+              <Sparkles className="w-6 h-6 text-cyan-300 group-hover:scale-110 transition-transform" /> 我要寫下我的禱告
             </button>
           </div>
         </FadeSection>
       </section>
 
-      {/* 🌟 復原原本連到天父的信的Modal邏輯，並完全保留原本內容 */}
-      <div className={`fixed inset-0 w-full h-full ${modalState === 'loading' ? 'bg-black' : 'bg-slate-950/80 backdrop-blur-xl'} flex justify-center items-center z-[1000] transition-all duration-500 ease-in-out ${isModalOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}>
-        {(modalState === 'input' || modalState === 'letter') && (
-          <div className={`bg-slate-900 w-[90%] max-w-[500px] rounded-[2rem] p-8 md:p-10 shadow-[0_20px_50px_rgb(0,0,0,0.3)] border border-slate-800 relative transition-all duration-400 ease-in-out max-h-[90vh] overflow-y-auto ${isModalOpen ? 'translate-y-0 opacity-100' : 'translate-y-5 opacity-0'}`}>
-            <button onClick={closeModal} className="absolute top-5 right-5 text-2xl text-slate-500 hover:text-white transition-colors">&times;</button>
-            {modalState === 'input' && (
+      {/* === Modal 彈出視窗 === */}
+      <div className={`fixed inset-0 w-full h-full ${isRedirecting ? 'bg-white/90' : 'bg-stone-900/40 backdrop-blur-md'} flex justify-center items-center z-[1000] transition-all duration-500 ease-in-out ${isModalOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} onClick={(e) => { if (e.target === e.currentTarget && !isRedirecting) closeModal(); }}>
+          
+          {/* 🌟 只有在尚未跳轉時才顯示輸入框 */}
+          {!isRedirecting && (
+            <div className={`bg-white w-[92%] max-w-[500px] rounded-[2rem] p-8 md:p-10 shadow-[0_40px_80px_rgb(0,0,0,0.1)] border border-white relative transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] max-h-[90vh] overflow-y-auto ${isModalOpen ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-10 opacity-0 scale-95'}`}>
+              <button onClick={closeModal} className="absolute top-5 right-6 text-2xl text-stone-300 hover:text-stone-600 transition-colors">&times;</button>
+              
               <div>
-                <h3 className="text-2xl font-bold mb-3 text-white tracking-tight">親愛的天父...</h3>
-                <p className="text-slate-400 mb-8 text-sm font-medium leading-relaxed">請寫下你目前最真實的需要、你想突破的困境，或是你想為誰（家人/朋友）祈求祝福？這份禱告卡只有你和天父知道。</p>
-                <textarea value={prayerText} onChange={(e) => setPrayerText(e.target.value)} placeholder="我想祈求..." className="w-full h-[150px] p-4 border border-slate-700 focus:border-cyan-500 rounded-xl resize-none text-white bg-slate-800/60 focus:bg-slate-800 transition-colors mb-6 outline-none font-medium"/>
-                <button onClick={handleSubmit} disabled={!prayerText.trim()} className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 disabled:from-slate-600 disabled:to-slate-700 text-white rounded-full text-lg font-bold tracking-wider transition-all shadow-lg shadow-cyan-500/20">
+                <h3 className="text-2xl font-extrabold mb-3 text-stone-900 tracking-tight">親愛的天父...</h3>
+                <p className="text-base text-stone-500 mb-6 font-medium leading-relaxed">請寫下你目前最真實的需要、你想突破的困境，或是你想為誰（家人/朋友）祈求祝福？這份禱告卡只有你和天父知道。</p>
+                <textarea value={prayerText} onChange={(e) => setPrayerText(e.target.value)} placeholder="我想祈求..." className="w-full h-[150px] p-5 border-2 border-stone-100 focus:border-cyan-400 rounded-xl resize-none text-base text-stone-700 bg-stone-50 focus:bg-white transition-colors mb-6 outline-none font-medium"/>
+                
+                <button onClick={handleSubmit} disabled={!prayerText.trim()} className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-500 disabled:from-stone-200 disabled:to-stone-200 text-white rounded-full text-lg font-bold tracking-wide transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5">
                   送出我的禱告
                 </button>
               </div>
-            )}
-            {modalState === 'letter' && letterData && (
-              <div className="text-left animate-in fade-in zoom-in duration-500">
-                <img src={letterImage} alt="溫暖插畫" className="w-full h-[200px] object-cover rounded-2xl mb-6 shadow-sm border border-slate-700" style={{ filter: 'contrast(0.9) saturate(1.2) brightness(0.9)' }} />
-                <h3 className="text-2xl font-bold text-cyan-400 mb-5 tracking-tight flex items-center gap-3">
-                   <Link href="/letters" className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-200">💌 來自天父的回應</Link>
-                </h3>
-                <div className="text-lg mb-8 leading-loose whitespace-pre-wrap text-slate-100 font-medium">{letterData.text}</div>
-                <div className="bg-slate-800/80 p-5 border-l-4 border-cyan-500 rounded-r-xl shadow-inner">
-                  <p className="font-semibold mb-2 text-slate-50">{letterData.verse}</p>
-                  <p className="text-sm text-slate-400 text-right italic m-0">{letterData.ref}</p>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-        {/* Loading Spinner */}
-        {modalState === 'loading' && (
-          <div className="text-center">
-            <div className="w-12 h-12 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full mx-auto mb-6 animate-spin shadow-[0_0_30px_rgba(6,182,212,0.5)]"></div>
-            <p className="text-white text-lg font-bold tracking-widest">正在將你的禱告帶到天父面前...</p>
-          </div>
-        )}
+            </div>
+          )}
+          
+          {/* 🌟 轉址 (跳轉至天父的信) 的 Loading 狀態 */}
+          {isRedirecting && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/95 backdrop-blur-sm z-50">
+              <div className="w-10 h-10 border-4 border-cyan-100 border-t-cyan-500 rounded-full mb-5 animate-spin"></div>
+              <p className="text-stone-800 text-base font-bold tracking-widest animate-pulse">正在將你的禱告帶到天父面前...</p>
+            </div>
+          )}
       </div>
     </main>
   );

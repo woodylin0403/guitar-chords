@@ -2,8 +2,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
+import { useRouter } from 'next/navigation'; // 🌟 加入 useRouter 用於頁面跳轉
 import { ArrowLeft, Gift, Heart, ArrowDown, Music } from 'lucide-react';
-import { getMatchedLetter } from '@/data/letters';
 
 // 平滑出現的動畫 Hook
 function useOnScreen(options: IntersectionObserverInit) {
@@ -32,21 +32,23 @@ function FadeSection({ children }: { children: React.ReactNode }) {
 }
 
 export default function SalvationTool() {
+  const router = useRouter(); // 🌟 初始化 router
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalState, setModalState] = useState<'input' | 'loading' | 'letter'>('input');
   const [prayerText, setPrayerText] = useState('');
-  const [letterData, setLetterData] = useState<any>(null);
-  const [letterImage, setLetterImage] = useState('');
+  const [isRedirecting, setIsRedirecting] = useState(false); // 🌟 新增：處理轉址時的狀態
 
   const handleSubmit = () => {
     if (prayerText.trim() === '') return;
-    setModalState('loading');
+    
+    // 🌟 不再處理本地資料，而是進入轉址狀態，直接帶著參數跳轉去 /letters
+    setIsRedirecting(true);
+    const encodedPrayer = encodeURIComponent(prayerText);
+    
+    // 給一點視覺緩衝時間再跳轉
     setTimeout(() => {
-      const result = getMatchedLetter(prayerText);
-      setLetterData(result.letter);
-      setLetterImage(result.image);
-      setModalState('letter');
-    }, 2000);
+      router.push(`/letters?prayer=${encodedPrayer}`);
+    }, 500); 
   };
 
   const closeModal = () => setIsModalOpen(false);
@@ -291,38 +293,30 @@ export default function SalvationTool() {
       </section>
 
       {/* === Modal 彈出視窗 === */}
-      <div className={`fixed inset-0 w-full h-full ${modalState === 'loading' ? 'bg-white/90' : 'bg-stone-900/30 backdrop-blur-md'} flex justify-center items-center z-[1000] transition-all duration-500 ease-in-out ${isModalOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}>
-          <div className={`bg-white w-[92%] max-w-[500px] rounded-[2rem] p-8 md:p-10 shadow-[0_40px_80px_rgb(0,0,0,0.1)] border border-white relative transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] max-h-[90vh] overflow-y-auto ${isModalOpen ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-10 opacity-0 scale-95'}`}>
-            <button onClick={closeModal} className="absolute top-5 right-6 text-2xl text-stone-300 hover:text-stone-600 transition-colors">&times;</button>
-            
-            {modalState === 'input' && (
+      <div className={`fixed inset-0 w-full h-full ${isRedirecting ? 'bg-white/90' : 'bg-stone-900/40 backdrop-blur-md'} flex justify-center items-center z-[1000] transition-all duration-500 ease-in-out ${isModalOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} onClick={(e) => { if (e.target === e.currentTarget && !isRedirecting) closeModal(); }}>
+          
+          {/* 🌟 只有在尚未跳轉時才顯示輸入框 */}
+          {!isRedirecting && (
+            <div className={`bg-white w-[92%] max-w-[500px] rounded-[2rem] p-8 md:p-10 shadow-[0_40px_80px_rgb(0,0,0,0.1)] border border-white relative transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] max-h-[90vh] overflow-y-auto ${isModalOpen ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-10 opacity-0 scale-95'}`}>
+              <button onClick={closeModal} className="absolute top-5 right-6 text-2xl text-stone-300 hover:text-stone-600 transition-colors">&times;</button>
+              
               <div>
                 <h3 className="text-2xl font-extrabold mb-3 text-stone-900 tracking-tight">告訴天父你的決定...</h3>
                 <p className="text-base text-stone-500 mb-6 font-medium leading-relaxed">請寫下你目前的困難，或是願意接受這份禮物的心聲。這份祈禱只有你跟天父知道。</p>
                 <textarea value={prayerText} onChange={(e) => setPrayerText(e.target.value)} placeholder="親愛的天父，我願意..." className="w-full h-[150px] p-5 border-2 border-stone-100 focus:border-rose-400 rounded-xl resize-none text-base text-stone-700 bg-stone-50 focus:bg-white transition-colors mb-6 outline-none font-medium"/>
+                
                 <button onClick={handleSubmit} disabled={!prayerText.trim()} className="w-full py-4 bg-gradient-to-r from-rose-500 to-orange-500 disabled:from-stone-200 disabled:to-stone-200 text-white rounded-full text-lg font-bold tracking-wide transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5">
                   送出我的心聲
                 </button>
               </div>
-            )}
-
-            {modalState === 'letter' && letterData && (
-              <div className="text-left animate-in fade-in zoom-in duration-700">
-                <img src={letterImage} alt="溫暖插畫" className="w-full h-[200px] object-cover rounded-2xl mb-6 shadow-sm" />
-                <h3 className="text-xl font-extrabold mb-5 tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-orange-500">💌 來自天父的信</h3>
-                <div className="text-base md:text-lg mb-8 leading-loose whitespace-pre-wrap text-stone-700 font-medium">{letterData.text}</div>
-                <div className="bg-stone-50 p-5 border-l-4 border-stone-300 rounded-r-xl">
-                  <p className="text-base font-bold mb-2 text-stone-800">{letterData.verse}</p>
-                  <p className="text-sm text-stone-400 text-right italic m-0">{letterData.ref}</p>
-                </div>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
           
-          {modalState === 'loading' && (
+          {/* 🌟 轉址 (跳轉至天父的信) 的 Loading 狀態 */}
+          {isRedirecting && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/95 backdrop-blur-sm z-50">
               <div className="w-10 h-10 border-4 border-rose-100 border-t-rose-500 rounded-full mb-5 animate-spin"></div>
-              <p className="text-stone-800 text-base font-bold tracking-widest animate-pulse">正在為你尋找天父的回信...</p>
+              <p className="text-stone-800 text-base font-bold tracking-widest animate-pulse">正在為你準備天父的回信...</p>
             </div>
           )}
       </div>
