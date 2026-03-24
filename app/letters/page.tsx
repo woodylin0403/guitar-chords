@@ -19,7 +19,7 @@ export default function HeavenlyLetters() {
   // 控制抽卡動畫階段的狀態
   const [drawStage, setDrawStage] = useState<'orb' | 'spinning' | 'reveal'>('orb');
 
-  // 🌟 新增：偵測是否從其他頁面（救恩/禱告）帶了祈禱文過來
+  // 🌟 偵測是否從其他頁面（救恩/禱告）帶了祈禱文過來
   useEffect(() => {
     const externalPrayer = searchParams.get('prayer');
     if (externalPrayer) {
@@ -136,7 +136,7 @@ export default function HeavenlyLetters() {
       <div className={`fixed inset-0 w-full h-full ${modalState === 'loading' ? 'bg-black' : 'bg-slate-950/80 backdrop-blur-xl'} flex justify-center items-center z-[1000] transition-all duration-500 ease-in-out ${isModalOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}>
         
         {/* 動畫 Keyframes */}
-        <style jsx global>{`
+        <style>{`
           @keyframes orb-float {
             0%, 100% { transform: translateY(0) scale(1); opacity: 0.8; }
             50% { transform: translateY(-10px) scale(1.05); opacity: 1; }
@@ -195,7 +195,6 @@ export default function HeavenlyLetters() {
                 <h3 className="text-2xl font-bold mb-3 text-white tracking-tight">親愛的天父...</h3>
                 <p className="text-slate-400 mb-8 text-sm font-medium leading-relaxed">寫下你目前的困難、期待或感恩，這份心聲只有你跟天父知道。</p>
                 <textarea value={prayerText} onChange={(e) => setPrayerText(e.target.value)} placeholder="我想對祢說..." className="w-full h-[150px] p-4 border border-slate-700 focus:border-violet-500 rounded-xl resize-none text-white bg-slate-800/60 focus:bg-slate-800 transition-colors mb-6 outline-none font-medium"/>
-                {/* 🌟 點擊後不直接給信，而是進入光點階段 */}
                 <button onClick={handleSubmitInput} disabled={!prayerText.trim()} className="w-full py-3 bg-gradient-to-r from-violet-600 to-blue-500 hover:from-violet-500 hover:to-blue-400 disabled:from-slate-600 disabled:to-slate-700 text-white rounded-full text-lg tracking-wider transition-all shadow-lg shadow-violet-600/20">
                   送出我的心聲
                 </button>
@@ -207,7 +206,7 @@ export default function HeavenlyLetters() {
               <div className="text-left">
                 <img src={letterImage} alt="溫暖插畫" className="w-full h-[200px] object-cover rounded-2xl mb-6 shadow-sm border border-slate-700" style={{ filter: 'contrast(0.9) saturate(1.2) brightness(0.9)' }} />
                 <h3 className="text-2xl font-bold text-violet-400 mb-5 tracking-tight flex items-center gap-3">
-                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-300 to-blue-200">💌 來自天父的信</span>
+                   <Link href="/letters" className="text-transparent bg-clip-text bg-gradient-to-r from-violet-300 to-blue-200">💌 來自天父的信</Link>
                 </h3>
                 <div className="text-lg mb-8 leading-loose whitespace-pre-wrap text-slate-100 font-medium">{letterData.text}</div>
                 <div className="bg-slate-800/80 p-5 border-l-4 border-violet-500 rounded-r-xl shadow-inner">
