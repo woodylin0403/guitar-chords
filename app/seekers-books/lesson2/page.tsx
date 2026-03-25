@@ -1,7 +1,27 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, BookOpen, Wind, ShieldCheck, Milestone, Search } from 'lucide-react';
+import { ArrowLeft, BookOpen, Wind, ShieldCheck, Milestone, Search, BookText } from 'lucide-react';
+
+// 🌟 經文點擊互動元件
+function BibleVerse({ reference, text }: { reference: string, text: string }) {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <span className="inline-block align-middle w-full mt-1">
+      <button 
+        onClick={(e) => { e.preventDefault(); setIsOpen(!isOpen); }}
+        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold transition-all duration-300 ${isOpen ? 'bg-[var(--accent-primary)] text-white shadow-md' : 'bg-slate-100 text-[var(--accent-primary)] hover:bg-[var(--accent-primary)] hover:text-white border border-slate-200'}`}
+      >
+        <BookText size={14} /> {reference}
+      </button>
+      <span className={`block overflow-hidden transition-all duration-500 ease-in-out ${isOpen ? 'max-h-[500px] opacity-100 mt-3 mb-2' : 'max-h-0 opacity-0 mt-0 mb-0'}`}>
+        <span className="block p-4 bg-blue-50/50 border-l-4 border-[var(--accent-primary)] rounded-r-xl text-[0.95rem] font-medium text-slate-700 shadow-sm">
+          {text}
+        </span>
+      </span>
+    </span>
+  );
+}
 
 export default function BibleInspirationLesson() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -12,13 +32,9 @@ export default function BibleInspirationLesson() {
   useEffect(() => {
     const observerOptions = { root: null, rootMargin: '0px', threshold: 0.15 };
     const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) entry.target.classList.add('visible');
-      });
+      entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('visible'); });
     }, observerOptions);
-    
     document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
-    
     return () => observer.disconnect();
   }, []);
 
@@ -31,7 +47,7 @@ export default function BibleInspirationLesson() {
   ];
 
   const heavenlyLetters = [
-      { keywords: ['不懂', '太難', '讀不懂', '枯燥', '不知道怎麼讀'], text: "親愛的孩子，有時候你會覺得聖經像是一本古老又難懂的書，這很正常。\n\n但請記得，這不是一本普通的書，這是我寫給你的情書。當你讀不懂的時候，請邀請聖靈——也就是這本書的『原作者』來做你的家教。每次打開書頁前，先在心裡輕輕呼喚我，我會親自開你的心眼，讓那些黑底白字變成活水，流進你的生命裡。", verse: "「求你開我的眼睛，使我看出你律法中的奇妙。」", ref: "— 詩篇 119:18" },
+      { keywords: ['不懂', '太難', '讀不懂', '枯燥', '不知道怎麼讀'], text: "親愛的孩子，有時候你會覺得聖經像是一本古老又難懂的書，這很正常。\n\n但請記得，這不是一本普通的書，這是我寫給你的情書。當你讀不懂的時候，請邀請聖靈——也就是這本書的『原作者』來做你的家教。每次打開書頁前，先在心裡輕呼喚我，我會親自開你的心眼，讓那些黑底白字變成活水，流進你的生命裡。", verse: "「求你開我的眼睛，使我看出你律法中的奇妙。」", ref: "— 詩篇 119:18" },
       { keywords: ['指引', '迷惘', '方向', '決定', '不知道該怎麼辦', '答案'], text: "親愛的孩子，我看見你正站在人生的十字路口，渴望尋找方向。\n\n不要在世界的喧囂中迷失了。我已經把最高明的導航系統交給了你——就是我的話語。當你願意安靜下來，每天在聖經中尋求我的心意，我會用我的話語成為你腳前的燈、路上的光，一步一步帶領你走在蒙福的道路上。", verse: "「你的話是我腳前的燈，是我路上的光。」", ref: "— 詩篇 119:105" },
       { keywords: ['真實', '奇妙', '感動', '原來如此', '相信', '神的話', '默示'], text: "親愛的孩子，看見你對我的話語產生敬畏與感動，我的心無比喜悅！\n\n是的，聖經中跨越千年的預言、40多位作者的完美和諧，都不是巧合，是我呼出的氣息。當你選擇將生命建造在這不改變的磐石上，即使世界動盪，你也絕不動搖。繼續渴慕我的話語吧，裡面藏著無盡的寶藏等你去發掘。", verse: "「草必枯乾，花必凋殘，惟有我們神的話必永遠立定。」", ref: "— 以賽亞書 40:8" },
       { keywords: ['力量', '軟弱', '低潮', '幫助', '功效', '改變'], text: "親愛的孩子，當你感到軟弱無力、想要放棄的時候，來讀我的話語吧。\n\n我的道是活潑的，是有功效的。它不是冰冷的教條，而是帶有創造天地的大能。當你把我的話吃進去、反覆思想，它就會在你裡面產生力量，醫治你的憂鬱，砍斷你的綑綁，使你的生命像奧古斯丁一樣經歷奇妙的翻轉！", verse: "「神的道是活潑的，是有功效的，比一切兩刃的劍更快...」", ref: "— 希伯來書 4:12" },
@@ -87,71 +103,52 @@ export default function BibleInspirationLesson() {
             line-height: 1.8;
             min-height: 100vh;
         }
-
         .custom-nav { padding: 20px 30px; position: fixed; top: 0; left: 0; right: 0; z-index: 50; }
         .custom-section { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 100px 20px 60px 20px; position: relative; }
         .custom-container { max-width: 850px; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 10;}
         .text-content { text-align: center; margin-bottom: 50px; max-width: 750px; width: 100%; z-index: 2; }
-
         .custom-theme-wrapper h1 { font-size: 3rem; font-weight: 800; background: linear-gradient(to right, var(--accent-primary), var(--accent-secondary)); -webkit-background-clip: text; color: transparent; margin-bottom: 15px; letter-spacing: 2px; text-align: center; line-height: 1.2;}
         .custom-theme-wrapper h2 { font-size: 2rem; font-weight: 700; margin-bottom: 25px; color: var(--text-main); border-bottom: 3px solid var(--accent-tertiary); padding-bottom: 10px; display: inline-block;}
         .custom-theme-wrapper h3 { font-size: 1.4rem; font-weight: 700; margin-top: 35px; margin-bottom: 15px; color: var(--accent-primary); text-align: left; width: 100%; display: flex; align-items: center; gap: 8px;}
         .custom-theme-wrapper p { font-size: 1.15rem; color: var(--text-main); font-weight: 500; margin-bottom: 15px; text-align: left;}
-
         .equip-list { list-style: none; padding: 0; margin: 0 0 20px 0; text-align: left; width: 100%; }
         .equip-list li { font-size: 1.1rem; color: var(--text-main); margin-bottom: 16px; position: relative; padding-left: 25px; line-height: 1.6; background: var(--card-bg); border: 1px solid var(--card-border); padding: 15px 20px 15px 40px; border-radius: 12px; backdrop-filter: blur(10px); box-shadow: 0 4px 6px rgba(0,0,0,0.02);}
         .equip-list li::before { content: "✦"; position: absolute; left: 15px; color: var(--accent-tertiary); font-size: 1.2rem; top: 15px; }
-        .counter-example { font-size: 0.95rem; color: var(--accent-secondary); font-style: italic; display: block; margin-top: 6px; font-weight: 600;}
-
-        /* 🌟 經文引用區塊樣式 */
-        .verse-quote { background: rgba(14, 165, 233, 0.05); border-left: 4px solid var(--accent-tertiary); padding: 12px 18px; border-radius: 0 8px 8px 0; font-size: 0.95rem; color: var(--text-light); margin-top: 10px; font-weight: 500; line-height: 1.6; }
-
         .highlight-box { background: linear-gradient(145deg, #F0F9FF, #EFF6FF); border-left: 5px solid var(--accent-primary); padding: 25px; margin: 25px 0; text-align: left; border-radius: 0 12px 12px 0; box-shadow: 0 10px 30px rgba(0,0,0,0.04); width: 100%; }
         .question-card { background: #FFF; border: 1px solid rgba(99, 102, 241, 0.2); border-left: 5px solid var(--accent-secondary); padding: 25px; border-radius: 12px; margin-bottom: 20px; text-align: left; width: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.03);}
         .question-card .q-label { font-weight: 800; color: var(--accent-secondary); font-size: 1.15rem; margin-bottom: 8px; display: block; letter-spacing: 1px;}
         .question-card .q-text { font-size: 1.2rem; color: var(--text-main); font-weight: 700; line-height: 1.6; }
-
         .bible-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0 40px 0; width: 100%; text-align: left;}
         .bible-card { background: #FFF; border: 1px solid var(--card-border); padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); transition: transform 0.3s; }
         .bible-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(59, 130, 246, 0.1); border-color: var(--accent-tertiary);}
         .bible-card h4 { font-size: 1.2rem; color: var(--accent-primary); font-weight: 800; margin-bottom: 10px; border-bottom: 2px dashed #E2E8F0; padding-bottom: 8px;}
         .bible-tag { display: inline-block; background: #F1F5F9; color: var(--text-light); font-size: 0.9rem; padding: 4px 10px; border-radius: 20px; margin: 4px 4px 0 0; font-weight: 600;}
         .bible-tag.highlight { background: #EFF6FF; color: var(--accent-primary); }
-
         .think-space { min-height: 40vh; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0.8; }
         .think-space span { font-size: 0.85rem; letter-spacing: 4px; color: var(--accent-primary); text-transform: uppercase; margin-bottom: 15px; animation: pulseText 2.5s infinite; font-weight: 700;}
         .think-space .scroll-line { width: 2px; height: 60px; background: linear-gradient(to bottom, var(--accent-primary), transparent); animation: pulseLine 2.5s infinite; }
-
         @keyframes pulseText { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
         @keyframes pulseLine { 0%, 100% { transform: scaleY(1); transform-origin: top; opacity: 0.4;} 50% { transform: scaleY(1.3); transform-origin: top; opacity: 1;} }
-
         .graphic-container { width: 100%; height: 240px; display: flex; justify-content: center; align-items: center; position: relative; margin-bottom: 30px;}
         .graphic-container svg { width: 100%; height: 100%; max-width: 450px; overflow: visible;}
         .svg-text { font-family: 'Noto Sans TC', sans-serif; font-size: 15px; font-weight: 700; fill: var(--text-main); text-anchor: middle; letter-spacing: 1px;}
-
         .fade-up { opacity: 0; transform: translateY(40px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
         .fade-up.visible { opacity: 1; transform: translateY(0); }
-
         .custom-btn { display: inline-block; margin-top: 30px; padding: 16px 45px; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; border: none; border-radius: 30px; font-weight: 700; letter-spacing: 2px; transition: all 0.3s ease; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3); cursor: pointer; font-size: 1.15rem; text-transform: uppercase;}
         .custom-btn:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 15px 35px rgba(99, 102, 241, 0.4); }
-
         .scroll-indicator { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; opacity: 0.6; animation: bounce 2.5s infinite; }
         .scroll-indicator span { font-size: 0.75rem; letter-spacing: 3px; margin-bottom: 10px; color: var(--accent-secondary); text-transform: uppercase; font-weight: 700;}
         .scroll-indicator .line { width: 2px; height: 50px; background: linear-gradient(to bottom, var(--accent-secondary), transparent); }
         @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0) translateX(-50%); } 40% { transform: translateY(-12px) translateX(-50%); } 60% { transform: translateY(-6px) translateX(-50%); } }
-
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--modal-bg); backdrop-filter: blur(8px); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
         .modal-card { background: #FFF; border: 1px solid var(--card-border); width: 90%; max-width: 600px; border-radius: 24px; padding: 45px 40px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); position: relative; transform: translateY(20px) scale(0.95); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); max-height: 90vh; overflow-y: auto; }
         .modal-overlay.active .modal-card { transform: translateY(0) scale(1); }
         .close-btn { position: absolute; top: 20px; right: 25px; background: none; border: none; font-size: 2rem; color: var(--text-light); cursor: pointer; transition: color 0.2s; }
         .close-btn:hover { color: var(--text-main); }
-        
         .modal-textarea { width: 100%; height: 180px; padding: 20px; border: 2px solid #E2E8F0; border-radius: 12px; resize: none; font-family: inherit; font-size: 1.05rem; color: var(--text-main); background: #F8FAFC; margin-bottom: 25px; transition: all 0.3s; line-height: 1.6; }
         .modal-textarea:focus { outline: none; border-color: var(--accent-tertiary); box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1); background: #FFF;}
-        
         .spinner { width: 50px; height: 50px; border: 4px solid rgba(59, 130, 246, 0.2); border-top: 4px solid var(--accent-primary); border-right: 4px solid var(--accent-secondary); border-radius: 50%; margin: 0 auto 30px auto; animation: spin 1s linear infinite; }
-
         @media (max-width: 768px) {
             .custom-theme-wrapper h1 { font-size: 2.3rem; } .custom-theme-wrapper h2 { font-size: 1.6rem; } .bible-grid { grid-template-columns: 1fr; }
             .graphic-container { height: 180px; } .modal-card { padding: 35px 25px; width: 95%;}
@@ -209,22 +206,22 @@ export default function BibleInspirationLesson() {
                 <ul className="equip-list">
                     <li>
                         <strong>普遍啟示：</strong>大自然、人的良知、道德本性。
-                        <div className="verse-quote">羅馬書 1:20「自從造天地以來，神的永能和神性是明明可知的，雖是眼不能見，但藉著所造之物就可以曉得，叫人無可推諉。」</div>
+                        <BibleVerse reference="(羅1:20)" text="自從造天地以來，神的永能和神性是明明可知的，雖是眼不能見，但藉著所造之物就可以曉得，叫人無可推諉。" />
                     </li>
                     <li>
                         <strong>特殊啟示：</strong>神直接顯現、異象、異夢、先知傳話。
-                        <div className="verse-quote">創世記 18:1「耶和華在幔利橡樹那裡向亞伯拉罕顯現出來...」</div>
+                        <BibleVerse reference="(創18:1)" text="耶和華在幔利橡樹那裡向亞伯拉罕顯現出來..." />
                     </li>
                 </ul>
 
                 <div className="highlight-box">
                     <strong style={{color:'var(--accent-primary)', fontSize:'1.2rem'}}>神終極的啟示：</strong><br/><br/>
                     1. 透過<strong>耶穌基督</strong>
-                    <div className="verse-quote" style={{background:'rgba(255,255,255,0.5)', marginTop:'5px', marginBottom:'15px'}}>約翰福音 1:18「從來沒有人看見神，只有在父懷裡的獨生子將他表明出來。」</div>
-                    
+                    <BibleVerse reference="(約1:18)" text="從來沒有人看見神，只有在父懷裡的獨生子將他表明出來。" />
+                    <br/><br/>
                     2. 透過<strong>聖經</strong>，帶出神救贖的計畫：
-                    <div className="verse-quote" style={{background:'rgba(255,255,255,0.5)', marginTop:'5px'}}>提摩太後書 3:15-16「...這聖經能使你因信基督耶穌，有得救的智慧。聖經都是神所默示的，於教訓、督責、使人歸正、教導人學義都是有益的...」</div>
-                    <div className="verse-quote" style={{background:'rgba(255,255,255,0.5)', marginTop:'5px'}}>約翰福音 20:31「但記這些事要叫你們信耶穌是基督，是神的兒子，並且叫你們信了他，就可以因他的名得生命。」</div>
+                    <BibleVerse reference="(提後3:15-16)" text="...這聖經能使你因信基督耶穌，有得救的智慧。聖經都是神所默示的，於教訓、督責、使人歸正、教導人學義都是有益的..." />
+                    <BibleVerse reference="(約20:31)" text="但記這些事要叫你們信耶穌是基督，是神的兒子，並且叫你們信了他，就可以因他的名得生命。" />
                 </div>
             </div>
         </div>
@@ -315,7 +312,7 @@ export default function BibleInspirationLesson() {
                     </li>
                     <li>
                         <strong>耶穌自己的宣告：</strong>耶穌親自背書舊約的權威，也授權給新約的使徒。
-                        <div className="verse-quote">馬太福音 5:18「我實在告訴你們，就是到天地都廢去了，律法的一點一畫也不能廢去，都要成全。」</div>
+                        <BibleVerse reference="(太5:18)" text="我實在告訴你們，就是到天地都廢去了，律法的一點一畫也不能廢去，都要成全。" />
                     </li>
                     <li><strong>歷代教會的教導：</strong>在逼迫與異端中，神護衛正典的流傳與保存。</li>
                     <li><strong>讀者生命的見證：</strong>放蕩不羈的奧古斯丁、放下名位的中國佈道家宋尚節，都是因為一句經文生命被徹底翻轉！</li>
@@ -359,7 +356,7 @@ export default function BibleInspirationLesson() {
         <div className="custom-container fade-up">
             <div className="text-content">
                 <h2>五、對聖經的回應</h2>
-                <div className="verse-quote" style={{marginBottom:'20px'}}>提摩太後書 3:15「...這聖經能使你因信基督耶穌，有得救的智慧。」</div>
+                <div className="mb-6"><BibleVerse reference="(提後3:15)" text="...這聖經能使你因信基督耶穌，有得救的智慧。" /></div>
                 <p>這本書不是用來供奉的，而是用來閱讀與活出來的。常見的讀經方式有：</p>
                 
                 <ul className="equip-list">
@@ -377,7 +374,7 @@ export default function BibleInspirationLesson() {
         </div>
       </section>
 
-      {/* Modal 程式碼 (同前)... */}
+      {/* Modal 程式碼 */}
       <div className={`modal-overlay ${isModalOpen ? 'active' : ''}`} onClick={(e) => { if(e.target === e.currentTarget) closeModal(); }}>
         <div className="modal-card">
             <button className="close-btn" onClick={closeModal}>&times;</button>

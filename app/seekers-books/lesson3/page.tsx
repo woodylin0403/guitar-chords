@@ -1,24 +1,58 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Search, ShieldAlert, Crosshair, Heart, Zap, Sun } from 'lucide-react';
+import { ArrowLeft, Search, ShieldAlert, Crosshair, Heart, Zap, Sun, BookText } from 'lucide-react';
+
+// 🌟 經文點擊互動元件
+function BibleVerse({ reference, text }: { reference: string, text: string }) {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <span className="inline-block align-middle w-full mt-1">
+      <button 
+        onClick={(e) => { e.preventDefault(); setIsOpen(!isOpen); }}
+        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold transition-all duration-300 ${isOpen ? 'bg-[var(--accent-primary)] text-white shadow-md' : 'bg-rose-50 text-[var(--accent-primary)] hover:bg-[var(--accent-primary)] hover:text-white border border-rose-100'}`}
+      >
+        <BookText size={14} /> {reference}
+      </button>
+      <span className={`block overflow-hidden transition-all duration-500 ease-in-out ${isOpen ? 'max-h-[500px] opacity-100 mt-3 mb-2' : 'max-h-0 opacity-0 mt-0 mb-0'}`}>
+        <span className="block p-4 bg-rose-50/50 border-l-4 border-[var(--accent-primary)] rounded-r-xl text-[0.95rem] font-medium text-slate-700 shadow-sm">
+          {text}
+        </span>
+      </span>
+    </span>
+  );
+}
+
+// 滾動漸顯動畫 Hook
+function useOnScreen(options: IntersectionObserverInit) {
+  const [isVisible, setIsVisible] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) setIsVisible(true);
+    }, options);
+    if (ref.current) observer.observe(ref.current);
+    return () => { if (ref.current) observer.unobserve(ref.current); };
+  }, [options]);
+
+  return [ref, isVisible] as const;
+}
+
+function FadeSection({ children, delay = '' }: { children: React.ReactNode, delay?: string }) {
+  const [ref, isVisible] = useOnScreen({ threshold: 0.15 });
+  return (
+    <div ref={ref} className={`w-full flex flex-col transition-all duration-[1200ms] ease-[cubic-bezier(0.16,1,0.3,1)] transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'} ${delay}`}>
+      {children}
+    </div>
+  );
+}
 
 export default function JesusSonOfGodLesson() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalState, setModalState] = useState<'input' | 'loading' | 'letter'>('input');
   const [prayerText, setPrayerText] = useState('');
   const [letterData, setLetterData] = useState<any>(null);
-
-  useEffect(() => {
-    const observerOptions = { root: null, rootMargin: '0px', threshold: 0.15 };
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) entry.target.classList.add('visible');
-      });
-    }, observerOptions);
-    document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
-    return () => observer.disconnect();
-  }, []);
 
   const illustrationImages = [
       "https://images.unsplash.com/photo-1544098281-073ae35c98b0?auto=format&fit=crop&w=600&q=80",
@@ -90,7 +124,7 @@ export default function JesusSonOfGodLesson() {
         .custom-section { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 100px 20px 60px 20px; position: relative; }
         .custom-container { max-width: 850px; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 10;}
         .text-content { text-align: center; margin-bottom: 50px; max-width: 750px; width: 100%; z-index: 2; }
-
+        
         .custom-theme-wrapper h1 { font-size: 3rem; font-weight: 800; background: linear-gradient(to right, var(--accent-primary), var(--accent-secondary)); -webkit-background-clip: text; color: transparent; margin-bottom: 15px; letter-spacing: 2px; text-align: center; line-height: 1.2;}
         .custom-theme-wrapper h2 { font-size: 2rem; font-weight: 700; margin-bottom: 25px; color: var(--text-main); border-bottom: 3px solid var(--accent-tertiary); padding-bottom: 10px; display: inline-block;}
         .custom-theme-wrapper h3 { font-size: 1.4rem; font-weight: 700; margin-top: 35px; margin-bottom: 15px; color: var(--accent-primary); text-align: left; width: 100%; display: flex; align-items: center; gap: 8px;}
@@ -99,9 +133,6 @@ export default function JesusSonOfGodLesson() {
         .equip-list { list-style: none; padding: 0; margin: 0 0 20px 0; text-align: left; width: 100%; }
         .equip-list li { font-size: 1.1rem; color: var(--text-main); margin-bottom: 16px; position: relative; padding-left: 25px; line-height: 1.6; background: var(--card-bg); border: 1px solid var(--card-border); padding: 15px 20px 15px 40px; border-radius: 12px; backdrop-filter: blur(10px); box-shadow: 0 4px 6px rgba(244,63,94,0.02);}
         .equip-list li::before { content: "✦"; position: absolute; left: 15px; color: var(--accent-tertiary); font-size: 1.2rem; top: 15px; }
-
-        /* 🌟 經文引用區塊樣式 */
-        .verse-quote { background: rgba(245, 158, 11, 0.05); border-left: 4px solid var(--accent-tertiary); padding: 12px 18px; border-radius: 0 8px 8px 0; font-size: 0.95rem; color: var(--text-light); margin-top: 10px; font-weight: 600; line-height: 1.6; }
 
         .highlight-box { background: linear-gradient(145deg, #FFF1F2, #FEFCE8); border-left: 5px solid var(--accent-primary); padding: 25px; margin: 25px 0; text-align: left; border-radius: 0 12px 12px 0; box-shadow: 0 10px 30px rgba(244,63,94,0.04); width: 100%; }
         .question-card { background: #FFF; border: 1px solid rgba(245, 158, 11, 0.2); border-left: 5px solid var(--accent-secondary); padding: 25px; border-radius: 12px; margin-bottom: 20px; text-align: left; width: 100%; box-shadow: 0 10px 25px rgba(245,158,11,0.05);}
@@ -123,7 +154,6 @@ export default function JesusSonOfGodLesson() {
         .think-space { min-height: 40vh; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0.8; }
         .think-space span { font-size: 0.85rem; letter-spacing: 4px; color: var(--accent-secondary); text-transform: uppercase; margin-bottom: 15px; animation: pulseText 2.5s infinite; font-weight: 700;}
         .think-space .scroll-line { width: 2px; height: 60px; background: linear-gradient(to bottom, var(--accent-secondary), transparent); animation: pulseLine 2.5s infinite; }
-
         @keyframes pulseText { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
         @keyframes pulseLine { 0%, 100% { transform: scaleY(1); transform-origin: top; opacity: 0.4;} 50% { transform: scaleY(1.3); transform-origin: top; opacity: 1;} }
 
@@ -133,10 +163,8 @@ export default function JesusSonOfGodLesson() {
 
         .fade-up { opacity: 0; transform: translateY(40px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
         .fade-up.visible { opacity: 1; transform: translateY(0); }
-
         .custom-btn { display: inline-block; margin-top: 30px; padding: 16px 45px; background: linear-gradient(135deg, var(--accent-primary), var(--accent-tertiary)); color: white; border: none; border-radius: 30px; font-weight: 700; letter-spacing: 2px; transition: all 0.3s ease; box-shadow: 0 10px 25px rgba(244, 63, 94, 0.3); cursor: pointer; font-size: 1.15rem; text-transform: uppercase;}
         .custom-btn:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 15px 35px rgba(251, 146, 60, 0.4); }
-
         .scroll-indicator { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; opacity: 0.6; animation: bounce 2.5s infinite; }
         .scroll-indicator span { font-size: 0.75rem; letter-spacing: 3px; margin-bottom: 10px; color: var(--accent-primary); text-transform: uppercase; font-weight: 700;}
         .scroll-indicator .line { width: 2px; height: 50px; background: linear-gradient(to bottom, var(--accent-primary), transparent); }
@@ -148,10 +176,8 @@ export default function JesusSonOfGodLesson() {
         .modal-overlay.active .modal-card { transform: translateY(0) scale(1); }
         .close-btn { position: absolute; top: 20px; right: 25px; background: none; border: none; font-size: 2rem; color: var(--text-light); cursor: pointer; transition: color 0.2s; }
         .close-btn:hover { color: var(--text-main); }
-        
         .modal-textarea { width: 100%; height: 180px; padding: 20px; border: 2px solid #FEE2E2; border-radius: 12px; resize: none; font-family: inherit; font-size: 1.05rem; color: var(--text-main); background: #FFFBFB; margin-bottom: 25px; transition: all 0.3s; line-height: 1.6; }
         .modal-textarea:focus { outline: none; border-color: var(--accent-secondary); box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1); background: #FFF;}
-        
         .spinner { width: 50px; height: 50px; border: 4px solid rgba(244, 63, 94, 0.2); border-top: 4px solid var(--accent-primary); border-right: 4px solid var(--accent-secondary); border-radius: 50%; margin: 0 auto 30px auto; animation: spin 1s linear infinite; }
 
         @media (max-width: 768px) {
@@ -169,7 +195,7 @@ export default function JesusSonOfGodLesson() {
 
       {/* 0. 封面區塊 */}
       <section className="custom-section">
-        <div className="custom-container fade-up">
+        <FadeSection>
             <div className="text-content" style={{ textAlign: 'center' }}>
                 <p style={{ textAlign: 'center', color: 'var(--accent-secondary)', fontWeight: '800', letterSpacing: '2px', marginBottom: '10px', fontSize: '0.9rem' }}>THE SON OF GOD</p>
                 <h1>耶穌是神的兒子嗎？</h1>
@@ -186,13 +212,13 @@ export default function JesusSonOfGodLesson() {
                     <path d="M 200 180 L 200 100 M 180 140 L 220 140" stroke="var(--accent-secondary)" strokeWidth="6" strokeLinecap="round" opacity="0.8"/>
                 </svg>
             </div>
-        </div>
+        </FadeSection>
         <div className="scroll-indicator"><span>開始探索</span><div className="line"></div></div>
       </section>
 
       {/* 1. 耶穌是誰？ */}
       <section className="custom-section">
-        <div className="custom-container fade-up">
+        <FadeSection>
             <div className="text-content">
                 <h2>一、教主還是救主？</h2>
                 
@@ -211,15 +237,15 @@ export default function JesusSonOfGodLesson() {
                 <ul className="equip-list">
                     <li>
                         「你們若不信我是基督(I AM)，必要死在罪中。」
-                        <div className="verse-quote">約翰福音 8:24「所以我對你們說，你們要死在罪中。你們若不信我是基督，必要死在罪中。」</div>
+                        <BibleVerse reference="(約8:24)" text="所以我對你們說，你們要死在罪中。你們若不信我是基督，必要死在罪中。" />
                     </li>
                     <li>
                         「還沒有亞伯拉罕就有了我(I AM)。」
-                        <div className="verse-quote">約翰福音 8:58「耶穌說：我實實在在地告訴你們，還沒有亞伯拉罕就有了我。」</div>
+                        <BibleVerse reference="(約8:58)" text="耶穌說：我實實在在地告訴你們，還沒有亞伯拉罕就有了我。" />
                     </li>
                     <li>
                         「我就是道路、真理、生命...」
-                        <div className="verse-quote">約翰福音 14:6「耶穌說：我就是道路、真理、生命；若不藉著我，沒有人能到父那裡去。」</div>
+                        <BibleVerse reference="(約14:6)" text="耶穌說：我就是道路、真理、生命；若不藉著我，沒有人能到父那裡去。" />
                     </li>
                 </ul>
 
@@ -246,24 +272,20 @@ export default function JesusSonOfGodLesson() {
                     耶穌是神的保證，在於祂戰勝了死亡！連《誰移走了石頭》這本書的無神論作者，在查考了「兵丁移走屍體？」、「門徒偷走？」、「婦女走錯墳墓？」等假設後，最後都只能承認復活是唯一的真相。門徒彼得、多馬、保羅更用生命為此作見證。
                 </div>
             </div>
-        </div>
+        </FadeSection>
       </section>
 
       {/* 2. 耶穌是神兒子的解釋 */}
       <section className="custom-section">
-        <div className="custom-container fade-up">
-            
+        <FadeSection>
             <div className="graphic-container" style={{height:'180px'}}>
                 <svg viewBox="0 0 400 150">
                     <circle cx="150" cy="75" r="50" fill="var(--card-bg)" stroke="var(--accent-secondary)" strokeWidth="3"/>
                     <text x="150" y="80" className="svg-text" fill="var(--accent-secondary)" fontSize="18">聖父</text>
-                    
                     <circle cx="250" cy="75" r="50" fill="var(--card-bg)" stroke="var(--accent-primary)" strokeWidth="3"/>
                     <text x="250" y="80" className="svg-text" fill="var(--accent-primary)" fontSize="18">聖子</text>
-
                     <path d="M 190 75 L 210 75" stroke="var(--text-main)" strokeWidth="2" markerEnd="url(#arrow-head)" markerStart="url(#arrow-head-rev)"/>
                     <text x="200" y="55" className="svg-text" fontSize="12" fill="var(--text-light)">原為一</text>
-                    
                     <defs>
                         <marker id="arrow-head" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
                             <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--text-main)" />
@@ -282,11 +304,11 @@ export default function JesusSonOfGodLesson() {
                 <ul className="equip-list">
                     <li>
                         <strong className="text-accent-secondary">等於神 (Equal)：</strong>本質本性完全合一。
-                        <div className="verse-quote">約翰福音 10:30「我與父原為一。」</div>
+                        <BibleVerse reference="(約10:30)" text="我與父原為一。" />
                     </li>
                     <li>
                         <strong className="text-accent-secondary">出於神 (From)：</strong>祂非被造，乃是被生。擁有與神相同的生命。
-                        <div className="verse-quote">約翰福音 5:26「因為父怎樣在自己有生命，就賜給他兒子也照樣在自己有生命。」</div>
+                        <BibleVerse reference="(約5:26)" text="因為父怎樣在自己有生命，就賜給他兒子也照樣在自己有生命。" />
                     </li>
                     <li>
                         <strong className="text-accent-secondary">代表神 (Represents)：</strong>彰顯神的生命與權柄。看見子，就是看見了父。
@@ -313,12 +335,12 @@ export default function JesusSonOfGodLesson() {
                     </div>
                 </div>
             </div>
-        </div>
+        </FadeSection>
       </section>
 
       {/* 3. 神兒子的救恩 (得勝) */}
       <section className="custom-section">
-        <div className="custom-container fade-up">
+        <FadeSection>
             <div className="graphic-container">
                 <svg viewBox="0 0 400 220">
                     <path d="M 50 180 L 350 180" stroke="var(--text-light)" strokeWidth="2" strokeDasharray="5 5"/>
@@ -337,10 +359,10 @@ export default function JesusSonOfGodLesson() {
                 <div className="grid-4" style={{gridTemplateColumns: '1fr'}}>
                     <div className="grid-card" style={{display:'flex', alignItems:'center', textAlign:'left', gap:'15px'}}>
                         <div className="p-3 bg-rose-50 rounded-full text-rose-500"><Crosshair size={24}/></div>
-                        <div>
+                        <div className="w-full">
                             <h4 style={{margin:0, textAlign:'left'}}>1. 勝過罪性與罪行</h4>
                             <p style={{textAlign:'left'}}>洗淨良心與罪惡，使罪得赦免，不再被定罪。</p>
-                            <div className="verse-quote" style={{background:'none', padding:'5px 10px', marginTop:'5px'}}>約翰一書 2:1-2「若有人犯罪，在父那裡我們有一位中保，就是那義者耶穌基督...」</div>
+                            <BibleVerse reference="(約壹2:1-2)" text="若有人犯罪，在父那裡我們有一位中保，就是那義者耶穌基督..." />
                         </div>
                     </div>
                     <div className="grid-card" style={{display:'flex', alignItems:'center', textAlign:'left', gap:'15px'}}>
@@ -359,31 +381,31 @@ export default function JesusSonOfGodLesson() {
                     </div>
                     <div className="grid-card" style={{display:'flex', alignItems:'center', textAlign:'left', gap:'15px'}}>
                         <div className="p-3 bg-slate-50 rounded-full text-slate-500"><Sun size={24}/></div>
-                        <div>
+                        <div className="w-full">
                             <h4 style={{margin:0, textAlign:'left'}}>4. 勝過世界</h4>
                             <p style={{textAlign:'left'}}>恢復神人關係，賜給我們神兒子的永生生命。</p>
-                            <div className="verse-quote" style={{background:'none', padding:'5px 10px', marginTop:'5px'}}>約翰福音 3:16「神愛世人，甚至將他的獨生子賜給他們，叫一切信他的，不至滅亡，反得永生。」</div>
+                            <BibleVerse reference="(約3:16)" text="神愛世人，甚至將他的獨生子賜給他們，叫一切信他的，不至滅亡，反得永生。" />
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </FadeSection>
       </section>
 
       {/* 4. 你的經歷與呼召 */}
       <section className="custom-section">
-        <div className="custom-container fade-up">
+        <FadeSection>
             <div className="text-content">
                 <h2>四、經歷祂並回應呼召</h2>
                 
                 <ul className="equip-list">
                     <li>
                         <strong className="text-accent-primary">接受祂：</strong>從神而生，領受新的生命 DNA。
-                        <div className="verse-quote">約翰福音 1:12「凡接待他的，就是信他名的人，他就賜他們權柄作神的兒女。」</div>
+                        <BibleVerse reference="(約1:12)" text="凡接待他的，就是信他名的人，他就賜他們權柄作神的兒女。" />
                     </li>
                     <li>
                         <strong className="text-accent-primary">支取祂：</strong>奉主的名禱告、宣告，擁有屬天的權柄。
-                        <div className="verse-quote">約翰福音 16:24「向來你們沒有奉我的名求什麼，如今你們求，就必得著...」</div>
+                        <BibleVerse reference="(約16:24)" text="向來你們沒有奉我的名求什麼，如今你們求，就必得著..." />
                     </li>
                     <li><strong className="text-accent-primary">建立教會：</strong>以先知、祭司、君王的職份建造基督的身體。</li>
                     <li><strong className="text-accent-primary">完成使命：</strong>神常與同在，沛降聖靈能力，透過我們彰顯基督！</li>
@@ -393,7 +415,7 @@ export default function JesusSonOfGodLesson() {
                 
                 <button className="custom-btn" onClick={openModal}>寫下我的決定與禱告</button>
             </div>
-        </div>
+        </FadeSection>
       </section>
 
       {/* Modal (同前) */}
