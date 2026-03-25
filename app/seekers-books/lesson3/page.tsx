@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Search, ShieldAlert, Crosshair, Heart, Zap, Sun, BookText } from 'lucide-react';
 
@@ -23,36 +23,23 @@ function BibleVerse({ reference, text }: { reference: string, text: string }) {
   );
 }
 
-// 滾動漸顯動畫 Hook
-function useOnScreen(options: IntersectionObserverInit) {
-  const [isVisible, setIsVisible] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) setIsVisible(true);
-    }, options);
-    if (ref.current) observer.observe(ref.current);
-    return () => { if (ref.current) observer.unobserve(ref.current); };
-  }, [options]);
-
-  return [ref, isVisible] as const;
-}
-
-function FadeSection({ children, delay = '' }: { children: React.ReactNode, delay?: string }) {
-  const [ref, isVisible] = useOnScreen({ threshold: 0.15 });
-  return (
-    <div ref={ref} className={`w-full flex flex-col transition-all duration-[1200ms] ease-[cubic-bezier(0.16,1,0.3,1)] transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'} ${delay}`}>
-      {children}
-    </div>
-  );
-}
-
 export default function JesusSonOfGodLesson() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalState, setModalState] = useState<'input' | 'loading' | 'letter'>('input');
   const [prayerText, setPrayerText] = useState('');
   const [letterData, setLetterData] = useState<any>(null);
+
+  // 🌟 滾動漸顯動畫
+  useEffect(() => {
+    const observerOptions = { root: null, rootMargin: '0px', threshold: 0.15 };
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) entry.target.classList.add('visible');
+      });
+    }, observerOptions);
+    document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
 
   const illustrationImages = [
       "https://images.unsplash.com/photo-1544098281-073ae35c98b0?auto=format&fit=crop&w=600&q=80",
@@ -161,10 +148,14 @@ export default function JesusSonOfGodLesson() {
         .graphic-container svg { width: 100%; height: 100%; max-width: 450px; overflow: visible;}
         .svg-text { font-family: 'Noto Sans TC', sans-serif; font-size: 15px; font-weight: 700; fill: var(--text-main); text-anchor: middle; letter-spacing: 1px;}
 
+        /* 🌟 CSS 漸顯動畫 */
         .fade-up { opacity: 0; transform: translateY(40px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
         .fade-up.visible { opacity: 1; transform: translateY(0); }
+        
         .custom-btn { display: inline-block; margin-top: 30px; padding: 16px 45px; background: linear-gradient(135deg, var(--accent-primary), var(--accent-tertiary)); color: white; border: none; border-radius: 30px; font-weight: 700; letter-spacing: 2px; transition: all 0.3s ease; box-shadow: 0 10px 25px rgba(244, 63, 94, 0.3); cursor: pointer; font-size: 1.15rem; text-transform: uppercase;}
         .custom-btn:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 15px 35px rgba(251, 146, 60, 0.4); }
+        .custom-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
         .scroll-indicator { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; opacity: 0.6; animation: bounce 2.5s infinite; }
         .scroll-indicator span { font-size: 0.75rem; letter-spacing: 3px; margin-bottom: 10px; color: var(--accent-primary); text-transform: uppercase; font-weight: 700;}
         .scroll-indicator .line { width: 2px; height: 50px; background: linear-gradient(to bottom, var(--accent-primary), transparent); }
@@ -176,8 +167,10 @@ export default function JesusSonOfGodLesson() {
         .modal-overlay.active .modal-card { transform: translateY(0) scale(1); }
         .close-btn { position: absolute; top: 20px; right: 25px; background: none; border: none; font-size: 2rem; color: var(--text-light); cursor: pointer; transition: color 0.2s; }
         .close-btn:hover { color: var(--text-main); }
+        
         .modal-textarea { width: 100%; height: 180px; padding: 20px; border: 2px solid #FEE2E2; border-radius: 12px; resize: none; font-family: inherit; font-size: 1.05rem; color: var(--text-main); background: #FFFBFB; margin-bottom: 25px; transition: all 0.3s; line-height: 1.6; }
         .modal-textarea:focus { outline: none; border-color: var(--accent-secondary); box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1); background: #FFF;}
+        
         .spinner { width: 50px; height: 50px; border: 4px solid rgba(244, 63, 94, 0.2); border-top: 4px solid var(--accent-primary); border-right: 4px solid var(--accent-secondary); border-radius: 50%; margin: 0 auto 30px auto; animation: spin 1s linear infinite; }
 
         @media (max-width: 768px) {
@@ -195,7 +188,7 @@ export default function JesusSonOfGodLesson() {
 
       {/* 0. 封面區塊 */}
       <section className="custom-section">
-        <FadeSection>
+        <div className="custom-container fade-up">
             <div className="text-content" style={{ textAlign: 'center' }}>
                 <p style={{ textAlign: 'center', color: 'var(--accent-secondary)', fontWeight: '800', letterSpacing: '2px', marginBottom: '10px', fontSize: '0.9rem' }}>THE SON OF GOD</p>
                 <h1>耶穌是神的兒子嗎？</h1>
@@ -212,13 +205,13 @@ export default function JesusSonOfGodLesson() {
                     <path d="M 200 180 L 200 100 M 180 140 L 220 140" stroke="var(--accent-secondary)" strokeWidth="6" strokeLinecap="round" opacity="0.8"/>
                 </svg>
             </div>
-        </FadeSection>
+        </div>
         <div className="scroll-indicator"><span>開始探索</span><div className="line"></div></div>
       </section>
 
       {/* 1. 耶穌是誰？ */}
       <section className="custom-section">
-        <FadeSection>
+        <div className="custom-container fade-up">
             <div className="text-content">
                 <h2>一、教主還是救主？</h2>
                 
@@ -272,12 +265,13 @@ export default function JesusSonOfGodLesson() {
                     耶穌是神的保證，在於祂戰勝了死亡！連《誰移走了石頭》這本書的無神論作者，在查考了「兵丁移走屍體？」、「門徒偷走？」、「婦女走錯墳墓？」等假設後，最後都只能承認復活是唯一的真相。門徒彼得、多馬、保羅更用生命為此作見證。
                 </div>
             </div>
-        </FadeSection>
+        </div>
       </section>
 
       {/* 2. 耶穌是神兒子的解釋 */}
       <section className="custom-section">
-        <FadeSection>
+        <div className="custom-container fade-up">
+            
             <div className="graphic-container" style={{height:'180px'}}>
                 <svg viewBox="0 0 400 150">
                     <circle cx="150" cy="75" r="50" fill="var(--card-bg)" stroke="var(--accent-secondary)" strokeWidth="3"/>
@@ -335,12 +329,12 @@ export default function JesusSonOfGodLesson() {
                     </div>
                 </div>
             </div>
-        </FadeSection>
+        </div>
       </section>
 
       {/* 3. 神兒子的救恩 (得勝) */}
       <section className="custom-section">
-        <FadeSection>
+        <div className="custom-container fade-up">
             <div className="graphic-container">
                 <svg viewBox="0 0 400 220">
                     <path d="M 50 180 L 350 180" stroke="var(--text-light)" strokeWidth="2" strokeDasharray="5 5"/>
@@ -389,12 +383,12 @@ export default function JesusSonOfGodLesson() {
                     </div>
                 </div>
             </div>
-        </FadeSection>
+        </div>
       </section>
 
       {/* 4. 你的經歷與呼召 */}
       <section className="custom-section">
-        <FadeSection>
+        <div className="custom-container fade-up">
             <div className="text-content">
                 <h2>四、經歷祂並回應呼召</h2>
                 
@@ -415,10 +409,10 @@ export default function JesusSonOfGodLesson() {
                 
                 <button className="custom-btn" onClick={openModal}>寫下我的決定與禱告</button>
             </div>
-        </FadeSection>
+        </div>
       </section>
 
-      {/* Modal (同前) */}
+      {/* Modal 視窗 */}
       <div className={`modal-overlay ${isModalOpen ? 'active' : ''}`} onClick={(e) => { if(e.target === e.currentTarget) closeModal(); }}>
         <div className="modal-card">
             <button className="close-btn" onClick={closeModal}>&times;</button>
