@@ -1,33 +1,7 @@
 'use client';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-// 🌟 修正了這裡：把 Search 加進來，並移除沒用到的圖示
-import { ArrowLeft, Search, Sun, ShieldAlert, Crosshair, Heart, Zap } from 'lucide-react';
-
-// 滾動漸顯動畫 Hook
-function useOnScreen(options: IntersectionObserverInit) {
-  const [isVisible, setIsVisible] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) setIsVisible(true);
-    }, options);
-    if (ref.current) observer.observe(ref.current);
-    return () => { if (ref.current) observer.unobserve(ref.current); };
-  }, [options]);
-
-  return [ref, isVisible] as const;
-}
-
-function FadeSection({ children, delay = '' }: { children: React.ReactNode, delay?: string }) {
-  const [ref, isVisible] = useOnScreen({ threshold: 0.15 });
-  return (
-    <div ref={ref} className={`w-full flex flex-col transition-all duration-[1200ms] ease-[cubic-bezier(0.16,1,0.3,1)] transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'} ${delay}`}>
-      {children}
-    </div>
-  );
-}
+import { ArrowLeft, Search, ShieldAlert, Crosshair, Heart, Zap, Sun } from 'lucide-react';
 
 export default function JesusSonOfGodLesson() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -35,13 +9,27 @@ export default function JesusSonOfGodLesson() {
   const [prayerText, setPrayerText] = useState('');
   const [letterData, setLetterData] = useState<any>(null);
 
+  // 🌟 修正：把滾動漸顯動畫的「啟動器」加回來了！
+  useEffect(() => {
+    const observerOptions = { root: null, rootMargin: '0px', threshold: 0.15 };
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) entry.target.classList.add('visible');
+      });
+    }, observerOptions);
+    
+    document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+    
+    return () => observer.disconnect();
+  }, []);
+
   // 晨光、十字架、得勝風格圖庫
   const illustrationImages = [
-      "https://images.unsplash.com/photo-1544098281-073ae35c98b0?auto=format&fit=crop&w=600&q=80", // 晨光十字架
-      "https://images.unsplash.com/photo-1473654729519-7af26932eb51?auto=format&fit=crop&w=600&q=80", // 日出破曉
-      "https://images.unsplash.com/photo-1437603562860-19efb19ebc51?auto=format&fit=crop&w=600&q=80", // 光芒雲彩
-      "https://images.unsplash.com/photo-1518991043183-1e5b88820d88?auto=format&fit=crop&w=600&q=80", // 溫暖光線
-      "https://images.unsplash.com/photo-1519818173456-114ebfa2409b?auto=format&fit=crop&w=600&q=80"  // 山頂晨曦
+      "https://images.unsplash.com/photo-1544098281-073ae35c98b0?auto=format&fit=crop&w=600&q=80",
+      "https://images.unsplash.com/photo-1473654729519-7af26932eb51?auto=format&fit=crop&w=600&q=80",
+      "https://images.unsplash.com/photo-1437603562860-19efb19ebc51?auto=format&fit=crop&w=600&q=80",
+      "https://images.unsplash.com/photo-1518991043183-1e5b88820d88?auto=format&fit=crop&w=600&q=80",
+      "https://images.unsplash.com/photo-1519818173456-114ebfa2409b?auto=format&fit=crop&w=600&q=80"
   ];
 
   // 天父的回信 (專為這課設計)
