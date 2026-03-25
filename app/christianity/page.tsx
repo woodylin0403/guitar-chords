@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { ArrowLeft, Gift, Heart, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Gift, Heart, Map } from 'lucide-react';
 
 export default function ChristianityHub() {
   return (
@@ -48,17 +48,28 @@ export default function ChristianityHub() {
             </div>
           </Link>
 
-          {/* 神是你的牧者 (未開放) */}
-          <div className="md:col-span-2 relative overflow-hidden rounded-[2rem] bg-slate-100/50 p-8 md:p-10 border border-slate-200/50 flex flex-col md:flex-row items-start md:items-center gap-6 opacity-80">
-            <span className="absolute top-6 right-6 text-xs font-bold text-slate-400 bg-white px-3 py-1 rounded-full shadow-sm">建置中</span>
-            <div className="w-14 h-14 shrink-0 rounded-2xl bg-slate-200 flex items-center justify-center">
-              <ShieldCheck className="w-7 h-7 text-slate-400" />
+          {/* 🌟 神是我們的牧者 (已打通連結) */}
+          <Link href="/christianity/shepherd" className="md:col-span-2 group relative overflow-hidden rounded-[2rem] bg-white p-8 md:p-10 border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(5,150,105,0.12)] flex flex-col md:flex-row items-start md:items-center gap-6">
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-amber-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            
+            <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center gap-6 w-full">
+              <div className="w-16 h-16 shrink-0 rounded-2xl bg-gradient-to-br from-emerald-500 to-amber-500 flex items-center justify-center shadow-lg shadow-emerald-500/30 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-500">
+                <Map className="w-8 h-8 text-white" />
+              </div>
+              
+              <div className="flex-1">
+                <h3 className="text-2xl font-bold mb-2 tracking-tight text-slate-900 group-hover:text-emerald-600 transition-colors">神是我們的牧者</h3>
+                <p className="text-slate-500 text-base font-medium leading-relaxed max-w-2xl">
+                  詩篇 23 篇的生命體會，一場真實的信仰天路歷程。尋找靈魂的青草地，與牧者一起走過高山低谷。
+                </p>
+              </div>
+
+              {/* 箭頭指示器 (在桌面版顯示) */}
+              <div className="hidden md:flex shrink-0 w-12 h-12 rounded-full bg-slate-50 border border-slate-100 items-center justify-center group-hover:bg-emerald-50 group-hover:border-emerald-200 transition-colors">
+                <ArrowLeft className="w-5 h-5 text-slate-400 group-hover:text-emerald-600 rotate-180 transition-colors" />
+              </div>
             </div>
-            <div>
-              <h3 className="text-xl font-bold mb-2 tracking-tight text-slate-600">神是你的牧者</h3>
-              <p className="text-slate-400 text-sm font-medium">詩篇 23 篇的生命體會，尋找靈魂的青草地。即將上線，敬請期待。</p>
-            </div>
-          </div>
+          </Link>
         </div>
       </div>
     </main>
