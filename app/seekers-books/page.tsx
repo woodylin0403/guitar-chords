@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { ArrowLeft, BookOpenText, Sparkles, ShieldCheck, HelpCircle, BookMarked } from 'lucide-react';
+import { ArrowLeft, BookOpenText, ShieldCheck, HelpCircle, BookMarked } from 'lucide-react';
 
 export default function SeekersBooksHub() {
   return (
@@ -30,7 +30,7 @@ export default function SeekersBooksHub() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           
-          {/* 🌟 已經完成的 第一課：到底有沒有神 */}
+          {/* 🌟 第一課：到底有沒有神 (橫跨兩欄，主打色：翡翠與青綠) */}
           <Link href="/seekers-books/lesson1" className="md:col-span-2 group relative overflow-hidden rounded-[2rem] bg-white p-8 md:p-10 border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(16,185,129,0.12)] flex flex-col md:flex-row items-start md:items-center gap-8">
             <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             
@@ -54,39 +54,41 @@ export default function SeekersBooksHub() {
             </div>
           </Link>
 
-          {/* 第二課：聖經是神默示的嗎 (未開放) */}
-          <div className="relative overflow-hidden rounded-[2rem] bg-slate-100/60 p-8 md:p-10 border border-slate-200/50 flex flex-col justify-between min-h-[250px] opacity-80">
-            <span className="absolute top-6 right-6 text-xs font-bold text-slate-400 bg-white px-3 py-1 rounded-full shadow-sm">建置中</span>
-            <div>
-              <div className="w-14 h-14 rounded-2xl bg-slate-200 flex items-center justify-center mb-6">
-                <BookMarked className="w-7 h-7 text-slate-400" />
+          {/* 🌟 第二課：聖經是神默示的嗎 (主題色：湛藍與靛紫) */}
+          <Link href="/seekers-books/lesson2" className="group relative overflow-hidden rounded-[2rem] bg-white p-8 md:p-10 border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(59,130,246,0.12)] flex flex-col justify-between min-h-[250px]">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            
+            <div className="relative z-10">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center mb-6 shadow-lg shadow-indigo-500/30 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+                <BookMarked className="w-7 h-7 text-white" />
               </div>
-              <div className="flex items-center gap-2 mb-2">
-                 <span className="px-2 py-0.5 bg-slate-200 text-slate-500 text-xs font-bold rounded-md">第二課</span>
+              <div className="flex items-center gap-2 mb-3">
+                 <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full tracking-wider">第二課</span>
               </div>
-              <h3 className="text-xl font-bold mb-3 tracking-tight text-slate-600">聖經是神默示的嗎？</h3>
-              <p className="text-slate-400 text-sm font-medium leading-relaxed">
+              <h3 className="text-xl md:text-2xl font-bold mb-3 tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors">聖經是神默示的嗎？</h3>
+              <p className="text-slate-500 text-sm md:text-base font-medium leading-relaxed">
                 歷史、科學與預言的精準印證。這本書為何能歷經千年，依然成為改變無數生命的真理指南？
               </p>
             </div>
-          </div>
+          </Link>
 
-          {/* 第三課：耶穌是神的兒子嗎 (未開放) */}
-          <div className="relative overflow-hidden rounded-[2rem] bg-slate-100/60 p-8 md:p-10 border border-slate-200/50 flex flex-col justify-between min-h-[250px] opacity-80">
-            <span className="absolute top-6 right-6 text-xs font-bold text-slate-400 bg-white px-3 py-1 rounded-full shadow-sm">建置中</span>
-            <div>
-              <div className="w-14 h-14 rounded-2xl bg-slate-200 flex items-center justify-center mb-6">
-                <ShieldCheck className="w-7 h-7 text-slate-400" />
+          {/* 🌟 第三課：耶穌是神的兒子嗎 (主題色：玫瑰紅與晨光橘) */}
+          <Link href="/seekers-books/lesson3" className="group relative overflow-hidden rounded-[2rem] bg-white p-8 md:p-10 border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(244,63,94,0.12)] flex flex-col justify-between min-h-[250px]">
+            <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 to-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            
+            <div className="relative z-10">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-rose-400 to-orange-500 flex items-center justify-center mb-6 shadow-lg shadow-orange-500/30 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+                <ShieldCheck className="w-7 h-7 text-white" />
               </div>
-              <div className="flex items-center gap-2 mb-2">
-                 <span className="px-2 py-0.5 bg-slate-200 text-slate-500 text-xs font-bold rounded-md">第三課</span>
+              <div className="flex items-center gap-2 mb-3">
+                 <span className="px-3 py-1 bg-rose-100 text-rose-700 text-xs font-bold rounded-full tracking-wider">第三課</span>
               </div>
-              <h3 className="text-xl font-bold mb-3 tracking-tight text-slate-600">耶穌是神的兒子嗎？</h3>
-              <p className="text-slate-400 text-sm font-medium leading-relaxed">
+              <h3 className="text-xl md:text-2xl font-bold mb-3 tracking-tight text-slate-900 group-hover:text-rose-600 transition-colors">耶穌是神的兒子嗎？</h3>
+              <p className="text-slate-500 text-sm md:text-base font-medium leading-relaxed">
                 四大鐵證與空墳墓的奧秘。如果耶穌只是個好人，為何祂敢自稱為神？十字架與復活的真實意義。
               </p>
             </div>
-          </div>
+          </Link>
 
         </div>
       </div>
