@@ -9,7 +9,6 @@ export default function BibleInspirationLesson() {
   const [prayerText, setPrayerText] = useState('');
   const [letterData, setLetterData] = useState<any>(null);
 
-  // 滾動漸顯動畫
   useEffect(() => {
     const observerOptions = { root: null, rootMargin: '0px', threshold: 0.15 };
     const observer = new IntersectionObserver((entries) => {
@@ -23,16 +22,14 @@ export default function BibleInspirationLesson() {
     return () => observer.disconnect();
   }, []);
 
-  // 晨曦、聖經、知性風格圖庫
   const illustrationImages = [
-      "https://images.unsplash.com/photo-1491841550275-ad7854e35ca6?auto=format&fit=crop&w=600&q=80", // 晨光學習
-      "https://images.unsplash.com/photo-1455390582262-044cdead27d8?auto=format&fit=crop&w=600&q=80", // 筆記與書
-      "https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=600&q=80", // 圖書館的光
-      "https://images.unsplash.com/photo-1447069387366-2a6739228eb1?auto=format&fit=crop&w=600&q=80", // 翻開的書頁
-      "https://images.unsplash.com/photo-1504052434569-70ad5836ab65?auto=format&fit=crop&w=600&q=80"  // 晨光筆記
+      "https://images.unsplash.com/photo-1491841550275-ad7854e35ca6?auto=format&fit=crop&w=600&q=80",
+      "https://images.unsplash.com/photo-1455390582262-044cdead27d8?auto=format&fit=crop&w=600&q=80",
+      "https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=600&q=80",
+      "https://images.unsplash.com/photo-1447069387366-2a6739228eb1?auto=format&fit=crop&w=600&q=80",
+      "https://images.unsplash.com/photo-1504052434569-70ad5836ab65?auto=format&fit=crop&w=600&q=80"
   ];
 
-  // 天父的回信 (專為這課設計)
   const heavenlyLetters = [
       { keywords: ['不懂', '太難', '讀不懂', '枯燥', '不知道怎麼讀'], text: "親愛的孩子，有時候你會覺得聖經像是一本古老又難懂的書，這很正常。\n\n但請記得，這不是一本普通的書，這是我寫給你的情書。當你讀不懂的時候，請邀請聖靈——也就是這本書的『原作者』來做你的家教。每次打開書頁前，先在心裡輕輕呼喚我，我會親自開你的心眼，讓那些黑底白字變成活水，流進你的生命裡。", verse: "「求你開我的眼睛，使我看出你律法中的奇妙。」", ref: "— 詩篇 119:18" },
       { keywords: ['指引', '迷惘', '方向', '決定', '不知道該怎麼辦', '答案'], text: "親愛的孩子，我看見你正站在人生的十字路口，渴望尋找方向。\n\n不要在世界的喧囂中迷失了。我已經把最高明的導航系統交給了你——就是我的話語。當你願意安靜下來，每天在聖經中尋求我的心意，我會用我的話語成為你腳前的燈、路上的光，一步一步帶領你走在蒙福的道路上。", verse: "「你的話是我腳前的燈，是我路上的光。」", ref: "— 詩篇 119:105" },
@@ -50,60 +47,38 @@ export default function BibleInspirationLesson() {
   const submitPrayer = () => {
     if(prayerText.trim() === '') return;
     setModalState('loading');
-
     setTimeout(() => {
         let highestScore = 0;
         let candidateLetters: typeof heavenlyLetters = [];
-
         heavenlyLetters.forEach(letter => {
             let score = 0;
-            letter.keywords.forEach(kw => {
-                if (prayerText.includes(kw)) score++;
-            });
-            if (score > highestScore) {
-                highestScore = score;
-                candidateLetters = [letter];
-            } else if (score === highestScore && score > 0) {
-                candidateLetters.push(letter);
-            }
+            letter.keywords.forEach(kw => { if (prayerText.includes(kw)) score++; });
+            if (score > highestScore) { highestScore = score; candidateLetters = [letter]; } 
+            else if (score === highestScore && score > 0) { candidateLetters.push(letter); }
         });
-
-        let selectedLetter = highestScore === 0 
-          ? fallbackLetter 
-          : candidateLetters[Math.floor(Math.random() * candidateLetters.length)];
-
-        setLetterData({
-          ...selectedLetter,
-          image: illustrationImages[Math.floor(Math.random() * illustrationImages.length)]
-        });
+        let selectedLetter = highestScore === 0 ? fallbackLetter : candidateLetters[Math.floor(Math.random() * candidateLetters.length)];
+        setLetterData({ ...selectedLetter, image: illustrationImages[Math.floor(Math.random() * illustrationImages.length)] });
         setModalState('letter');
     }, 1800);
   };
 
-  const openModal = () => {
-    setModalState('input');
-    setPrayerText('');
-    setIsModalOpen(true);
-  };
-
+  const openModal = () => { setModalState('input'); setPrayerText(''); setIsModalOpen(true); };
   const closeModal = () => setIsModalOpen(false);
 
   return (
     <div className="custom-theme-wrapper relative overflow-hidden">
-      
-      {/* 淺色晨曦氛圍的背景光暈 */}
       <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vh] bg-blue-400/10 rounded-full blur-[120px] pointer-events-none"></div>
       <div className="absolute bottom-[20%] right-[-10%] w-[40vw] h-[40vh] bg-indigo-400/10 rounded-full blur-[100px] pointer-events-none"></div>
 
       <style dangerouslySetInnerHTML={{__html: `
         .custom-theme-wrapper {
-            --bg-color: #F8FAFC; /* 羊皮紙白/Slate 50 */
-            --text-main: #334155; /* Slate 700 */
-            --text-light: #64748B; /* Slate 500 */
-            --accent-primary: #3B82F6; /* 活力藍 */
-            --accent-secondary: #6366F1; /* 靛紫 */
-            --accent-tertiary: #0EA5E9; /* 天空青 */
-            --card-bg: rgba(255, 255, 255, 0.85); /* 毛玻璃白卡片 */
+            --bg-color: #F8FAFC; 
+            --text-main: #334155; 
+            --text-light: #64748B; 
+            --accent-primary: #3B82F6; 
+            --accent-secondary: #6366F1; 
+            --accent-tertiary: #0EA5E9; 
+            --card-bg: rgba(255, 255, 255, 0.85); 
             --card-border: rgba(226, 232, 240, 0.8);
             --modal-bg: rgba(15, 23, 42, 0.6);
             background-color: var(--bg-color);
@@ -114,30 +89,28 @@ export default function BibleInspirationLesson() {
         }
 
         .custom-nav { padding: 20px 30px; position: fixed; top: 0; left: 0; right: 0; z-index: 50; }
-        
         .custom-section { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 100px 20px 60px 20px; position: relative; }
         .custom-container { max-width: 850px; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 10;}
         .text-content { text-align: center; margin-bottom: 50px; max-width: 750px; width: 100%; z-index: 2; }
 
-        /* 標題與字體設定 */
         .custom-theme-wrapper h1 { font-size: 3rem; font-weight: 800; background: linear-gradient(to right, var(--accent-primary), var(--accent-secondary)); -webkit-background-clip: text; color: transparent; margin-bottom: 15px; letter-spacing: 2px; text-align: center; line-height: 1.2;}
         .custom-theme-wrapper h2 { font-size: 2rem; font-weight: 700; margin-bottom: 25px; color: var(--text-main); border-bottom: 3px solid var(--accent-tertiary); padding-bottom: 10px; display: inline-block;}
         .custom-theme-wrapper h3 { font-size: 1.4rem; font-weight: 700; margin-top: 35px; margin-bottom: 15px; color: var(--accent-primary); text-align: left; width: 100%; display: flex; align-items: center; gap: 8px;}
         .custom-theme-wrapper p { font-size: 1.15rem; color: var(--text-main); font-weight: 500; margin-bottom: 15px; text-align: left;}
 
-        /* 列表樣式 */
         .equip-list { list-style: none; padding: 0; margin: 0 0 20px 0; text-align: left; width: 100%; }
         .equip-list li { font-size: 1.1rem; color: var(--text-main); margin-bottom: 16px; position: relative; padding-left: 25px; line-height: 1.6; background: var(--card-bg); border: 1px solid var(--card-border); padding: 15px 20px 15px 40px; border-radius: 12px; backdrop-filter: blur(10px); box-shadow: 0 4px 6px rgba(0,0,0,0.02);}
         .equip-list li::before { content: "✦"; position: absolute; left: 15px; color: var(--accent-tertiary); font-size: 1.2rem; top: 15px; }
         .counter-example { font-size: 0.95rem; color: var(--accent-secondary); font-style: italic; display: block; margin-top: 6px; font-weight: 600;}
 
-        /* 重點與問題卡片 */
+        /* 🌟 經文引用區塊樣式 */
+        .verse-quote { background: rgba(14, 165, 233, 0.05); border-left: 4px solid var(--accent-tertiary); padding: 12px 18px; border-radius: 0 8px 8px 0; font-size: 0.95rem; color: var(--text-light); margin-top: 10px; font-weight: 500; line-height: 1.6; }
+
         .highlight-box { background: linear-gradient(145deg, #F0F9FF, #EFF6FF); border-left: 5px solid var(--accent-primary); padding: 25px; margin: 25px 0; text-align: left; border-radius: 0 12px 12px 0; box-shadow: 0 10px 30px rgba(0,0,0,0.04); width: 100%; }
         .question-card { background: #FFF; border: 1px solid rgba(99, 102, 241, 0.2); border-left: 5px solid var(--accent-secondary); padding: 25px; border-radius: 12px; margin-bottom: 20px; text-align: left; width: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.03);}
         .question-card .q-label { font-weight: 800; color: var(--accent-secondary); font-size: 1.15rem; margin-bottom: 8px; display: block; letter-spacing: 1px;}
         .question-card .q-text { font-size: 1.2rem; color: var(--text-main); font-weight: 700; line-height: 1.6; }
 
-        /* 🌟 新增：聖經結構網格 */
         .bible-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0 40px 0; width: 100%; text-align: left;}
         .bible-card { background: #FFF; border: 1px solid var(--card-border); padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); transition: transform 0.3s; }
         .bible-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(59, 130, 246, 0.1); border-color: var(--accent-tertiary);}
@@ -145,7 +118,6 @@ export default function BibleInspirationLesson() {
         .bible-tag { display: inline-block; background: #F1F5F9; color: var(--text-light); font-size: 0.9rem; padding: 4px 10px; border-radius: 20px; margin: 4px 4px 0 0; font-weight: 600;}
         .bible-tag.highlight { background: #EFF6FF; color: var(--accent-primary); }
 
-        /* 🌟 思考留白區域 (Think Space) */
         .think-space { min-height: 40vh; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0.8; }
         .think-space span { font-size: 0.85rem; letter-spacing: 4px; color: var(--accent-primary); text-transform: uppercase; margin-bottom: 15px; animation: pulseText 2.5s infinite; font-weight: 700;}
         .think-space .scroll-line { width: 2px; height: 60px; background: linear-gradient(to bottom, var(--accent-primary), transparent); animation: pulseLine 2.5s infinite; }
@@ -153,27 +125,21 @@ export default function BibleInspirationLesson() {
         @keyframes pulseText { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
         @keyframes pulseLine { 0%, 100% { transform: scaleY(1); transform-origin: top; opacity: 0.4;} 50% { transform: scaleY(1.3); transform-origin: top; opacity: 1;} }
 
-        /* 圖形容器 */
         .graphic-container { width: 100%; height: 240px; display: flex; justify-content: center; align-items: center; position: relative; margin-bottom: 30px;}
         .graphic-container svg { width: 100%; height: 100%; max-width: 450px; overflow: visible;}
         .svg-text { font-family: 'Noto Sans TC', sans-serif; font-size: 15px; font-weight: 700; fill: var(--text-main); text-anchor: middle; letter-spacing: 1px;}
 
-        /* 動畫 */
         .fade-up { opacity: 0; transform: translateY(40px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
         .fade-up.visible { opacity: 1; transform: translateY(0); }
 
-        /* 按鈕 */
         .custom-btn { display: inline-block; margin-top: 30px; padding: 16px 45px; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; border: none; border-radius: 30px; font-weight: 700; letter-spacing: 2px; transition: all 0.3s ease; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3); cursor: pointer; font-size: 1.15rem; text-transform: uppercase;}
         .custom-btn:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 15px 35px rgba(99, 102, 241, 0.4); }
-        .custom-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 
-        /* 向下滾動提示 */
         .scroll-indicator { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; opacity: 0.6; animation: bounce 2.5s infinite; }
         .scroll-indicator span { font-size: 0.75rem; letter-spacing: 3px; margin-bottom: 10px; color: var(--accent-secondary); text-transform: uppercase; font-weight: 700;}
         .scroll-indicator .line { width: 2px; height: 50px; background: linear-gradient(to bottom, var(--accent-secondary), transparent); }
         @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0) translateX(-50%); } 40% { transform: translateY(-12px) translateX(-50%); } 60% { transform: translateY(-6px) translateX(-50%); } }
 
-        /* Modal 視窗 */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--modal-bg); backdrop-filter: blur(8px); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
         .modal-card { background: #FFF; border: 1px solid var(--card-border); width: 90%; max-width: 600px; border-radius: 24px; padding: 45px 40px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); position: relative; transform: translateY(20px) scale(0.95); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); max-height: 90vh; overflow-y: auto; }
@@ -192,7 +158,6 @@ export default function BibleInspirationLesson() {
         }
       `}} />
 
-      {/* 導覽列 */}
       <nav className="custom-nav">
         <Link href="/seekers-books" className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-blue-600 transition-colors bg-white/80 backdrop-blur-md px-5 py-2.5 rounded-full shadow-sm border border-slate-200">
           <ArrowLeft className="w-4 h-4" /> 返回慕道裝備
@@ -208,14 +173,11 @@ export default function BibleInspirationLesson() {
                 <p style={{ textAlign: 'center', color: 'var(--text-light)', marginTop: '15px', fontWeight:'600' }}>對應進度：118 Q&A — Q32-37, 62-63</p>
             </div>
             
-            {/* 打開的聖經與光芒 SVG */}
             <div className="graphic-container">
                 <svg viewBox="0 0 400 250">
                     <path d="M 200 180 Q 250 150, 350 160 L 350 80 Q 250 70, 200 100 Z" fill="var(--card-bg)" stroke="var(--accent-primary)" strokeWidth="2" />
                     <path d="M 200 180 Q 150 150, 50 160 L 50 80 Q 150 70, 200 100 Z" fill="var(--card-bg)" stroke="var(--accent-primary)" strokeWidth="2" />
                     <line x1="200" y1="100" x2="200" y2="180" stroke="var(--accent-secondary)" strokeWidth="4" />
-                    
-                    {/* 光芒/呼氣 */}
                     <path d="M 200 80 Q 200 40, 150 20" fill="none" stroke="var(--accent-tertiary)" strokeWidth="3" strokeDasharray="5 5" opacity="0.6"/>
                     <path d="M 200 80 Q 200 20, 200 0" fill="none" stroke="var(--accent-primary)" strokeWidth="4" opacity="0.8"/>
                     <path d="M 200 80 Q 200 40, 250 20" fill="none" stroke="var(--accent-tertiary)" strokeWidth="3" strokeDasharray="5 5" opacity="0.6"/>
@@ -245,15 +207,24 @@ export default function BibleInspirationLesson() {
                 <h3><Search className="w-6 h-6 inline mr-2" /> 普遍啟示 vs. 特殊啟示</h3>
                 <p>人是有限且有罪的，如果沒有正確的根源，人無法自救。因此神透過兩種方式向人啟示祂自己：</p>
                 <ul className="equip-list">
-                    <li><strong>普遍啟示：</strong>大自然、人的良知、道德本性。<span className="counter-example">羅 1:20 藉著所造之物就可以曉得。</span></li>
-                    <li><strong>特殊啟示：</strong>神直接顯現、異象、異夢、先知傳話。<span className="counter-example">創 18:1 神直接顯現。</span></li>
+                    <li>
+                        <strong>普遍啟示：</strong>大自然、人的良知、道德本性。
+                        <div className="verse-quote">羅馬書 1:20「自從造天地以來，神的永能和神性是明明可知的，雖是眼不能見，但藉著所造之物就可以曉得，叫人無可推諉。」</div>
+                    </li>
+                    <li>
+                        <strong>特殊啟示：</strong>神直接顯現、異象、異夢、先知傳話。
+                        <div className="verse-quote">創世記 18:1「耶和華在幔利橡樹那裡向亞伯拉罕顯現出來...」</div>
+                    </li>
                 </ul>
 
                 <div className="highlight-box">
                     <strong style={{color:'var(--accent-primary)', fontSize:'1.2rem'}}>神終極的啟示：</strong><br/><br/>
-                    1. 透過<strong>耶穌基督</strong> (約 1:18)<br/>
-                    2. 透過<strong>聖經</strong> (提後 3:15-17)<br/>
-                    聖經是神救贖的計畫，目的只有一個：<span style={{color:'var(--accent-secondary)', fontWeight:'700'}}>「因祂的名得生命」</span>(約 20:31)。
+                    1. 透過<strong>耶穌基督</strong>
+                    <div className="verse-quote" style={{background:'rgba(255,255,255,0.5)', marginTop:'5px', marginBottom:'15px'}}>約翰福音 1:18「從來沒有人看見神，只有在父懷裡的獨生子將他表明出來。」</div>
+                    
+                    2. 透過<strong>聖經</strong>，帶出神救贖的計畫：
+                    <div className="verse-quote" style={{background:'rgba(255,255,255,0.5)', marginTop:'5px'}}>提摩太後書 3:15-16「...這聖經能使你因信基督耶穌，有得救的智慧。聖經都是神所默示的，於教訓、督責、使人歸正、教導人學義都是有益的...」</div>
+                    <div className="verse-quote" style={{background:'rgba(255,255,255,0.5)', marginTop:'5px'}}>約翰福音 20:31「但記這些事要叫你們信耶穌是基督，是神的兒子，並且叫你們信了他，就可以因他的名得生命。」</div>
                 </div>
             </div>
         </div>
@@ -263,19 +234,15 @@ export default function BibleInspirationLesson() {
       <section className="custom-section">
         <div className="custom-container fade-up">
             
-            {/* 66 卷視覺圖 */}
             <div className="graphic-container" style={{height:'180px'}}>
                 <svg viewBox="0 0 400 150">
                     <rect x="60" y="40" width="80" height="70" rx="8" fill="var(--accent-primary)" opacity="0.1"/>
                     <text x="100" y="85" className="svg-text" fontSize="30" fill="var(--accent-primary)">39</text>
                     <text x="100" y="130" className="svg-text" fontSize="12" fill="var(--text-light)">舊約 (Old)</text>
-
                     <text x="175" y="85" className="svg-text" fontSize="24" fill="var(--text-light)">+</text>
-
                     <rect x="210" y="40" width="80" height="70" rx="8" fill="var(--accent-secondary)" opacity="0.1"/>
                     <text x="250" y="85" className="svg-text" fontSize="30" fill="var(--accent-secondary)">27</text>
                     <text x="250" y="130" className="svg-text" fontSize="12" fill="var(--text-light)">新約 (New)</text>
-
                     <text x="320" y="85" className="svg-text" fontSize="24" fill="var(--text-light)">=</text>
                     <text x="360" y="85" className="svg-text" fontSize="35" fill="var(--text-main)" fontWeight="800">66</text>
                 </svg>
@@ -326,18 +293,13 @@ export default function BibleInspirationLesson() {
         <div className="custom-container fade-up">
             <div className="graphic-container">
                 <svg viewBox="0 0 400 220">
-                    {/* 權威的基石 */}
                     <path d="M 50 180 L 350 180 L 330 200 L 70 200 Z" fill="var(--text-light)" opacity="0.2"/>
-                    
                     <rect x="80" y="80" width="40" height="100" fill="var(--card-bg)" stroke="var(--accent-primary)" strokeWidth="2"/>
                     <text x="100" y="140" className="svg-text" fill="var(--accent-primary)">神</text>
-
                     <rect x="180" y="60" width="40" height="120" fill="var(--card-bg)" stroke="var(--accent-secondary)" strokeWidth="2"/>
                     <text x="200" y="130" className="svg-text" fill="var(--accent-secondary)">耶穌</text>
-
                     <rect x="280" y="80" width="40" height="100" fill="var(--card-bg)" stroke="var(--accent-tertiary)" strokeWidth="2"/>
                     <text x="300" y="140" className="svg-text" fill="var(--accent-tertiary)">教會</text>
-                    
                     <path d="M 40 80 L 360 80 L 200 30 Z" fill="var(--accent-primary)" opacity="0.1"/>
                     <line x1="40" y1="80" x2="360" y2="80" stroke="var(--accent-primary)" strokeWidth="3"/>
                     <text x="200" y="65" className="svg-text" fill="var(--accent-primary)" fontWeight="800">最高權威</text>
@@ -348,8 +310,13 @@ export default function BibleInspirationLesson() {
                 <p>為什麼我們說聖經有絕對的權威？因為這本書建立在不可動搖的基石上：</p>
                 
                 <ul className="equip-list">
-                    <li><strong>上帝不變的話語：</strong>聖經中出現 3808 次「耶和華說」。神的話具備永恆性、真實性、與功效性 (不徒勞無功)。</li>
-                    <li><strong>耶穌自己的宣告：</strong>耶穌親自背書舊約的權威：「律法的一點一畫也不能廢去」(太5:18)，也授權給新約的使徒。</li>
+                    <li>
+                        <strong>上帝不變的話語：</strong>聖經中出現 3808 次「耶和華說」。神的話具備永恆性、真實性、與功效性 (不徒勞無功)。
+                    </li>
+                    <li>
+                        <strong>耶穌自己的宣告：</strong>耶穌親自背書舊約的權威，也授權給新約的使徒。
+                        <div className="verse-quote">馬太福音 5:18「我實在告訴你們，就是到天地都廢去了，律法的一點一畫也不能廢去，都要成全。」</div>
+                    </li>
                     <li><strong>歷代教會的教導：</strong>在逼迫與異端中，神護衛正典的流傳與保存。</li>
                     <li><strong>讀者生命的見證：</strong>放蕩不羈的奧古斯丁、放下名位的中國佈道家宋尚節，都是因為一句經文生命被徹底翻轉！</li>
                 </ul>
@@ -392,7 +359,8 @@ export default function BibleInspirationLesson() {
         <div className="custom-container fade-up">
             <div className="text-content">
                 <h2>五、對聖經的回應</h2>
-                <p>「明白聖經...能使我們有得救的智慧。」(提後3:15)<br/>這本書不是用來供奉的，而是用來閱讀與活出來的。常見的讀經方式有：</p>
+                <div className="verse-quote" style={{marginBottom:'20px'}}>提摩太後書 3:15「...這聖經能使你因信基督耶穌，有得救的智慧。」</div>
+                <p>這本書不是用來供奉的，而是用來閱讀與活出來的。常見的讀經方式有：</p>
                 
                 <ul className="equip-list">
                     <li><strong className="text-accent-tertiary">速讀：</strong>抓住全貌與中心思想。</li>
@@ -409,32 +377,24 @@ export default function BibleInspirationLesson() {
         </div>
       </section>
 
-      {/* 互動彈出視窗 (Modal) */}
+      {/* Modal 程式碼 (同前)... */}
       <div className={`modal-overlay ${isModalOpen ? 'active' : ''}`} onClick={(e) => { if(e.target === e.currentTarget) closeModal(); }}>
         <div className="modal-card">
             <button className="close-btn" onClick={closeModal}>&times;</button>
-            
             {modalState === 'input' && (
                 <div style={{ textAlign: 'center' }}>
                     <h3 style={{ fontSize: '1.8rem', marginBottom: '15px', color: 'var(--text-main)', fontWeight: '800' }}>裝備課回應卡</h3>
                     <p style={{ fontSize: '1rem', color: 'var(--text-light)', marginBottom: '25px', lineHeight: '1.6', fontWeight:'600' }}>1. 讀完這課，你對聖經有什麼新的認識？<br/>2. 你決定這週開始如何讀經？寫下你的禱告。</p>
-                    <textarea 
-                        className="modal-textarea"
-                        value={prayerText} 
-                        onChange={(e) => setPrayerText(e.target.value)} 
-                        placeholder="原來聖經真的是神寫的...&#10;天父，我決定每天花十分鐘讀經，求祢幫助我..."
-                    />
+                    <textarea className="modal-textarea" value={prayerText} onChange={(e) => setPrayerText(e.target.value)} placeholder="原來聖經真的是神寫的...&#10;天父，我決定每天花十分鐘讀經，求祢幫助我..." />
                     <button className="custom-btn" style={{ width: '100%', marginTop: '0' }} onClick={submitPrayer} disabled={!prayerText.trim()}>送出作業與禱告</button>
                 </div>
             )}
-
             {modalState === 'loading' && (
                 <div style={{ textAlign: 'center', padding: '60px 0' }}>
                     <div className="spinner"></div>
                     <p style={{ color: 'var(--accent-primary)', fontWeight: '700', letterSpacing: '1px' }}>正在接收你的心志，為你開啟天父的信...</p>
                 </div>
             )}
-
             {modalState === 'letter' && letterData && (
                 <div style={{ textAlign: 'left' }}>
                     <img src={letterData.image} alt="插畫" style={{ width: '100%', height: '220px', objectFit: 'cover', borderRadius: '12px', marginBottom: '25px', boxShadow: '0 10px 20px rgba(0,0,0,0.05)' }} />
@@ -448,7 +408,6 @@ export default function BibleInspirationLesson() {
             )}
         </div>
       </div>
-
     </div>
   );
 }

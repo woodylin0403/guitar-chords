@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Search, ShieldAlert, Crosshair, Heart, Zap, Sun } from 'lucide-react';
 
@@ -9,7 +9,6 @@ export default function JesusSonOfGodLesson() {
   const [prayerText, setPrayerText] = useState('');
   const [letterData, setLetterData] = useState<any>(null);
 
-  // 🌟 修正：把滾動漸顯動畫的「啟動器」加回來了！
   useEffect(() => {
     const observerOptions = { root: null, rootMargin: '0px', threshold: 0.15 };
     const observer = new IntersectionObserver((entries) => {
@@ -17,13 +16,10 @@ export default function JesusSonOfGodLesson() {
         if (entry.isIntersecting) entry.target.classList.add('visible');
       });
     }, observerOptions);
-    
     document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
-    
     return () => observer.disconnect();
   }, []);
 
-  // 晨光、十字架、得勝風格圖庫
   const illustrationImages = [
       "https://images.unsplash.com/photo-1544098281-073ae35c98b0?auto=format&fit=crop&w=600&q=80",
       "https://images.unsplash.com/photo-1473654729519-7af26932eb51?auto=format&fit=crop&w=600&q=80",
@@ -32,7 +28,6 @@ export default function JesusSonOfGodLesson() {
       "https://images.unsplash.com/photo-1519818173456-114ebfa2409b?auto=format&fit=crop&w=600&q=80"
   ];
 
-  // 天父的回信 (專為這課設計)
   const heavenlyLetters = [
       { keywords: ['復活', '懷疑', '證據', '真理', '空墳墓', '真的嗎'], text: "親愛的孩子，我完全理解你的理性和疑惑。\n\n耶穌的復活不是一個神話故事，而是人類歷史上最震撼的真實事件。連當時最想推翻這個事實的人，都無法解釋那座空墳墓。當你願意用心去查考，你會發現所有的證據都指向一個榮耀的真相：祂真的已經復活了！祂現在活著，而且渴望參與你的人生。", verse: "「因為我活著，你們也要活著。」", ref: "— 約翰福音 14:19" },
       { keywords: ['罪', '赦免', '內疚', '做錯', '原諒', '洗淨'], text: "親愛的孩子，我看見你背負著罪疚感，覺得自己不夠好、不配得愛。\n\n但請看看十字架！耶穌這位無罪的神之子，親自為你承擔了一切的代價。當祂在十字架上說『成了』的時候，你所有的過犯就已經被完全洗淨了。不要再定自己的罪了，接受這份重價的恩典，在我眼中，你是聖潔且美麗的。", verse: "「我們藉這愛子的血得蒙救贖，過犯得以赦免，乃是照他豐富的恩典。」", ref: "— 以弗所書 1:7" },
@@ -50,59 +45,37 @@ export default function JesusSonOfGodLesson() {
   const submitPrayer = () => {
     if(prayerText.trim() === '') return;
     setModalState('loading');
-
     setTimeout(() => {
         let highestScore = 0;
         let candidateLetters: typeof heavenlyLetters = [];
-
         heavenlyLetters.forEach(letter => {
             let score = 0;
-            letter.keywords.forEach(kw => {
-                if (prayerText.includes(kw)) score++;
-            });
-            if (score > highestScore) {
-                highestScore = score;
-                candidateLetters = [letter];
-            } else if (score === highestScore && score > 0) {
-                candidateLetters.push(letter);
-            }
+            letter.keywords.forEach(kw => { if (prayerText.includes(kw)) score++; });
+            if (score > highestScore) { highestScore = score; candidateLetters = [letter]; } 
+            else if (score === highestScore && score > 0) { candidateLetters.push(letter); }
         });
-
-        let selectedLetter = highestScore === 0 
-          ? fallbackLetter 
-          : candidateLetters[Math.floor(Math.random() * candidateLetters.length)];
-
-        setLetterData({
-          ...selectedLetter,
-          image: illustrationImages[Math.floor(Math.random() * illustrationImages.length)]
-        });
+        let selectedLetter = highestScore === 0 ? fallbackLetter : candidateLetters[Math.floor(Math.random() * candidateLetters.length)];
+        setLetterData({ ...selectedLetter, image: illustrationImages[Math.floor(Math.random() * illustrationImages.length)] });
         setModalState('letter');
     }, 1800);
   };
 
-  const openModal = () => {
-    setModalState('input');
-    setPrayerText('');
-    setIsModalOpen(true);
-  };
-
+  const openModal = () => { setModalState('input'); setPrayerText(''); setIsModalOpen(true); };
   const closeModal = () => setIsModalOpen(false);
 
   return (
     <div className="custom-theme-wrapper relative overflow-hidden">
-      
-      {/* 溫暖晨光的背景光暈 */}
       <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vh] bg-rose-400/10 rounded-full blur-[120px] pointer-events-none"></div>
       <div className="absolute bottom-[20%] right-[-10%] w-[40vw] h-[40vh] bg-orange-400/15 rounded-full blur-[100px] pointer-events-none"></div>
 
       <style dangerouslySetInnerHTML={{__html: `
         .custom-theme-wrapper {
-            --bg-color: #FFFDF9; /* 晨光暖白 */
-            --text-main: #43302B; /* 炭褐 */
-            --text-light: #785A52; /* 淺褐 */
-            --accent-primary: #F43F5E; /* 玫瑰紅 Rose 500 */
-            --accent-secondary: #F59E0B; /* 琥珀黃 Amber 500 */
-            --accent-tertiary: #FB923C; /* 晨光橘 Orange 400 */
+            --bg-color: #FFFDF9; 
+            --text-main: #43302B; 
+            --text-light: #785A52; 
+            --accent-primary: #F43F5E; 
+            --accent-secondary: #F59E0B; 
+            --accent-tertiary: #FB923C; 
             --card-bg: rgba(255, 255, 255, 0.85);
             --card-border: rgba(244, 63, 94, 0.15);
             --modal-bg: rgba(67, 48, 43, 0.7);
@@ -114,44 +87,39 @@ export default function JesusSonOfGodLesson() {
         }
 
         .custom-nav { padding: 20px 30px; position: fixed; top: 0; left: 0; right: 0; z-index: 50; }
-        
         .custom-section { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 100px 20px 60px 20px; position: relative; }
         .custom-container { max-width: 850px; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 10;}
         .text-content { text-align: center; margin-bottom: 50px; max-width: 750px; width: 100%; z-index: 2; }
 
-        /* 標題與字體設定 */
         .custom-theme-wrapper h1 { font-size: 3rem; font-weight: 800; background: linear-gradient(to right, var(--accent-primary), var(--accent-secondary)); -webkit-background-clip: text; color: transparent; margin-bottom: 15px; letter-spacing: 2px; text-align: center; line-height: 1.2;}
         .custom-theme-wrapper h2 { font-size: 2rem; font-weight: 700; margin-bottom: 25px; color: var(--text-main); border-bottom: 3px solid var(--accent-tertiary); padding-bottom: 10px; display: inline-block;}
         .custom-theme-wrapper h3 { font-size: 1.4rem; font-weight: 700; margin-top: 35px; margin-bottom: 15px; color: var(--accent-primary); text-align: left; width: 100%; display: flex; align-items: center; gap: 8px;}
         .custom-theme-wrapper p { font-size: 1.15rem; color: var(--text-main); font-weight: 500; margin-bottom: 15px; text-align: left;}
 
-        /* 列表樣式 */
         .equip-list { list-style: none; padding: 0; margin: 0 0 20px 0; text-align: left; width: 100%; }
         .equip-list li { font-size: 1.1rem; color: var(--text-main); margin-bottom: 16px; position: relative; padding-left: 25px; line-height: 1.6; background: var(--card-bg); border: 1px solid var(--card-border); padding: 15px 20px 15px 40px; border-radius: 12px; backdrop-filter: blur(10px); box-shadow: 0 4px 6px rgba(244,63,94,0.02);}
         .equip-list li::before { content: "✦"; position: absolute; left: 15px; color: var(--accent-tertiary); font-size: 1.2rem; top: 15px; }
-        .counter-example { font-size: 0.95rem; color: var(--text-light); font-style: italic; display: block; margin-top: 6px; font-weight: 600;}
 
-        /* 重點與問題卡片 */
+        /* 🌟 經文引用區塊樣式 */
+        .verse-quote { background: rgba(245, 158, 11, 0.05); border-left: 4px solid var(--accent-tertiary); padding: 12px 18px; border-radius: 0 8px 8px 0; font-size: 0.95rem; color: var(--text-light); margin-top: 10px; font-weight: 600; line-height: 1.6; }
+
         .highlight-box { background: linear-gradient(145deg, #FFF1F2, #FEFCE8); border-left: 5px solid var(--accent-primary); padding: 25px; margin: 25px 0; text-align: left; border-radius: 0 12px 12px 0; box-shadow: 0 10px 30px rgba(244,63,94,0.04); width: 100%; }
         .question-card { background: #FFF; border: 1px solid rgba(245, 158, 11, 0.2); border-left: 5px solid var(--accent-secondary); padding: 25px; border-radius: 12px; margin-bottom: 20px; text-align: left; width: 100%; box-shadow: 0 10px 25px rgba(245,158,11,0.05);}
         .question-card .q-label { font-weight: 800; color: var(--accent-secondary); font-size: 1.15rem; margin-bottom: 8px; display: block; letter-spacing: 1px;}
         .question-card .q-text { font-size: 1.2rem; color: var(--text-main); font-weight: 700; line-height: 1.6; }
 
-        /* 🌟 權柄與救恩的網格 */
         .grid-4 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0 30px 0;}
         .grid-card { background: #FFF; border: 1px solid var(--card-border); padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); text-align: center; transition: all 0.3s;}
         .grid-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(244,63,94,0.1); border-color: var(--accent-primary);}
         .grid-card h4 { font-size: 1.2rem; font-weight: 800; color: var(--accent-primary); margin-bottom: 5px;}
         .grid-card p { font-size: 0.95rem; color: var(--text-light); text-align: center; margin: 0; line-height: 1.4;}
 
-        /* 🌟 三難困境模塊 (Trilemma) */
         .trilemma-box { display: flex; justify-content: space-between; gap: 10px; margin: 25px 0;}
         .tri-item { flex: 1; background: #FFF; border: 2px dashed rgba(245,158,11,0.3); border-radius: 12px; padding: 15px 10px; text-align: center; position: relative;}
         .tri-item.active { border-style: solid; border-color: var(--accent-primary); background: #FFF1F2; box-shadow: 0 5px 15px rgba(244,63,94,0.15);}
         .tri-item h4 { font-size: 1.1rem; font-weight: 800; margin: 0; color: var(--text-light);}
         .tri-item.active h4 { color: var(--accent-primary); }
 
-        /* 🌟 思考留白區域 (Think Space) */
         .think-space { min-height: 40vh; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0.8; }
         .think-space span { font-size: 0.85rem; letter-spacing: 4px; color: var(--accent-secondary); text-transform: uppercase; margin-bottom: 15px; animation: pulseText 2.5s infinite; font-weight: 700;}
         .think-space .scroll-line { width: 2px; height: 60px; background: linear-gradient(to bottom, var(--accent-secondary), transparent); animation: pulseLine 2.5s infinite; }
@@ -159,27 +127,21 @@ export default function JesusSonOfGodLesson() {
         @keyframes pulseText { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
         @keyframes pulseLine { 0%, 100% { transform: scaleY(1); transform-origin: top; opacity: 0.4;} 50% { transform: scaleY(1.3); transform-origin: top; opacity: 1;} }
 
-        /* 圖形容器 */
         .graphic-container { width: 100%; height: 240px; display: flex; justify-content: center; align-items: center; position: relative; margin-bottom: 30px;}
         .graphic-container svg { width: 100%; height: 100%; max-width: 450px; overflow: visible;}
         .svg-text { font-family: 'Noto Sans TC', sans-serif; font-size: 15px; font-weight: 700; fill: var(--text-main); text-anchor: middle; letter-spacing: 1px;}
 
-        /* 動畫 */
         .fade-up { opacity: 0; transform: translateY(40px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
         .fade-up.visible { opacity: 1; transform: translateY(0); }
 
-        /* 按鈕 */
         .custom-btn { display: inline-block; margin-top: 30px; padding: 16px 45px; background: linear-gradient(135deg, var(--accent-primary), var(--accent-tertiary)); color: white; border: none; border-radius: 30px; font-weight: 700; letter-spacing: 2px; transition: all 0.3s ease; box-shadow: 0 10px 25px rgba(244, 63, 94, 0.3); cursor: pointer; font-size: 1.15rem; text-transform: uppercase;}
         .custom-btn:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 15px 35px rgba(251, 146, 60, 0.4); }
-        .custom-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 
-        /* 向下滾動提示 */
         .scroll-indicator { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; opacity: 0.6; animation: bounce 2.5s infinite; }
         .scroll-indicator span { font-size: 0.75rem; letter-spacing: 3px; margin-bottom: 10px; color: var(--accent-primary); text-transform: uppercase; font-weight: 700;}
         .scroll-indicator .line { width: 2px; height: 50px; background: linear-gradient(to bottom, var(--accent-primary), transparent); }
         @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0) translateX(-50%); } 40% { transform: translateY(-12px) translateX(-50%); } 60% { transform: translateY(-6px) translateX(-50%); } }
 
-        /* Modal 視窗 */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--modal-bg); backdrop-filter: blur(8px); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
         .modal-card { background: #FFF; border: 1px solid var(--card-border); width: 90%; max-width: 600px; border-radius: 24px; padding: 45px 40px; box-shadow: 0 25px 50px rgba(0,0,0,0.3); position: relative; transform: translateY(20px) scale(0.95); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); max-height: 90vh; overflow-y: auto; }
@@ -199,7 +161,6 @@ export default function JesusSonOfGodLesson() {
         }
       `}} />
 
-      {/* 導覽列 */}
       <nav className="custom-nav">
         <Link href="/seekers-books" className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-rose-600 transition-colors bg-white/80 backdrop-blur-md px-5 py-2.5 rounded-full shadow-sm border border-slate-200">
           <ArrowLeft className="w-4 h-4" /> 返回慕道裝備
@@ -215,23 +176,13 @@ export default function JesusSonOfGodLesson() {
                 <p style={{ textAlign: 'center', color: 'var(--text-light)', marginTop: '15px', fontWeight:'600' }}>對應進度：118 Q&A — Q16~31，Q38~41</p>
             </div>
             
-            {/* 空墳墓與晨光 SVG */}
             <div className="graphic-container">
                 <svg viewBox="0 0 400 250">
-                    {/* 背景光芒 */}
                     <circle cx="200" cy="150" r="80" fill="var(--accent-secondary)" opacity="0.15" filter="blur(20px)"/>
                     <path d="M 200 150 L 100 50 M 200 150 L 200 20 M 200 150 L 300 50" stroke="var(--accent-secondary)" strokeWidth="3" strokeDasharray="5 5" opacity="0.5"/>
-                    
-                    {/* 墳墓山丘 */}
                     <path d="M 50 220 Q 200 100 350 220 Z" fill="var(--card-bg)" stroke="var(--accent-primary)" strokeWidth="3"/>
-                    
-                    {/* 洞口 */}
                     <path d="M 170 220 L 170 160 Q 200 130 230 160 L 230 220 Z" fill="var(--bg-color)" stroke="var(--accent-primary)" strokeWidth="3"/>
-                    
-                    {/* 移開的石頭 */}
                     <circle cx="140" cy="190" r="35" fill="var(--card-bg)" stroke="var(--accent-tertiary)" strokeWidth="3"/>
-                    
-                    {/* 光芒射出 */}
                     <path d="M 200 180 L 200 100 M 180 140 L 220 140" stroke="var(--accent-secondary)" strokeWidth="6" strokeLinecap="round" opacity="0.8"/>
                 </svg>
             </div>
@@ -258,9 +209,18 @@ export default function JesusSonOfGodLesson() {
                 <h3><Search className="w-6 h-6 inline mr-2 text-accent-tertiary" /> 祂自稱是神 (I AM)</h3>
                 <p>耶穌的自我宣示非常驚人，祂不只說自己是先知，祂宣告自己就是神：</p>
                 <ul className="equip-list">
-                    <li>「你們若不信我是基督(I AM)，必要死在罪中。」(約8:24)</li>
-                    <li>「還沒有亞伯拉罕就有了我(I AM)。」(約8:58)</li>
-                    <li>「我就是道路、真理、生命...」(約14:6)</li>
+                    <li>
+                        「你們若不信我是基督(I AM)，必要死在罪中。」
+                        <div className="verse-quote">約翰福音 8:24「所以我對你們說，你們要死在罪中。你們若不信我是基督，必要死在罪中。」</div>
+                    </li>
+                    <li>
+                        「還沒有亞伯拉罕就有了我(I AM)。」
+                        <div className="verse-quote">約翰福音 8:58「耶穌說：我實實在在地告訴你們，還沒有亞伯拉罕就有了我。」</div>
+                    </li>
+                    <li>
+                        「我就是道路、真理、生命...」
+                        <div className="verse-quote">約翰福音 14:6「耶穌說：我就是道路、真理、生命；若不藉著我，沒有人能到父那裡去。」</div>
+                    </li>
                 </ul>
 
                 <h3><ShieldAlert className="w-6 h-6 inline mr-2 text-accent-primary" /> 著名的三難困境 (Trilemma)</h3>
@@ -320,9 +280,17 @@ export default function JesusSonOfGodLesson() {
                 <p>我們說耶穌是「神的兒子」，這不是生物學上的繁衍，而是一種奧秘的屬靈關係：</p>
 
                 <ul className="equip-list">
-                    <li><strong className="text-accent-secondary">等於神 (Equal)：</strong>「我與父原為一」。本質本性完全合一。</li>
-                    <li><strong className="text-accent-secondary">出於神 (From)：</strong>祂非被造，乃是被生。祂擁有與神相同的 DNA (神性)，是神分靈降世。</li>
-                    <li><strong className="text-accent-secondary">代表神 (Represents)：</strong>彰顯神的生命與權柄。看見子，就是看見了父。</li>
+                    <li>
+                        <strong className="text-accent-secondary">等於神 (Equal)：</strong>本質本性完全合一。
+                        <div className="verse-quote">約翰福音 10:30「我與父原為一。」</div>
+                    </li>
+                    <li>
+                        <strong className="text-accent-secondary">出於神 (From)：</strong>祂非被造，乃是被生。擁有與神相同的生命。
+                        <div className="verse-quote">約翰福音 5:26「因為父怎樣在自己有生命，就賜給他兒子也照樣在自己有生命。」</div>
+                    </li>
+                    <li>
+                        <strong className="text-accent-secondary">代表神 (Represents)：</strong>彰顯神的生命與權柄。看見子，就是看見了父。
+                    </li>
                 </ul>
 
                 <p style={{marginTop:'20px'}}>因為這份「父與子」的關係，耶穌擁有了絕對的權柄：</p>
@@ -353,16 +321,12 @@ export default function JesusSonOfGodLesson() {
         <div className="custom-container fade-up">
             <div className="graphic-container">
                 <svg viewBox="0 0 400 220">
-                    {/* 十字架得勝 */}
                     <path d="M 50 180 L 350 180" stroke="var(--text-light)" strokeWidth="2" strokeDasharray="5 5"/>
                     <line x1="200" y1="40" x2="200" y2="180" stroke="var(--accent-primary)" strokeWidth="8"/>
                     <line x1="140" y1="80" x2="260" y2="80" stroke="var(--accent-primary)" strokeWidth="8"/>
-                    
-                    {/* 斷開的鎖鏈/罪 */}
                     <path d="M 160 160 Q 180 120 180 180" fill="none" stroke="var(--text-main)" strokeWidth="4" opacity="0.3"/>
                     <path d="M 240 160 Q 220 120 220 180" fill="none" stroke="var(--text-main)" strokeWidth="4" opacity="0.3"/>
-                    <path d="M 170 150 L 190 170 M 230 150 L 210 170" stroke="var(--accent-primary)" strokeWidth="3"/> {/* 斬斷 */}
-
+                    <path d="M 170 150 L 190 170 M 230 150 L 210 170" stroke="var(--accent-primary)" strokeWidth="3"/>
                     <text x="200" y="210" className="svg-text" fill="var(--accent-primary)" fontWeight="800">十字架的得勝</text>
                 </svg>
             </div>
@@ -376,6 +340,7 @@ export default function JesusSonOfGodLesson() {
                         <div>
                             <h4 style={{margin:0, textAlign:'left'}}>1. 勝過罪性與罪行</h4>
                             <p style={{textAlign:'left'}}>洗淨良心與罪惡，使罪得赦免，不再被定罪。</p>
+                            <div className="verse-quote" style={{background:'none', padding:'5px 10px', marginTop:'5px'}}>約翰一書 2:1-2「若有人犯罪，在父那裡我們有一位中保，就是那義者耶穌基督...」</div>
                         </div>
                     </div>
                     <div className="grid-card" style={{display:'flex', alignItems:'center', textAlign:'left', gap:'15px'}}>
@@ -389,14 +354,15 @@ export default function JesusSonOfGodLesson() {
                         <div className="p-3 bg-amber-50 rounded-full text-amber-500"><Zap size={24}/></div>
                         <div>
                             <h4 style={{margin:0, textAlign:'left'}}>3. 勝過撒旦</h4>
-                            <p style={{textAlign:'left'}}>神兒子的顯現，廢除了律法的定罪，讓仇敵無法再掌死權，毫無著力點！</p>
+                            <p style={{textAlign:'left'}}>廢除了律法的定罪，讓仇敵無法再掌死權，毫無著力點！</p>
                         </div>
                     </div>
                     <div className="grid-card" style={{display:'flex', alignItems:'center', textAlign:'left', gap:'15px'}}>
                         <div className="p-3 bg-slate-50 rounded-full text-slate-500"><Sun size={24}/></div>
                         <div>
                             <h4 style={{margin:0, textAlign:'left'}}>4. 勝過世界</h4>
-                            <p style={{textAlign:'left'}}>成為挽回祭，恢復神人關係，賜給我們神兒子的永生生命。</p>
+                            <p style={{textAlign:'left'}}>恢復神人關係，賜給我們神兒子的永生生命。</p>
+                            <div className="verse-quote" style={{background:'none', padding:'5px 10px', marginTop:'5px'}}>約翰福音 3:16「神愛世人，甚至將他的獨生子賜給他們，叫一切信他的，不至滅亡，反得永生。」</div>
                         </div>
                     </div>
                 </div>
@@ -411,8 +377,14 @@ export default function JesusSonOfGodLesson() {
                 <h2>四、經歷祂並回應呼召</h2>
                 
                 <ul className="equip-list">
-                    <li><strong className="text-accent-primary">接受祂：</strong>從神而生，領受新的生命 DNA。</li>
-                    <li><strong className="text-accent-primary">支取祂：</strong>奉主的名禱告、宣告，擁有屬天的權柄。</li>
+                    <li>
+                        <strong className="text-accent-primary">接受祂：</strong>從神而生，領受新的生命 DNA。
+                        <div className="verse-quote">約翰福音 1:12「凡接待他的，就是信他名的人，他就賜他們權柄作神的兒女。」</div>
+                    </li>
+                    <li>
+                        <strong className="text-accent-primary">支取祂：</strong>奉主的名禱告、宣告，擁有屬天的權柄。
+                        <div className="verse-quote">約翰福音 16:24「向來你們沒有奉我的名求什麼，如今你們求，就必得著...」</div>
+                    </li>
                     <li><strong className="text-accent-primary">建立教會：</strong>以先知、祭司、君王的職份建造基督的身體。</li>
                     <li><strong className="text-accent-primary">完成使命：</strong>神常與同在，沛降聖靈能力，透過我們彰顯基督！</li>
                 </ul>
@@ -424,32 +396,24 @@ export default function JesusSonOfGodLesson() {
         </div>
       </section>
 
-      {/* 互動彈出視窗 (Modal) */}
+      {/* Modal (同前) */}
       <div className={`modal-overlay ${isModalOpen ? 'active' : ''}`} onClick={(e) => { if(e.target === e.currentTarget) closeModal(); }}>
         <div className="modal-card">
             <button className="close-btn" onClick={closeModal}>&times;</button>
-            
             {modalState === 'input' && (
                 <div style={{ textAlign: 'center' }}>
                     <h3 style={{ fontSize: '1.8rem', marginBottom: '15px', color: 'var(--text-main)', fontWeight: '800' }}>裝備課回應卡</h3>
                     <p style={{ fontSize: '1rem', color: 'var(--text-light)', marginBottom: '25px', lineHeight: '1.6', fontWeight:'600' }}>1. 上完這課，你對耶穌有什麼新的認識？<br/>2. 面對耶穌為你成就的救恩，你現在最想對祂說什麼？</p>
-                    <textarea 
-                        className="modal-textarea"
-                        value={prayerText} 
-                        onChange={(e) => setPrayerText(e.target.value)} 
-                        placeholder="原來耶穌為我做了這麼多...&#10;主耶穌，我願意打開心門接受祢，求祢赦免我..."
-                    />
+                    <textarea className="modal-textarea" value={prayerText} onChange={(e) => setPrayerText(e.target.value)} placeholder="原來耶穌為我做了這麼多...&#10;主耶穌，我願意打開心門接受祢，求祢赦免我..." />
                     <button className="custom-btn" style={{ width: '100%', marginTop: '0' }} onClick={submitPrayer} disabled={!prayerText.trim()}>送出回應與禱告</button>
                 </div>
             )}
-
             {modalState === 'loading' && (
                 <div style={{ textAlign: 'center', padding: '60px 0' }}>
                     <div className="spinner"></div>
                     <p style={{ color: 'var(--accent-primary)', fontWeight: '700', letterSpacing: '1px' }}>正在接收你的決定，為你開啟天父的信...</p>
                 </div>
             )}
-
             {modalState === 'letter' && letterData && (
                 <div style={{ textAlign: 'left' }}>
                     <img src={letterData.image} alt="插畫" style={{ width: '100%', height: '220px', objectFit: 'cover', borderRadius: '12px', marginBottom: '25px', boxShadow: '0 10px 20px rgba(0,0,0,0.05)' }} />
@@ -463,7 +427,6 @@ export default function JesusSonOfGodLesson() {
             )}
         </div>
       </div>
-
     </div>
   );
 }
