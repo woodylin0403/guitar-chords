@@ -138,12 +138,20 @@ export default function DoesGodExistOriginal() {
 
         /* 重點與問題卡片 */
         .highlight-box { background: linear-gradient(145deg, rgba(139, 92, 246, 0.1), rgba(6, 182, 212, 0.05)); border-left: 4px solid var(--accent-primary); padding: 25px; margin: 25px 0; text-align: left; border-radius: 0 12px 12px 0; box-shadow: 0 10px 30px rgba(0,0,0,0.2); width: 100%; border-right: 1px solid var(--card-border); border-top: 1px solid var(--card-border); border-bottom: 1px solid var(--card-border);}
-        .question-card { background: rgba(236, 72, 153, 0.05); border: 1px solid rgba(236, 72, 153, 0.2); border-left: 4px solid var(--accent-secondary); padding: 25px; border-radius: 12px; margin-bottom: 30px; text-align: left; width: 100%; backdrop-filter: blur(5px);}
+        .question-card { background: rgba(236, 72, 153, 0.05); border: 1px solid rgba(236, 72, 153, 0.2); border-left: 4px solid var(--accent-secondary); padding: 25px; border-radius: 12px; margin-bottom: 10px; text-align: left; width: 100%; backdrop-filter: blur(5px);}
         .question-card .q-label { font-weight: 700; color: var(--accent-secondary); font-size: 1.15rem; margin-bottom: 8px; display: block; letter-spacing: 1px;}
         .question-card .q-text { font-size: 1.2rem; color: #FFF; font-weight: 600; line-height: 1.6; }
         .question-card .q-hint { font-size: 0.95rem; color: var(--text-light); margin-top: 10px; display: block; }
 
-        /* 🌟 新增：現代感信念推演圖像模塊 */
+        /* 🌟 思考留白區域 (Think Space) */
+        .think-space { min-height: 45vh; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0.7; }
+        .think-space span { font-size: 0.85rem; letter-spacing: 4px; color: var(--accent-tertiary); text-transform: uppercase; margin-bottom: 15px; animation: pulseText 2.5s infinite; }
+        .think-space .scroll-line { width: 1px; height: 60px; background: linear-gradient(to bottom, var(--accent-tertiary), transparent); animation: pulseLine 2.5s infinite; }
+
+        @keyframes pulseText { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+        @keyframes pulseLine { 0%, 100% { transform: scaleY(1); transform-origin: top; opacity: 0.4;} 50% { transform: scaleY(1.3); transform-origin: top; opacity: 1;} }
+
+        /* 現代感信念推演圖像模塊 */
         .belief-chain { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 15px; margin: 35px 0; width: 100%;}
         .belief-node { background: var(--card-bg); border: 1px solid var(--accent-tertiary); padding: 15px 30px; border-radius: 12px; font-weight: 700; font-size: 1.2rem; color: #FFF; box-shadow: 0 0 15px rgba(6, 182, 212, 0.15); backdrop-filter: blur(10px); position: relative; overflow: hidden;}
         .belief-node::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent); transform: skewX(-20deg); animation: shine 3s infinite;}
@@ -240,7 +248,7 @@ export default function DoesGodExistOriginal() {
         <div className="scroll-indicator"><span>開始探索</span><div className="line"></div></div>
       </section>
 
-      {/* 1. 神存在嗎？ (移除了開頭的重複 SVG) */}
+      {/* 1. 神存在嗎？ */}
       <section className="custom-section">
         <div className="custom-container fade-up">
             <div className="text-content">
@@ -251,6 +259,12 @@ export default function DoesGodExistOriginal() {
                     <span className="q-text">你相信有神嗎？覺得是一神還是多神呢？</span>
                 </div>
                 
+                {/* 🌟 思考留白區域 */}
+                <div className="think-space">
+                    <span>往下看解答</span>
+                    <div className="scroll-line"></div>
+                </div>
+
                 <h3>✦ 一神(真神) or 多神(假神)？</h3>
                 <p>若有神，我們必須辨別真神的卓越性。真神必須具備以下條件：</p>
                 <ul className="equip-list">
@@ -260,7 +274,6 @@ export default function DoesGodExistOriginal() {
                     <li><strong>能夠創造：</strong>神是造物主，人是受造者。 <span className="counter-example">(反例：關公是受造的人)</span></li>
                 </ul>
 
-                {/* 🌟 現代感圖像模塊：取代原本文字的「信念重要性」 */}
                 <h3>✦ 為什麼有信仰這麼重要？</h3>
                 <p>在探討神是否存在之前，我們必須了解信念的力量。掌控人生關鍵的不是基因，而是我們的<strong>「信念」</strong>。你相信什麼，將直接決定你的未來：</p>
                 
@@ -313,6 +326,12 @@ export default function DoesGodExistOriginal() {
                     <span className="q-text">你覺得是「人找神」比較容易，還是「神找人」比較容易？</span>
                 </div>
 
+                {/* 🌟 思考留白區域 */}
+                <div className="think-space">
+                    <span>往下看解答</span>
+                    <div className="scroll-line"></div>
+                </div>
+
                 <p>嚴格來說，要求人類去「證明」神存在是一個<strong>非法的問題</strong>。因為位階低的，不能決定或完全測透位階高的 <span className="counter-example">（例如：生活在二度空間的，無法完全認識三度空間的存在）</span>。</p>
                 <p>這也是為什麼「神找人」（神主動啟示）遠比「人找神」容易。即或如此，以下四點皆已證明有神：</p>
                 <ul className="equip-list">
@@ -349,6 +368,12 @@ export default function DoesGodExistOriginal() {
                     <span className="q-label">Q3. 思考一下：</span>
                     <span className="q-text">人要如何能夠認識神呢？</span>
                     <span className="q-hint">（Hint: 如果你要認識一個歷史人物或新朋友，你會怎麼做？）</span>
+                </div>
+
+                {/* 🌟 思考留白區域 */}
+                <div className="think-space">
+                    <span>往下看解答</span>
+                    <div className="scroll-line"></div>
                 </div>
 
                 <h3>✦ 要由聖經來看</h3>
