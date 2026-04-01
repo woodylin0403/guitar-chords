@@ -112,7 +112,7 @@ export default function SongPage() {
   const [song, setSong] = useState<Song | null>(null);
   const [targetKey, setTargetKey] = useState("C");
   const [isEditing, setIsEditing] = useState(false);
-  const [fontSize, setFontSize] = useState(22);
+  const [fontSize, setFontSize] = useState(22); // 初始值
   const [isLoading, setIsLoading] = useState(true);
   const [isPlayingMode, setIsPlayingMode] = useState(false);
 
@@ -127,6 +127,17 @@ export default function SongPage() {
   const [comments, setComments] = useState<any[]>([]);
   const [newCommentText, setNewCommentText] = useState("");
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+
+  // 🌟 手機版智能預設字體大小
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (window.innerWidth < 768) {
+        setFontSize(14); // 手機預設 14px，通常可以完整塞進螢幕
+      } else {
+        setFontSize(22); // 電腦版預設 22px
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, setUser);
@@ -254,12 +265,14 @@ export default function SongPage() {
 
   const steps = getNoteIndex(getRootNote(targetKey)) - getNoteIndex(getRootNote(song.originalKey));
 
-  // 🌟 最終精準對齊渲染邏輯：完全尊重底線 _
   const renderPreview = (text: string) => {
     return (
       <div className="overflow-x-auto pb-6">
         <div className="w-max min-w-full font-mono leading-relaxed text-stone-800 tracking-wide transition-all duration-200" style={{ fontSize: `${fontSize}px` }}>
-          {text.split('\n').map((line, lineIndex) => {
+          {text.split('\n').map((rawLine, lineIndex) => {
+            
+            const line = rawLine.replace(/_+/g, (match) => '_' + ' '.repeat(match.length - 1));
+
             if (/\[.*?\]/.test(line)) {
               const parts = line.split(/\[(.*?)\]/);
               const elements = [];
@@ -281,7 +294,6 @@ export default function SongPage() {
                 if (lyricSegment.length > 0) {
                   const firstChar = lyricSegment.charAt(0);
                   const restText = lyricSegment.substring(1);
-                  // 檢查第一個字是否為底線 (半形或全形)
                   const isUnderscore = firstChar === '_' || firstChar === '＿';
 
                   elements.push(
@@ -296,7 +308,9 @@ export default function SongPage() {
                       </div>
                       {restText && (
                         <span className="whitespace-pre text-stone-800">
-                          {restText}
+                          {restText.split('').map((char, charIdx) => (
+                            <span key={charIdx} className={char === '_' ? 'text-stone-300' : 'text-stone-800'}>{char}</span>
+                          ))}
                         </span>
                       )}
                     </div>
@@ -343,7 +357,8 @@ export default function SongPage() {
       {isPlayingMode && (
         <div className="fixed top-6 right-6 z-[60] flex items-center bg-stone-800/90 text-white rounded-full shadow-lg backdrop-blur-md print:hidden overflow-hidden border border-stone-700/50">
           <div className="flex items-center px-2 py-1">
-            <button onClick={() => setFontSize(p => Math.max(12, p - 2))} className="w-9 h-9 flex items-center justify-center hover:bg-stone-700 rounded-full transition-colors text-stone-300 hover:text-white" title="縮小字體">－</button>
+            {/* 🌟 最小限制下放到了 8 */}
+            <button onClick={() => setFontSize(p => Math.max(8, p - 2))} className="w-9 h-9 flex items-center justify-center hover:bg-stone-700 rounded-full transition-colors text-stone-300 hover:text-white" title="縮小字體">－</button>
             <span className="w-8 text-center text-sm font-medium font-mono text-stone-200">{fontSize}</span>
             <button onClick={() => setFontSize(p => Math.min(60, p + 2))} className="w-9 h-9 flex items-center justify-center hover:bg-stone-700 rounded-full transition-colors text-stone-300 hover:text-white" title="放大字體">＋</button>
           </div>
@@ -400,7 +415,8 @@ export default function SongPage() {
               <div className="flex items-center gap-3">
                 <span className="text-sm font-medium text-stone-500">字體</span>
                 <div className="flex items-center bg-stone-50 border border-stone-200 rounded-lg overflow-hidden">
-                  <button onClick={() => setFontSize(p => Math.max(12, p - 2))} className="px-3 py-1 hover:bg-stone-200 text-stone-600 transition-colors border-r border-stone-200">－</button>
+                  {/* 🌟 最小限制下放到了 8 */}
+                  <button onClick={() => setFontSize(p => Math.max(8, p - 2))} className="px-3 py-1 hover:bg-stone-200 text-stone-600 transition-colors border-r border-stone-200">－</button>
                   <span className="px-3 py-1 font-medium text-sm text-stone-700 min-w-[2.5rem] text-center">{fontSize}</span>
                   <button onClick={() => setFontSize(p => Math.min(60, p + 2))} className="px-3 py-1 hover:bg-stone-200 text-stone-600 transition-colors border-l border-stone-200">＋</button>
                 </div>
