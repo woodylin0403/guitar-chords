@@ -114,8 +114,6 @@ export default function SongPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [fontSize, setFontSize] = useState(22);
   const [isLoading, setIsLoading] = useState(true);
-
-  // 🌟 新增：演奏模式狀態
   const [isPlayingMode, setIsPlayingMode] = useState(false);
 
   const [user, setUser] = useState<User | null>(null);
@@ -152,7 +150,6 @@ export default function SongPage() {
         if (docSnap.exists()) {
           const foundSong = docSnap.data() as Song;
           
-          // 🌟 單曲瀏覽次數 +1 (加入防護機制)
           try {
             const viewKey = `viewed_${songId}`;
             if (!sessionStorage.getItem(viewKey)) {
@@ -257,24 +254,19 @@ export default function SongPage() {
 
   const steps = getNoteIndex(getRootNote(targetKey)) - getNoteIndex(getRootNote(song.originalKey));
 
-  // 🌟 升級版：精準對齊與底線替換邏輯
+  // 🌟 最終精準對齊渲染邏輯：完全尊重底線 _
   const renderPreview = (text: string) => {
     return (
       <div className="overflow-x-auto pb-6">
         <div className="w-max min-w-full font-mono leading-relaxed text-stone-800 tracking-wide transition-all duration-200" style={{ fontSize: `${fontSize}px` }}>
-          {text.split('\n').map((rawLine, lineIndex) => {
-            
-            // 🌟 關鍵魔法：在這裡直接把整行的所有底線 '_' 替換成空白格 ' '
-            // 這樣畫面上看起來就乾淨了，而且空白實體寬度會被 whitespace-pre 完美保留！
-            const line = rawLine.replace(/_/g, ' ');
-
+          {text.split('\n').map((line, lineIndex) => {
             if (/\[.*?\]/.test(line)) {
               const parts = line.split(/\[(.*?)\]/);
               const elements = [];
 
               if (parts[0]) {
                 elements.push(
-                  <span key={`text-init`} className="whitespace-pre">
+                  <span key={`text-init`} className="whitespace-pre text-stone-800">
                     {parts[0]}
                   </span>
                 );
@@ -289,6 +281,8 @@ export default function SongPage() {
                 if (lyricSegment.length > 0) {
                   const firstChar = lyricSegment.charAt(0);
                   const restText = lyricSegment.substring(1);
+                  // 檢查第一個字是否為底線 (半形或全形)
+                  const isUnderscore = firstChar === '_' || firstChar === '＿';
 
                   elements.push(
                     <div key={`chord-${i}`} className="inline-flex items-end">
@@ -296,12 +290,12 @@ export default function SongPage() {
                         <span className={`font-bold ${isBarline ? 'text-stone-300' : 'text-stone-600'}`} style={{ fontSize: '0.85em', marginBottom: '0.1em' }}>
                           {chordDisplay}
                         </span>
-                        <span className={`whitespace-pre ${!isBarline && firstChar.trim() !== '' ? 'underline decoration-stone-400 decoration-[2.5px] underline-offset-[5px]' : ''}`}>
+                        <span className={`whitespace-pre ${!isBarline && firstChar.trim() !== '' && !isUnderscore ? 'underline decoration-stone-400 decoration-[2.5px] underline-offset-[5px]' : ''} ${isUnderscore ? 'text-stone-400' : 'text-stone-800'}`}>
                           {firstChar}
                         </span>
                       </div>
                       {restText && (
-                        <span className="whitespace-pre">
+                        <span className="whitespace-pre text-stone-800">
                           {restText}
                         </span>
                       )}
@@ -320,14 +314,18 @@ export default function SongPage() {
               }
               return <div key={lineIndex} className="flex items-end mb-3 min-h-[2.5em]">{elements}</div>;
             } else {
-              const tokens = line.split(/(\s+|[|()[\]{}<>,.:;~\-｜（）【】《》，。：；～]+)/);
+              const tokens = line.split(/(\s+|[|()[\]{}<>,.:;~\-｜（）【】《》，。：；～_＿]+)/);
               return (
                 <div key={lineIndex} className="whitespace-pre mb-1" style={{ minHeight: '1.5em' }}>
-                  {tokens.filter(Boolean).map((token, i) => (
-                    <span key={i} className={isChord(token) ? "text-stone-600 font-bold" : (token==='|'||token==='｜' ? "text-stone-300" : "")}>
-                      {isChord(token) ? transposeChord(token, steps, targetKey) : token}
-                    </span>
-                  ))}
+                  {tokens.filter(Boolean).map((token, i) => {
+                    const displayToken = isChord(token) ? transposeChord(token, steps, targetKey) : token;
+                    const isUnderscoreToken = /^[_＿]+$/.test(token);
+                    return (
+                      <span key={i} className={isChord(token) ? "text-stone-600 font-bold" : (token==='|'||token==='｜' ? "text-stone-300" : (isUnderscoreToken ? "text-stone-400" : "text-stone-800"))}>
+                        {displayToken}
+                      </span>
+                    )
+                  })}
                 </div>
               );
             }
@@ -342,48 +340,21 @@ export default function SongPage() {
   return (
     <main className={`min-h-screen bg-[#FDFBF7] text-stone-800 font-sans selection:bg-stone-200 pb-20 ${isPlayingMode ? 'fixed inset-0 z-50 overflow-y-auto !pb-0' : ''}`}>
       
-      {/* 🌟 演奏模式的懸浮控制列 (包含字體調整與結束按鈕) */}
       {isPlayingMode && (
         <div className="fixed top-6 right-6 z-[60] flex items-center bg-stone-800/90 text-white rounded-full shadow-lg backdrop-blur-md print:hidden overflow-hidden border border-stone-700/50">
-          
-          {/* 字體調整區塊 */}
           <div className="flex items-center px-2 py-1">
-            <button 
-              onClick={() => setFontSize(p => Math.max(12, p - 2))} 
-              className="w-9 h-9 flex items-center justify-center hover:bg-stone-700 rounded-full transition-colors text-stone-300 hover:text-white"
-              title="縮小字體"
-            >
-              －
-            </button>
+            <button onClick={() => setFontSize(p => Math.max(12, p - 2))} className="w-9 h-9 flex items-center justify-center hover:bg-stone-700 rounded-full transition-colors text-stone-300 hover:text-white" title="縮小字體">－</button>
             <span className="w-8 text-center text-sm font-medium font-mono text-stone-200">{fontSize}</span>
-            <button 
-              onClick={() => setFontSize(p => Math.min(60, p + 2))} 
-              className="w-9 h-9 flex items-center justify-center hover:bg-stone-700 rounded-full transition-colors text-stone-300 hover:text-white"
-              title="放大字體"
-            >
-              ＋
-            </button>
+            <button onClick={() => setFontSize(p => Math.min(60, p + 2))} className="w-9 h-9 flex items-center justify-center hover:bg-stone-700 rounded-full transition-colors text-stone-300 hover:text-white" title="放大字體">＋</button>
           </div>
-          
-          {/* 分隔線 */}
           <div className="w-px h-6 bg-stone-600 mx-1"></div>
-          
-          {/* 結束按鈕 */}
-          <button 
-            onClick={() => setIsPlayingMode(false)}
-            className="px-5 py-2.5 hover:bg-stone-700 text-stone-200 hover:text-white transition-all flex items-center gap-2 text-sm font-medium"
-          >
-            <span>✕</span> 結束
-          </button>
+          <button onClick={() => setIsPlayingMode(false)} className="px-5 py-2.5 hover:bg-stone-700 text-stone-200 hover:text-white transition-all flex items-center gap-2 text-sm font-medium"><span>✕</span> 結束</button>
         </div>
       )}
 
       {!isPlayingMode && (
         <nav className="max-w-5xl mx-auto px-6 py-6 flex justify-between items-center border-b border-stone-200 mb-8 print:hidden">
-          {/* 🌟 導向 /chords */}
-          <Link href="/chords" className="text-stone-500 hover:text-stone-800 text-sm font-medium tracking-widest transition-colors">
-            ← 返回吉他譜目錄
-          </Link>
+          <Link href="/chords" className="text-stone-500 hover:text-stone-800 text-sm font-medium tracking-widest transition-colors">← 返回吉他譜目錄</Link>
           {isEditing && <button onClick={handleDelete} className="text-red-400 hover:text-red-600 text-sm font-medium transition-colors">{songId === 'new' ? '放棄編輯' : '刪除樂譜'}</button>}
         </nav>
       )}
@@ -396,11 +367,7 @@ export default function SongPage() {
             <div className="flex flex-wrap items-center gap-3 text-sm text-stone-500">
               {song.editor && <span className="border border-stone-200 px-3 py-1 rounded-full bg-white shadow-sm">編譜：{song.editor}</span>}
               {!isEditing && song.timeSignature && <span className="border border-stone-200 px-3 py-1 rounded-full bg-white shadow-sm">拍號：{song.timeSignature}</span>}
-              {!isEditing && (
-                <span className="border border-stone-200 px-3 py-1 rounded-full bg-white shadow-sm flex items-center gap-1">
-                  👁️ {(song as any).views || 1} 次觀看
-                </span>
-              )}
+              {!isEditing && <span className="border border-stone-200 px-3 py-1 rounded-full bg-white shadow-sm flex items-center gap-1">👁️ {(song as any).views || 1} 次觀看</span>}
               {!isEditing && targetKey !== song.originalKey && <span className="border border-red-200 text-red-600 px-3 py-1 rounded-full bg-red-50 shadow-sm font-medium">彈奏調性：{targetKey}</span>}
             </div>
           </div>
@@ -441,18 +408,8 @@ export default function SongPage() {
             </div>
 
             <div className="flex gap-3">
-              <button 
-                onClick={() => setIsPlayingMode(true)}
-                className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg text-sm font-medium transition-all flex items-center gap-2"
-              >
-                🎸 演奏模式
-              </button>
-              <button 
-                onClick={() => window.print()}
-                className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg text-sm font-medium transition-all flex items-center gap-2"
-              >
-                🖨️ 列印樂譜
-              </button>
+              <button onClick={() => setIsPlayingMode(true)} className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg text-sm font-medium transition-all flex items-center gap-2">🎸 演奏模式</button>
+              <button onClick={() => window.print()} className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg text-sm font-medium transition-all flex items-center gap-2">🖨️ 列印樂譜</button>
             </div>
           </div>
         )}
