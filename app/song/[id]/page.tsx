@@ -257,12 +257,17 @@ export default function SongPage() {
 
   const steps = getNoteIndex(getRootNote(targetKey)) - getNoteIndex(getRootNote(song.originalKey));
 
-  // 🌟 升級版：精準對齊與底線渲染邏輯
+  // 🌟 升級版：精準對齊與底線替換邏輯
   const renderPreview = (text: string) => {
     return (
       <div className="overflow-x-auto pb-6">
         <div className="w-max min-w-full font-mono leading-relaxed text-stone-800 tracking-wide transition-all duration-200" style={{ fontSize: `${fontSize}px` }}>
-          {text.split('\n').map((line, lineIndex) => {
+          {text.split('\n').map((rawLine, lineIndex) => {
+            
+            // 🌟 關鍵魔法：在這裡直接把整行的所有底線 '_' 替換成空白格 ' '
+            // 這樣畫面上看起來就乾淨了，而且空白實體寬度會被 whitespace-pre 完美保留！
+            const line = rawLine.replace(/_/g, ' ');
+
             if (/\[.*?\]/.test(line)) {
               const parts = line.split(/\[(.*?)\]/);
               const elements = [];
@@ -375,7 +380,7 @@ export default function SongPage() {
 
       {!isPlayingMode && (
         <nav className="max-w-5xl mx-auto px-6 py-6 flex justify-between items-center border-b border-stone-200 mb-8 print:hidden">
-          {/* 🌟 修改這裡：導向 /chords */}
+          {/* 🌟 導向 /chords */}
           <Link href="/chords" className="text-stone-500 hover:text-stone-800 text-sm font-medium tracking-widest transition-colors">
             ← 返回吉他譜目錄
           </Link>
