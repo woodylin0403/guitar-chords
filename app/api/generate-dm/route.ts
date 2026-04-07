@@ -44,7 +44,12 @@ export async function POST(req: Request) {
     `;
 
     const result = await model.generateContent(prompt);
-    const parsedData = JSON.parse(result.response.text());
+    let responseText = result.response.text();
+
+    // 🌟 防呆機制：過濾掉 AI 有時候會雞婆加上的 Markdown 標記
+    responseText = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
+
+    const parsedData = JSON.parse(responseText);
 
     return NextResponse.json({ 
       success: true, 
@@ -53,8 +58,10 @@ export async function POST(req: Request) {
       imagePrompt: parsedData.imagePrompt 
     });
 
-  } catch (error) {
-    console.error("Gemini API 錯誤:", error);
-    return NextResponse.json({ success: false, error: "AI 思考失敗" }, { status: 500 });
+  } catch (error: any) {
+    console.error("Gemini API 錯誤細節:", error);
+    // 🌟 錯誤顯示升級：把真正的錯誤訊息傳給前端
+    const errorMessage = error.message || String(error);
+    return NextResponse.json({ success: false, error: errorMessage }, { status: 500 });
   }
 }
