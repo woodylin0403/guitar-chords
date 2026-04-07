@@ -27,8 +27,8 @@ export default function ToolsHub() {
             <p className="text-[#8E867A] text-sm">破冰抽卡、寫下心聲求問天父</p>
           </Link>
 
-          {/* 🌟 新增：小組 DM 產生器 */}
-          <Link href="/tools/dm-generator" className="p-8 rounded-3xl bg-[#F5F3FF] border border-[#E0D7FF] hover:shadow-md transition-shadow group block md:col-span-2">
+          {/* 🌟 關鍵修改：這裡的 href 從 /tools 改成 /tools-hub 了！ */}
+          <Link href="/tools-hub/dm-generator" className="p-8 rounded-3xl bg-[#F5F3FF] border border-[#E0D7FF] hover:shadow-md transition-shadow group block md:col-span-2">
             <div className="flex flex-col md:flex-row md:items-center gap-4">
               <div className="text-3xl group-hover:scale-110 transition-transform origin-left w-fit">🪄</div>
               <div>
