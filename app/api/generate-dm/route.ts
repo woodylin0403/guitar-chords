@@ -11,9 +11,10 @@ export async function POST(req: Request) {
     }
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    
+    // 🌟 改用最通用、最穩定的 gemini-pro 模型
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-1.5-flash-latest',
-      generationConfig: { responseMimeType: "application/json" }
+      model: 'gemini-pro' 
     });
 
     const prompt = `
@@ -38,9 +39,11 @@ export async function POST(req: Request) {
     請附上一句給美宣參考的 Midjourney/AI 繪圖提示詞，需符合文案的配色與風格，加上參數「--ar 16:9」或「--ar 4:5」(根據format自定)。
 
     請嚴格執行指令，並直接輸出 JSON 格式，包含三個欄位：
-    1. "optimizedTitle": 優化後的新標題。
-    2. "socialCopy": 生成的完整社群文案。
-    3. "imagePrompt": 給美宣的英文繪圖提示詞 (需包含比例參數)。
+    {
+      "optimizedTitle": "優化後的新標題",
+      "socialCopy": "生成的完整社群文案",
+      "imagePrompt": "給美宣的英文繪圖提示詞"
+    }
     `;
 
     const result = await model.generateContent(prompt);
@@ -60,7 +63,6 @@ export async function POST(req: Request) {
 
   } catch (error: any) {
     console.error("Gemini API 錯誤細節:", error);
-    // 🌟 錯誤顯示升級：把真正的錯誤訊息傳給前端
     const errorMessage = error.message || String(error);
     return NextResponse.json({ success: false, error: errorMessage }, { status: 500 });
   }
