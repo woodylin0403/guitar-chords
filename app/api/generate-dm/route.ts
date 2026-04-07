@@ -11,8 +11,9 @@ export async function POST(req: Request) {
     }
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    // 使用目前最標準的 1.5 flash 模型
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    
+    // 🌟 關鍵修正：這裡確實改用最穩定不會報 404 的 gemini-pro
+    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
     const prompt = `
     你是一位專門為教會和社群團體設計創意行銷文案的行銷大師。
@@ -44,7 +45,7 @@ export async function POST(req: Request) {
     const result = await model.generateContent(prompt);
     let responseText = result.response.text();
 
-    // 🌟 終極防呆：強制只擷取 { 到 } 之間的內容
+    // 🌟 終極防呆：強制只擷取 { 到 } 之間的 JSON 內容，過濾掉 AI 亂講話
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
     
     if (!jsonMatch) {
