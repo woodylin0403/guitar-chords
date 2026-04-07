@@ -1,7 +1,8 @@
 'use client';
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Sparkles, Copy, MessageCircle, Instagram, FileText, CheckCircle2, Lightbulb, Download, Monitor, Layout } from 'lucide-react';
+import { ArrowLeft, Sparkles, Copy, MessageCircle, Instagram, FileText, CheckCircle2, Lightbulb, Download, Monitor, Layout, Loader2 } from 'lucide-react';
+import html2canvas from 'html2canvas'; // 🌟 新增：匯入截圖套件
 
 const STYLES = [
   "☕ 溫馨走心", "🌿 療癒舒壓", "🫂 溫柔陪伴", "📖 故事感", "❤️ 內在醫治",
@@ -24,9 +25,10 @@ export default function DMGenerator() {
   const [timeLoc, setTimeLoc] = useState("");
   const [details, setDetails] = useState("");
   const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
-  const [format, setFormat] = useState("LINE");
+  const [format, setFormat] = useState("IG_POST"); // 預設改為有比例的格式比較好看
 
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false); // 🌟 下載狀態
   const [result, setResult] = useState("");
   const [isCopied, setIsCopied] = useState(false);
 
@@ -45,7 +47,7 @@ export default function DMGenerator() {
   };
 
   const handleGenerate = () => {
-    if (!topic) return;
+    if (!topic) { alert("請填寫活動主題！"); return; }
     setIsGenerating(true);
     setTimeout(() => {
       setResult(`【${topic}】\n\n⏰ 時間：${timeLoc || '本週五 19:30'}\n📍 地點：教會副堂\n\n✨ 活動亮點：\n${details || '驚喜活動內容，保密中！'}\n\n期待與你見面！`);
@@ -53,11 +55,36 @@ export default function DMGenerator() {
     }, 1500);
   };
 
+  // 🌟 新增：下載圖片的函數
+  const downloadImage = async (imageFormat: 'png' | 'jpeg') => {
+    const element = document.getElementById('preview-canvas'); // 抓取這個 ID 的區塊
+    if (!element) return;
+
+    setIsDownloading(true);
+    try {
+      const canvas = await html2canvas(element, {
+        scale: 2, // 提高畫質
+        useCORS: true,
+        backgroundColor: '#ffffff' // 確保背景是白色的，避免透明變黑
+      });
+      
+      const data = canvas.toDataURL(`image/${imageFormat}`, 0.9);
+      const link = document.createElement('a');
+      link.href = data;
+      link.download = `小組DM-${topic || '邀請卡'}.${imageFormat === 'jpeg' ? 'jpg' : 'png'}`;
+      link.click();
+    } catch (error) {
+      console.error("下載圖片失敗", error);
+      alert("下載圖片時發生錯誤！");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   const currentFormat = FORMATS.find(f => f.id === format);
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900 pb-20 relative overflow-hidden font-sans">
-      {/* 導覽列 */}
       <nav className="max-w-6xl mx-auto px-6 py-8 relative z-10">
         <Link href="/tools-hub" className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-fuchsia-600 bg-white/60 backdrop-blur-md px-4 py-2 rounded-full border border-slate-200/60 shadow-sm">
           <ArrowLeft className="w-4 h-4" /> 返回工具箱
@@ -122,37 +149,54 @@ export default function DMGenerator() {
           {/* 右側：視覺預覽 */}
           <div className="flex-1 space-y-6">
             <div className="bg-slate-800 rounded-3xl p-8 flex flex-col items-center justify-center min-h-[500px] shadow-2xl relative">
-              {/* 模擬圖片預覽區域 */}
+              
               {result ? (
-                <div className={`bg-gradient-to-br from-fuchsia-100 to-orange-50 w-full max-w-sm rounded-lg shadow-xl p-8 flex flex-col justify-between overflow-hidden relative ${currentFormat?.ratio}`}>
-                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-fuchsia-500 to-orange-500"></div>
-                  <div>
-                    <h3 className="text-2xl font-black text-slate-900 mb-4">{topic}</h3>
-                    <div className="space-y-2 text-slate-600 font-bold text-sm">
-                      <p>📍 {timeLoc || '聚會地點'}</p>
-                      <p className="whitespace-pre-wrap">{details || '活動亮點內容...'}</p>
+                <>
+                  {/* 🌟 這個框框加上了 id="preview-canvas" 準備被截圖 */}
+                  <div 
+                    id="preview-canvas"
+                    className={`bg-gradient-to-br from-fuchsia-100 to-orange-50 w-full max-w-sm rounded-lg shadow-xl p-8 flex flex-col justify-between overflow-hidden relative ${currentFormat?.ratio}`}
+                  >
+                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-fuchsia-500 to-orange-500"></div>
+                    <div>
+                      <h3 className="text-3xl font-black text-slate-900 mb-6 leading-tight">{topic}</h3>
+                      <div className="space-y-3 text-slate-700 font-bold text-sm">
+                        <p className="flex items-center gap-2"><span className="text-lg">⏰</span> {timeLoc || '聚會時間'}</p>
+                        <p className="flex items-center gap-2"><span className="text-lg">📍</span> 教會副堂</p>
+                        <div className="mt-4 pt-4 border-t border-fuchsia-200 whitespace-pre-wrap leading-relaxed">
+                          {details || '精彩活動等你來參加！\n手刀報名中🏃‍♂️'}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-[10px] font-bold text-fuchsia-600/60 tracking-widest pt-4">
+                      烏鴉的嗎哪小工具
                     </div>
                   </div>
-                  <div className="text-[10px] font-bold text-fuchsia-600 tracking-widest border-t border-fuchsia-200 pt-4">
-                    烏鴉的嗎哪小工具製作
+
+                  {/* 🌟 下載按鈕區塊，綁定了下載函數 */}
+                  <div className="flex flex-wrap gap-4 mt-8">
+                    <button 
+                      onClick={() => downloadImage('png')}
+                      disabled={isDownloading}
+                      className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-6 py-2 rounded-full text-sm font-bold backdrop-blur-md border border-white/20 transition-all disabled:opacity-50"
+                    >
+                      {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                      下載 PNG
+                    </button>
+                    <button 
+                      onClick={() => downloadImage('jpeg')}
+                      disabled={isDownloading}
+                      className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-6 py-2 rounded-full text-sm font-bold backdrop-blur-md border border-white/20 transition-all disabled:opacity-50"
+                    >
+                      {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                      下載 JPG
+                    </button>
                   </div>
-                </div>
+                </>
               ) : (
                 <div className="text-slate-500 text-center">
                   <Layout className="w-12 h-12 mx-auto mb-4 opacity-20" />
                   <p>生成文案後，這裡會顯示視覺預覽</p>
-                </div>
-              )}
-
-              {/* 下載按鈕 */}
-              {result && (
-                <div className="flex gap-4 mt-8">
-                  <button className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-6 py-2 rounded-full text-sm font-bold backdrop-blur-md border border-white/20 transition-all">
-                    <Download className="w-4 h-4" /> 下載 PNG
-                  </button>
-                  <button className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-6 py-2 rounded-full text-sm font-bold backdrop-blur-md border border-white/20 transition-all">
-                    <Download className="w-4 h-4" /> 下載 JPG
-                  </button>
                 </div>
               )}
             </div>
