@@ -1,4 +1,3 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
@@ -10,11 +9,6 @@ export async function POST(req: Request) {
     if (!apiKey) {
       return NextResponse.json({ success: false, error: "API Key 未設定" }, { status: 500 });
     }
-
-    const genAI = new GoogleGenerativeAI(apiKey);
-    
-    // 🌟 已經幫你替換成全世界最穩定、支援度最高的 gemini-pro 模型
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
     const prompt = `
     你是一位專門為教會和社群團體設計創意行銷文案的行銷大師。
@@ -43,14 +37,34 @@ export async function POST(req: Request) {
     }
     `;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    let responseText = response.text();
+    // 🌟 核彈解法：直接用原生 fetch 呼叫 Google 最新的 1.5-flash API，繞過所有套件 Bug
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        // 直接在底層強制要求回傳 JSON
+        generationConfig: { responseMimeType: "application/json" }
+      })
+    });
 
-    // 強制擷取 JSON 內容，過濾掉 AI 亂講話
+    const data = await response.json();
+
+    // 如果 Google API 本身報錯，把真正的錯誤抓出來
+    if (!response.ok) {
+      console.error("Google API 錯誤:", data);
+      throw new Error(data.error?.message || "Google 伺服器拒絕連線");
+    }
+
+    // 取得 AI 回傳的文字
+    const responseText = data.candidates[0].content.parts[0].text;
+
+    // 雙重防呆：確保抓到 JSON
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      throw new Error("AI 回傳格式錯誤，請重新產生一次");
+      throw new Error("AI 回傳格式異常，請重新點擊產生");
     }
 
     const parsedData = JSON.parse(jsonMatch[0]);
@@ -63,7 +77,7 @@ export async function POST(req: Request) {
     });
 
   } catch (error: any) {
-    console.error("Gemini API 錯誤:", error);
+    console.error("API 執行錯誤:", error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
