@@ -37,24 +37,28 @@ export async function POST(req: Request) {
     }
     `;
 
-    // 🌟 核彈解法：直接用原生 fetch 呼叫 Google 最新的 1.5-flash API，繞過所有套件 Bug
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+    // 🌟 最終通關關鍵：舊模型已淘汰，這裡換成最新的 gemini-2.5-flash
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        // 直接在底層強制要求回傳 JSON
         generationConfig: { responseMimeType: "application/json" }
       })
     });
 
     const data = await response.json();
 
-    // 如果 Google API 本身報錯，把真正的錯誤抓出來
+    // 攔截 Google 伺服器的真實錯誤
     if (!response.ok) {
       console.error("Google API 錯誤:", data);
+      
+      // 如果 2.5 也找不到，自動提示備用模型
+      if (data.error?.message?.includes("not found")) {
+         throw new Error("模型代號錯誤。請將程式碼中的 'gemini-2.5-flash' 改為 'gemini-2.0-flash' 試試看！");
+      }
       throw new Error(data.error?.message || "Google 伺服器拒絕連線");
     }
 
