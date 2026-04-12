@@ -13,7 +13,7 @@ export async function POST(req: Request) {
     }
 
     // ==========================================
-    // 階段 1：呼叫 Gemini (大腦) 寫文案與生圖提示詞
+    // 階段 1：呼叫 Gemini 寫文案與生圖提示詞
     // ==========================================
     const prompt = `
     你是一位專門為教會和社群團體設計創意行銷文案的行銷大師。
@@ -43,7 +43,6 @@ export async function POST(req: Request) {
     }
     `;
 
-    // 呼叫 Gemini 2.5 模型
     const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -62,9 +61,8 @@ export async function POST(req: Request) {
     const parsedData = JSON.parse(jsonMatch[0]);
 
     // ==========================================
-    // 階段 2：呼叫 OpenAI (畫筆) 根據提示詞畫圖
+    // 階段 2：呼叫 OpenAI 畫圖
     // ==========================================
-    // 我們在結尾再次強調「不要有文字」，確保背景乾淨
     const finalImagePrompt = parsedData.imagePrompt + " IMPORTANT: Ensure there is absolutely NO text, no typography, and no words in the image. It must be a pure illustration.";
 
     const openaiRes = await fetch('https://api.openai.com/v1/images/generations', {
@@ -76,8 +74,8 @@ export async function POST(req: Request) {
       body: JSON.stringify({
         model: "dall-e-3",
         prompt: finalImagePrompt,
-        n: 1, // 生成 1 張
-        size: "1024x1024", // 高畫質正方形
+        n: 1, 
+        size: "1024x1024", 
         response_format: "url"
       })
     });
@@ -88,14 +86,21 @@ export async function POST(req: Request) {
     const imageUrl = openaiData.data[0].url;
 
     // ==========================================
-    // 階段 3：把所有成果打包傳回給前端
+    // 🌟 階段 3：終極解法 - 後端攔截圖片並轉成 Base64
+    // 這樣前端瀏覽器就絕對不會遇到 CORS 擋圖或無法下載的問題
     // ==========================================
+    const imageResponse = await fetch(imageUrl);
+    const arrayBuffer = await imageResponse.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const base64Image = `data:image/png;base64,${buffer.toString('base64')}`;
+
+    // 傳回 Base64 給前端
     return NextResponse.json({ 
       success: true, 
       optimizedTitle: parsedData.optimizedTitle || topic,
       socialCopy: parsedData.socialCopy, 
       imagePrompt: parsedData.imagePrompt,
-      imageUrl: imageUrl // 🌟 新增：把畫好的圖片網址傳出去
+      imageUrl: base64Image 
     });
 
   } catch (error: any) {
