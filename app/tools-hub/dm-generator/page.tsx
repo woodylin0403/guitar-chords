@@ -1,43 +1,61 @@
 'use client';
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Sparkles, Loader2, Download, CheckCircle2, Copy, ChevronRight, Image as ImageIcon, MapPin, Clock } from 'lucide-react';
+import { ArrowLeft, Sparkles, Loader2, Download, CheckCircle2, Copy, ImageIcon, Clock, Layout } from 'lucide-react';
 import html2canvas from 'html2canvas';
 
-// 🌟 全新的單一圖像海報組件 (圖文完美融合)
-const FinalPosterCard = ({ topic, timeLoc, details, imageUrl }: any) => {
+// 支援的格式列表
+const FORMATS = [
+  { id: 'IG_POST', name: 'IG 貼文 (1:1)', ratio: 'aspect-square', desc: '適合一般社群貼文' },
+  { id: 'IG_STORY', name: 'IG 限動 (9:16)', ratio: 'aspect-[9/16]', desc: '直式滿版視覺' },
+  { id: 'A4', name: 'A4 海報列印', ratio: 'aspect-[1/1.414]', desc: '適合實體張貼' },
+  { id: 'SLIDE', name: '投影片 (16:9)', ratio: 'aspect-[16/9]', desc: '橫式大螢幕投影' }
+];
+
+// 🌟 進化版海報排版組件
+const FinalPosterCard = ({ topic, timeLoc, details, imageUrl, formatInfo }: any) => {
   return (
-    <div id="poster-canvas" className="w-full aspect-[4/5] relative rounded-2xl overflow-hidden shadow-2xl group bg-slate-900 mx-auto max-w-sm border-4 border-slate-900">
-      {/* AI 生成的純淨底圖 */}
+    <div id="poster-canvas" className={`w-full relative overflow-hidden shadow-2xl group bg-black mx-auto border-4 border-slate-900 ${formatInfo.ratio}`}>
+      {/* 🌟 拔除 crossOrigin="anonymous"，解決 Base64 下載失敗問題 */}
       {imageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={imageUrl} alt="Background" className="absolute inset-0 w-full h-full object-cover" crossOrigin="anonymous" />
+        <img src={imageUrl} alt="Background" className="absolute inset-0 w-full h-full object-cover" />
       ) : (
-        <div className="absolute inset-0 flex items-center justify-center bg-slate-800 text-slate-500"><ImageIcon className="w-12 h-12 opacity-50" /></div>
+        <div className="absolute inset-0 flex items-center justify-center bg-slate-800"><ImageIcon className="w-12 h-12 text-slate-600" /></div>
       )}
 
-      {/* 為了確保文字清晰，加上一層由下往上的深色漸層 */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10"></div>
-
-      {/* 融合在圖片上的排版文字 */}
-      <div className="absolute inset-0 p-8 flex flex-col justify-end text-white z-10">
-        <h2 className="text-4xl font-[1000] leading-tight mb-4 tracking-tighter drop-shadow-lg" style={{ textShadow: '2px 4px 10px rgba(0,0,0,0.5)' }}>
-          {topic}
-        </h2>
-        
-        {/* 玻璃透視風資訊卡片 */}
-        <div className="bg-white/10 backdrop-blur-md border border-white/20 p-5 rounded-xl space-y-3 shadow-xl">
-          <div className="flex items-start gap-3">
-            <Clock className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-            <p className="text-sm font-bold text-slate-100">{timeLoc || '尚未設定時間地點'}</p>
+      {/* 專業雜誌風的文字疊加設計：上下黑色漸層，讓文字絕對清晰 */}
+      <div className="absolute inset-0 flex flex-col justify-between z-10 p-8 md:p-10">
+        {/* 上方裝飾 */}
+        <div className="w-full flex justify-between items-start">
+          <div className="bg-white text-black px-4 py-1.5 rounded-full text-xs font-[1000] tracking-widest uppercase shadow-lg">
+            Special Event
           </div>
-          {details && (
-            <div className="pt-3 border-t border-white/20">
-              <p className="text-xs font-medium text-amber-300 leading-relaxed drop-shadow-md">{details}</p>
+        </div>
+
+        {/* 下方資訊區塊 (使用更有設計感的排版) */}
+        <div className="space-y-6 w-full max-w-lg mt-auto">
+          {/* 大標題加上強烈文字陰影 */}
+          <h2 className="text-4xl md:text-5xl font-[1000] text-white leading-[1.1] tracking-tighter" 
+              style={{ textShadow: '0px 4px 20px rgba(0,0,0,0.8), 0px 1px 3px rgba(0,0,0,0.8)' }}>
+            {topic}
+          </h2>
+          
+          <div className="bg-black/60 backdrop-blur-md border-l-4 border-fuchsia-500 p-5 rounded-r-xl shadow-2xl">
+            <div className="flex items-center gap-3 mb-3">
+              <Clock className="w-5 h-5 text-fuchsia-400" />
+              <p className="text-sm md:text-base font-bold text-white tracking-wide">{timeLoc || '尚未設定時間地點'}</p>
             </div>
-          )}
+            {details && (
+              <p className="text-xs md:text-sm font-medium text-slate-200 leading-relaxed opacity-90">
+                {details}
+              </p>
+            )}
+          </div>
         </div>
       </div>
+      {/* 底部全域漸層保護 */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent pointer-events-none z-0"></div>
     </div>
   );
 };
@@ -46,7 +64,6 @@ export default function WizardDMGenerator() {
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   
-  // 狀態收集區
   const [description, setDescription] = useState("");
   const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
   const [suggestedStyles, setSuggestedStyles] = useState<string[]>([]);
@@ -54,6 +71,7 @@ export default function WizardDMGenerator() {
   const [selectedTopic, setSelectedTopic] = useState("");
   const [timeLoc, setTimeLoc] = useState("");
   const [details, setDetails] = useState("");
+  const [selectedFormat, setSelectedFormat] = useState(FORMATS[0].id); // 新增格式選擇
   const [selectedStyle, setSelectedStyle] = useState("");
 
   const [finalImage, setFinalImage] = useState("");
@@ -61,9 +79,6 @@ export default function WizardDMGenerator() {
   const [isCopied, setIsCopied] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  // --- API 呼叫函式 ---
-
-  // 步驟一：取得標題與風格建議
   const fetchSuggestions = async () => {
     if (!description) return alert("請先描述一下活動！");
     setIsLoading(true);
@@ -83,7 +98,6 @@ export default function WizardDMGenerator() {
     setIsLoading(false);
   };
 
-  // 步驟四：生成最終海報
   const generateFinalPoster = async () => {
     if (!selectedStyle) return alert("請選擇一種風格！");
     setIsLoading(true);
@@ -91,34 +105,45 @@ export default function WizardDMGenerator() {
       const res = await fetch('/api/generate-dm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'generate_final', topic: selectedTopic, timeLoc, details, style: selectedStyle })
+        body: JSON.stringify({ 
+          action: 'generate_final', 
+          topic: selectedTopic, 
+          timeLoc, 
+          details, 
+          style: selectedStyle,
+          format: selectedFormat // 傳送格式給後端
+        })
       });
       const data = await res.json();
       if (data.success) {
         setFinalImage(data.imageUrl);
         setFinalCopy(data.socialCopy);
-        setStep(5);
+        setStep(4);
       } else throw new Error(data.error);
     } catch (e: any) { alert("發生錯誤：" + e.message); }
     setIsLoading(false);
   };
 
-  // --- 下載海報 ---
   const downloadImage = async () => {
     const element = document.getElementById('poster-canvas');
     if (!element) return;
     setIsDownloading(true);
     try {
-      const canvas = await html2canvas(element, { scale: 3, useCORS: true, backgroundColor: '#ffffff' });
+      const canvas = await html2canvas(element, { 
+        scale: 3, 
+        useCORS: true, 
+        backgroundColor: '#000000' 
+      });
       const link = document.createElement('a');
       link.href = canvas.toDataURL('image/jpeg', 1.0);
       link.download = `${selectedTopic}-海報.jpg`;
       link.click();
-    } catch (e) { alert("下載失敗"); }
+    } catch (e) { alert("下載失敗，請檢查瀏覽器權限"); }
     setIsDownloading(false);
   };
 
-  // --- 介面渲染 ---
+  const currentFormatInfo = FORMATS.find(f => f.id === selectedFormat);
+
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900 pb-20 font-sans">
       <nav className="max-w-4xl mx-auto px-6 py-8">
@@ -127,111 +152,87 @@ export default function WizardDMGenerator() {
         </Link>
       </nav>
 
-      <div className="max-w-3xl mx-auto px-6">
-        {/* 進度條 */}
-        <div className="flex items-center justify-between mb-10 relative before:absolute before:inset-0 before:top-1/2 before:-translate-y-1/2 before:h-1 before:bg-slate-200 before:-z-10">
-          {[1, 2, 3, 4, 5].map(num => (
-            <div key={num} className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all ${step >= num ? 'bg-fuchsia-600 text-white shadow-md shadow-fuchsia-200' : 'bg-slate-100 text-slate-400 border-2 border-white'}`}>
-              {num}
-            </div>
-          ))}
-        </div>
-
-        {/* 內容區塊 */}
-        <div className="bg-white rounded-[2rem] p-8 md:p-12 shadow-xl shadow-slate-200/50 border border-slate-100 min-h-[400px] flex flex-col">
+      <div className="max-w-4xl mx-auto px-6">
+        <div className="bg-white rounded-[2rem] p-8 md:p-12 shadow-xl border border-slate-100 min-h-[500px]">
           
-          {/* Step 1: 活動描述 */}
           {step === 1 && (
-            <div className="space-y-6 flex-1 animate-in fade-in slide-in-from-bottom-4">
-              <h2 className="text-3xl font-bold tracking-tight text-slate-800">第一步：這是一個什麼樣的活動？</h2>
-              <p className="text-slate-500">請用口語的方式告訴我，我們將用 AI 為你量身打造主題。</p>
-              <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="w-full bg-slate-50 border border-slate-200 p-6 rounded-2xl focus:ring-2 focus:ring-fuchsia-500/20 outline-none h-40 text-lg resize-none" placeholder="例如：這週五晚上小組聚會，我們要吃披薩、玩桌遊，順便幫壽星慶生..." />
-              <button onClick={fetchSuggestions} disabled={isLoading || !description} className="w-full py-4 bg-slate-900 text-white font-bold text-lg rounded-xl hover:bg-slate-800 transition-all flex justify-center items-center gap-2">
-                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "下一步：讓 AI 想標題"}
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+              <h2 className="text-3xl font-bold text-slate-800">1. 這是一個什麼樣的活動？</h2>
+              <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="w-full bg-slate-50 border border-slate-200 p-6 rounded-2xl focus:ring-2 focus:ring-fuchsia-500/20 outline-none h-32 text-lg" placeholder="例如：這週五晚上小組聚會，要吃披薩..." />
+              <button onClick={fetchSuggestions} disabled={isLoading || !description} className="w-full py-4 bg-slate-900 text-white font-bold text-lg rounded-xl flex justify-center items-center gap-2 hover:bg-slate-800">
+                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "下一步"}
               </button>
             </div>
           )}
 
-          {/* Step 2: 選擇標題 */}
           {step === 2 && (
-            <div className="space-y-6 flex-1 animate-in fade-in slide-in-from-right-4">
-              <h2 className="text-3xl font-bold tracking-tight text-slate-800">第二步：選擇一個最棒的標題</h2>
-              <p className="text-slate-500">我們為你發想了三個主題，請點擊你最喜歡的一個：</p>
-              <div className="grid gap-4">
+            <div className="space-y-6 animate-in fade-in">
+              <h2 className="text-3xl font-bold text-slate-800">2. 選擇標題與填寫資訊</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 {suggestedTitles.map((title, i) => (
-                  <button key={i} onClick={() => { setSelectedTopic(title); setStep(3); }} className="text-left p-6 rounded-2xl border-2 border-slate-100 hover:border-fuchsia-500 hover:bg-fuchsia-50 transition-all group">
-                    <h3 className="text-xl font-bold text-slate-800 group-hover:text-fuchsia-700">{title}</h3>
+                  <button key={i} onClick={() => setSelectedTopic(title)} className={`p-4 rounded-xl border-2 text-left transition-all ${selectedTopic === title ? 'border-fuchsia-600 bg-fuchsia-50' : 'border-slate-100 hover:border-slate-300'}`}>
+                    <span className="font-bold text-slate-800">{title}</span>
                   </button>
                 ))}
               </div>
-              <button onClick={() => setStep(1)} className="text-slate-400 text-sm font-medium hover:text-slate-600">返回修改描述</button>
+              <input type="text" value={timeLoc} onChange={(e) => setTimeLoc(e.target.value)} className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl outline-none" placeholder="時間與地點 (例如：12/25 19:30 @S307)" />
+              <textarea value={details} onChange={(e) => setDetails(e.target.value)} className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl outline-none h-24" placeholder="特色細節 (例如：限量50份雞排！)" />
+              <button onClick={() => { if(selectedTopic && timeLoc) setStep(3); else alert("請選擇標題並填寫時間！"); }} className="w-full py-4 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800">下一步</button>
             </div>
           )}
 
-          {/* Step 3: 詳細資訊 */}
           {step === 3 && (
-            <div className="space-y-6 flex-1 animate-in fade-in slide-in-from-right-4">
-              <h2 className="text-3xl font-bold tracking-tight text-slate-800">第三步：重要資訊與特色</h2>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-bold text-slate-500 mb-2">時間與地點</label>
-                  <input type="text" value={timeLoc} onChange={(e) => setTimeLoc(e.target.value)} className="w-full bg-slate-50 border border-slate-200 px-5 py-4 rounded-xl outline-none font-medium" placeholder="例如：12/25 (五) 19:30 @S307副堂" />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-slate-500 mb-2">必備特色 (限量、條件、亮點)</label>
-                  <textarea value={details} onChange={(e) => setDetails(e.target.value)} className="w-full bg-slate-50 border border-slate-200 px-5 py-4 rounded-xl outline-none font-medium h-24" placeholder="例如：前 50 名報名送現炸大雞排！記得帶交換禮物。" />
-                </div>
-              </div>
-              <button onClick={() => { if(timeLoc) setStep(4); else alert("請填寫時間地點！"); }} className="w-full py-4 bg-slate-900 text-white font-bold text-lg rounded-xl hover:bg-slate-800 transition-all flex justify-center items-center">
-                下一步：選擇視覺風格
-              </button>
-            </div>
-          )}
-
-          {/* Step 4: 選擇風格 */}
-          {step === 4 && (
-            <div className="space-y-6 flex-1 animate-in fade-in slide-in-from-right-4">
-              <h2 className="text-3xl font-bold tracking-tight text-slate-800">第四步：定調海報視覺風格</h2>
-              <p className="text-slate-500">AI 根據你的活動，推薦了以下三種最適合的設計風格：</p>
-              <div className="grid gap-4">
-                {suggestedStyles.map((style, i) => (
-                  <button key={i} onClick={() => setSelectedStyle(style)} className={`text-left p-6 rounded-2xl border-2 transition-all ${selectedStyle === style ? 'border-fuchsia-600 bg-fuchsia-50' : 'border-slate-100 hover:border-fuchsia-300'}`}>
-                    <h3 className="text-lg font-bold text-slate-800">{style}</h3>
+            <div className="space-y-6 animate-in fade-in">
+              <h2 className="text-3xl font-bold text-slate-800">3. 決定尺寸與風格</h2>
+              
+              <h3 className="text-sm font-bold text-slate-500 uppercase">版面格式</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {FORMATS.map(f => (
+                  <button key={f.id} onClick={() => setSelectedFormat(f.id)} className={`p-4 rounded-xl border-2 text-left transition-all ${selectedFormat === f.id ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-100 bg-white'}`}>
+                    <div className="font-bold text-sm mb-1">{f.name}</div>
+                    <div className={`text-[10px] ${selectedFormat === f.id ? 'text-slate-300' : 'text-slate-400'}`}>{f.desc}</div>
                   </button>
                 ))}
               </div>
-              <button onClick={generateFinalPoster} disabled={isLoading || !selectedStyle} className="w-full py-5 bg-gradient-to-r from-fuchsia-600 to-orange-500 text-white font-bold text-lg rounded-xl shadow-lg shadow-fuchsia-500/30 hover:-translate-y-1 transition-all flex justify-center items-center">
-                {isLoading ? <span className="flex items-center gap-2"><Loader2 className="w-5 h-5 animate-spin" /> AI 畫師與文案處理中 (約 15 秒)...</span> : "✨ 產生最終圖文合一海報"}
+
+              <h3 className="text-sm font-bold text-slate-500 uppercase pt-4">視覺風格</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {suggestedStyles.map((style, i) => (
+                  <button key={i} onClick={() => setSelectedStyle(style)} className={`p-4 rounded-xl border-2 text-left transition-all ${selectedStyle === style ? 'border-fuchsia-600 bg-fuchsia-50 font-bold text-fuchsia-800' : 'border-slate-100 font-bold text-slate-700 hover:border-slate-300'}`}>
+                    {style}
+                  </button>
+                ))}
+              </div>
+
+              <button onClick={generateFinalPoster} disabled={isLoading || !selectedStyle} className="w-full py-5 mt-6 bg-gradient-to-r from-fuchsia-600 to-orange-500 text-white font-bold text-lg rounded-xl shadow-lg hover:-translate-y-1 transition-all flex justify-center items-center">
+                {isLoading ? <span className="flex items-center gap-2"><Loader2 className="w-5 h-5 animate-spin" /> 啟動 HD 畫質運算中 (約需 15-20 秒)...</span> : "✨ 產生專業海報"}
               </button>
             </div>
           )}
 
-          {/* Step 5: 最終成果 */}
-          {step === 5 && (
-            <div className="flex flex-col md:flex-row gap-8 animate-in fade-in zoom-in-95">
-              
-              {/* 左側：合成好的單一圖檔 */}
-              <div className="flex-1 flex flex-col items-center space-y-6">
-                <FinalPosterCard topic={selectedTopic} timeLoc={timeLoc} details={details} imageUrl={finalImage} />
-                <button onClick={downloadImage} disabled={isDownloading} className="w-full max-w-sm py-4 bg-slate-900 text-white font-bold rounded-xl flex justify-center items-center gap-2 hover:bg-slate-800 transition-colors shadow-lg">
-                  {isDownloading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />} 下載這張圖文合一海報
+          {step === 4 && (
+            <div className="flex flex-col lg:flex-row gap-8 animate-in zoom-in-95">
+              <div className="flex-1 flex flex-col items-center space-y-6 w-full">
+                <div className="w-full max-w-md mx-auto">
+                  <FinalPosterCard topic={selectedTopic} timeLoc={timeLoc} details={details} imageUrl={finalImage} formatInfo={currentFormatInfo} />
+                </div>
+                <button onClick={downloadImage} disabled={isDownloading} className="w-full max-w-md py-4 bg-slate-900 text-white font-bold rounded-xl flex justify-center items-center gap-2 hover:bg-slate-800 transition-colors shadow-lg">
+                  {isDownloading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />} 下載此海報
                 </button>
               </div>
 
-              {/* 右側：社群文案 */}
-              <div className="flex-1 bg-slate-50 rounded-2xl p-6 border border-slate-200 relative">
-                <button onClick={() => { navigator.clipboard.writeText(finalCopy); setIsCopied(true); setTimeout(() => setIsCopied(false), 2000); }} className="absolute top-4 right-4 p-2 bg-white rounded-lg shadow-sm hover:text-fuchsia-600 transition-colors">
+              <div className="flex-1 bg-slate-50 rounded-2xl p-6 border border-slate-200 relative lg:max-w-sm h-fit">
+                <button onClick={() => { navigator.clipboard.writeText(finalCopy); setIsCopied(true); setTimeout(() => setIsCopied(false), 2000); }} className="absolute top-4 right-4 p-2 bg-white rounded-lg shadow-sm">
                   {isCopied ? <CheckCircle2 className="w-5 h-5 text-emerald-500" /> : <Copy className="w-5 h-5 text-slate-500" />}
                 </button>
-                <h3 className="text-sm font-bold text-slate-500 mb-4 flex items-center gap-2"><Sparkles className="w-4 h-4 text-fuchsia-500" /> 專屬社群邀請文案</h3>
-                <div className="whitespace-pre-wrap text-slate-700 leading-relaxed font-medium">
+                <h3 className="text-sm font-bold text-slate-500 mb-4 flex items-center gap-2"><Sparkles className="w-4 h-4 text-fuchsia-500" /> 社群邀請文案</h3>
+                <div className="whitespace-pre-wrap text-slate-700 leading-relaxed font-medium text-sm">
                   {finalCopy}
                 </div>
-                <button onClick={() => { setStep(1); setDescription(""); setFinalImage(""); }} className="mt-8 text-sm font-bold text-fuchsia-600 hover:underline">
-                  重新製作另一份 DM
+                <button onClick={() => { setStep(1); setDescription(""); setFinalImage(""); setSelectedStyle(""); }} className="mt-8 text-sm font-bold text-fuchsia-600 hover:underline w-full text-center">
+                  重新製作一份
                 </button>
               </div>
-
             </div>
           )}
 
