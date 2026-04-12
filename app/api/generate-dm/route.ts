@@ -5,11 +5,16 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { topic, timeLoc, details, styles, format } = body;
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json({ success: false, error: "API Key 未設定" }, { status: 500 });
+    const geminiApiKey = process.env.GEMINI_API_KEY;
+    const openaiApiKey = process.env.OPENAI_API_KEY;
+
+    if (!geminiApiKey || !openaiApiKey) {
+      return NextResponse.json({ success: false, error: "API Key 未設定，請確認 Gemini 與 OpenAI 鑰匙皆已填寫" }, { status: 500 });
     }
 
+    // ==========================================
+    // 階段 1：呼叫 Gemini (大腦) 寫文案與生圖提示詞
+    // ==========================================
     const prompt = `
     你是一位專門為教會和社群團體設計創意行銷文案的行銷大師。
     請根據以下資訊，幫我完成三個任務：
@@ -25,11 +30,12 @@ export async function POST(req: Request) {
     文案要求：要有鉤子、重點清晰、大量表情符號、明確的行動呼籲。
 
     任務三：AI 繪圖提示詞 (英文)
-    一句給美宣參考的 Midjourney 繪圖提示詞，加上參數「--ar 16:9」或「--ar 4:5」。
+    請寫一段給 DALL-E 3 的精準英文提示詞。
+    核心重點：畫面中【絕對不要包含任何文字、字母或數字】 (No text, no typography, pure illustration)。
+    風格需符合主題，若主題歡樂請用 Pop art (普普風) 或是 3D 渲染風格。
 
     【極度重要指令】：
-    你只能回傳合法的 JSON 格式，不要包含任何 markdown 標記 (如 \`\`\`json)，也不要有任何前後文解釋。
-    格式必須嚴格如下：
+    你只能回傳合法的 JSON 格式。
     {
       "optimizedTitle": "...",
       "socialCopy": "...",
@@ -37,47 +43,59 @@ export async function POST(req: Request) {
     }
     `;
 
-    // 🌟 最終通關關鍵：舊模型已淘汰，這裡換成最新的 gemini-2.5-flash
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+    // 呼叫 Gemini 2.5 模型
+    const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: { responseMimeType: "application/json" }
       })
     });
 
-    const data = await response.json();
+    const geminiData = await geminiResponse.json();
+    if (!geminiResponse.ok) throw new Error(geminiData.error?.message || "Gemini 發生錯誤");
 
-    // 攔截 Google 伺服器的真實錯誤
-    if (!response.ok) {
-      console.error("Google API 錯誤:", data);
-      
-      // 如果 2.5 也找不到，自動提示備用模型
-      if (data.error?.message?.includes("not found")) {
-         throw new Error("模型代號錯誤。請將程式碼中的 'gemini-2.5-flash' 改為 'gemini-2.0-flash' 試試看！");
-      }
-      throw new Error(data.error?.message || "Google 伺服器拒絕連線");
-    }
-
-    // 取得 AI 回傳的文字
-    const responseText = data.candidates[0].content.parts[0].text;
-
-    // 雙重防呆：確保抓到 JSON
+    const responseText = geminiData.candidates[0].content.parts[0].text;
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error("AI 回傳格式異常，請重新點擊產生");
-    }
-
+    if (!jsonMatch) throw new Error("Gemini 回傳格式異常");
     const parsedData = JSON.parse(jsonMatch[0]);
 
+    // ==========================================
+    // 階段 2：呼叫 OpenAI (畫筆) 根據提示詞畫圖
+    // ==========================================
+    // 我們在結尾再次強調「不要有文字」，確保背景乾淨
+    const finalImagePrompt = parsedData.imagePrompt + " IMPORTANT: Ensure there is absolutely NO text, no typography, and no words in the image. It must be a pure illustration.";
+
+    const openaiRes = await fetch('https://api.openai.com/v1/images/generations', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${openaiApiKey}`
+      },
+      body: JSON.stringify({
+        model: "dall-e-3",
+        prompt: finalImagePrompt,
+        n: 1, // 生成 1 張
+        size: "1024x1024", // 高畫質正方形
+        response_format: "url"
+      })
+    });
+
+    const openaiData = await openaiRes.json();
+    if (!openaiRes.ok) throw new Error(openaiData.error?.message || "OpenAI 畫圖發生錯誤");
+
+    const imageUrl = openaiData.data[0].url;
+
+    // ==========================================
+    // 階段 3：把所有成果打包傳回給前端
+    // ==========================================
     return NextResponse.json({ 
       success: true, 
       optimizedTitle: parsedData.optimizedTitle || topic,
       socialCopy: parsedData.socialCopy, 
-      imagePrompt: parsedData.imagePrompt 
+      imagePrompt: parsedData.imagePrompt,
+      imageUrl: imageUrl // 🌟 新增：把畫好的圖片網址傳出去
     });
 
   } catch (error: any) {
