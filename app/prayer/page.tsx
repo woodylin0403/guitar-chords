@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, MessageCircleHeart, Sparkles, ArrowDown, Lightbulb } from 'lucide-react'; // 🌟 新增 Lightbulb 圖示
+import { ArrowLeft, MessageCircleHeart, Sparkles, ArrowDown, Lightbulb } from 'lucide-react';
 
 // 平滑出現的動畫 Hook
 function useOnScreen(options: IntersectionObserverInit) {
@@ -31,6 +31,24 @@ function FadeSection({ children }: { children: React.ReactNode }) {
   );
 }
 
+// 🌟 新增：過場引導提問卡片組件
+function TransitionQuestion({ question, subtext, iconColor, bgHover, borderStyle }: any) {
+  const [ref, isVisible] = useOnScreen({ threshold: 0.5 });
+  return (
+    <div ref={ref} className={`max-w-3xl mx-auto w-full px-6 -my-10 relative z-20 transition-all duration-1000 transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+      <div className={`bg-white/95 backdrop-blur-md p-6 md:p-8 rounded-3xl shadow-[0_15px_35px_rgb(0,0,0,0.05)] border-t-4 ${borderStyle} flex flex-col md:flex-row items-center gap-6 text-center md:text-left hover:-translate-y-1 transition-transform duration-500`}>
+        <div className={`w-14 h-14 rounded-full ${bgHover} flex items-center justify-center shrink-0`}>
+          <Lightbulb className={`w-7 h-7 ${iconColor}`} />
+        </div>
+        <div>
+          <h3 className="text-lg md:text-xl font-bold text-stone-800 mb-2 tracking-tight">{question}</h3>
+          <p className="text-sm md:text-base text-stone-500 font-medium leading-relaxed">{subtext}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function PrayerTool() {
   const router = useRouter(); 
   
@@ -40,10 +58,8 @@ export default function PrayerTool() {
 
   const handleSubmit = () => {
     if (prayerText.trim() === '') return;
-    
     setIsRedirecting(true);
     const encodedPrayer = encodeURIComponent(prayerText);
-    
     setTimeout(() => {
       router.push(`/letters?prayer=${encodedPrayer}`);
     }, 500); 
@@ -57,11 +73,9 @@ export default function PrayerTool() {
         <title>禱告的大能 | 烏鴉的嗎哪</title>
       </Head>
 
-      {/* 明亮、清爽的背景光暈 */}
       <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[50%] bg-cyan-400/15 rounded-full blur-[120px] pointer-events-none"></div>
       <div className="absolute bottom-[20%] right-[-10%] w-[50%] h-[40%] bg-blue-400/10 rounded-full blur-[120px] pointer-events-none"></div>
 
-      {/* 水晶質感導覽列 */}
       <nav className="p-4 md:p-6 lg:px-8 lg:py-8 max-w-6xl mx-auto flex justify-start relative z-50 sticky top-0">
         <Link href="/christianity" className="group inline-flex items-center gap-2 px-5 py-3 bg-white/70 backdrop-blur-xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-full text-stone-500 hover:text-stone-900 transition-all">
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform duration-300" /> 
@@ -70,7 +84,7 @@ export default function PrayerTool() {
       </nav>
 
       {/* === 0. 首頁封面區 === */}
-      <section className="min-h-[85vh] flex flex-col justify-center items-center px-6 relative text-center">
+      <section className="min-h-[85vh] flex flex-col justify-center items-center px-6 relative text-center pb-24">
         <FadeSection>
           <div className="z-10 max-w-2xl w-full">
             <div className="w-20 h-20 rounded-[1.5rem] bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center mx-auto mb-8 shadow-xl shadow-cyan-500/20 transform hover:scale-105 transition-transform duration-500">
@@ -81,8 +95,7 @@ export default function PrayerTool() {
               禱告的大能
             </h1>
             
-            {/* 詩歌與金句質感卡片 */}
-            <div className="bg-white/80 backdrop-blur-xl border border-white shadow-[0_20px_40px_rgb(0,0,0,0.03)] p-8 md:p-12 rounded-[2.5rem] text-left mb-12 relative overflow-hidden">
+            <div className="bg-white/80 backdrop-blur-xl border border-white shadow-[0_20px_40px_rgb(0,0,0,0.03)] p-8 md:p-12 rounded-[2.5rem] text-left relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-50 rounded-bl-full -z-10"></div>
               
               <div className="mb-10 pb-10 border-b border-stone-100">
@@ -101,25 +114,28 @@ export default function PrayerTool() {
               </div>
               
               <div className="bg-slate-50/50 p-6 md:p-8 rounded-2xl border-l-4 border-cyan-400 text-left">
-                 {/* 🌟 1. 修改為完整的馬太福音經文 */}
                  <p className="text-lg md:text-xl font-bold leading-relaxed mb-4 text-stone-800 tracking-tight">
                    「你們祈求，就給你們；尋找，就尋見；叩門，就給你們開門。因為凡祈求的，就得著；尋找的，就尋見；叩門的，就給他開門。<br/><br/>
-                   你們中間誰有兒子求餅，反給他石頭呢？求魚，反給他蛇呢？你們雖然不好，尚且知道拿好東西給兒女，何況你們在天上的父，豈不更把好東西給求他的人嗎？」
+                   你們雖然不好，尚且知道拿好東西給兒女，何況你們在天上的父，豈不更把好東西給求他的人嗎？」
                  </p>
                  <p className="text-base text-stone-400 font-mono italic">— 馬太福音 7:7-11</p>
               </div>
             </div>
           </div>
         </FadeSection>
-
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce text-stone-400 flex flex-col items-center opacity-70">
-          <span className="text-[10px] tracking-[0.2em] mb-2 font-bold uppercase">探索禱告的旅程</span>
-          <ArrowDown className="w-5 h-5" />
-        </div>
       </section>
 
+      {/* 🌟 提問 1：引導至「祈求」 */}
+      <TransitionQuestion 
+        question="當你遇到靠自己無法解決的壓力或困難時，你通常會向誰求助？" 
+        subtext="每個人都會遇到跨不過去的難關。基督教的『禱告』，其實就是把這個求助的對象，轉向那位願意聽你說話的天父。"
+        iconColor="text-cyan-500"
+        bgHover="bg-cyan-50"
+        borderStyle="border-cyan-400"
+      />
+
       {/* === 1. 祈求 (Ask) === */}
-      <section className="min-h-[80vh] flex flex-col justify-center items-center py-24 px-6 relative">
+      <section className="min-h-[70vh] flex flex-col justify-center items-center py-24 px-6 relative">
         <FadeSection>
           <div className="w-full h-[200px] flex justify-center items-center relative mx-auto mb-10">
             <svg viewBox="0 0 400 250" className="w-full h-full max-w-[500px] overflow-visible mx-auto">
@@ -130,7 +146,7 @@ export default function PrayerTool() {
               <path d="M180 80 Q 200 50, 220 80" fill="none" stroke="#22d3ee" strokeWidth="4" opacity="0.3"/>
             </svg>
           </div>
-          <div className="text-center max-w-2xl mx-auto z-10 px-4">
+          <div className="text-center max-w-2xl mx-auto px-4">
             <h2 className="text-3xl md:text-4xl font-extrabold mb-8 text-stone-900 tracking-tight">第一步：建立信心的根基 <span className="text-cyan-500 px-1">(祈求)</span></h2>
             <ul className="space-y-5 text-lg md:text-xl text-stone-600 font-medium mb-8 text-left max-w-xl mx-auto">
               <li className="flex gap-4 items-start"><span className="text-cyan-400 font-black mt-1">•</span> <span><strong className="text-stone-900">信心的約：</strong>神透過應許，將祂自己與我們緊緊綁在一起。</span></li>
@@ -142,8 +158,17 @@ export default function PrayerTool() {
         </FadeSection>
       </section>
 
+      {/* 🌟 提問 2：引導至「尋找」 */}
+      <TransitionQuestion 
+        question="你有沒有過這樣的經驗：雖然一開始沒有立刻得到想要的結果，但在這個『等待與尋找』的過程中，反而學到了更寶貴的一課？" 
+        subtext="有時候，我們求的東西不一定會馬上出現。禱告也是如此，比起直接給答案，天父更看重我們在這過程中與祂建立的關係。"
+        iconColor="text-blue-500"
+        bgHover="bg-blue-50"
+        borderStyle="border-blue-400"
+      />
+
       {/* === 2. 尋找 (Seek) === */}
-      <section className="min-h-[80vh] flex flex-col justify-center items-center py-24 px-6 relative">
+      <section className="min-h-[70vh] flex flex-col justify-center items-center py-24 px-6 relative">
         <FadeSection>
           <div className="w-full h-[200px] flex justify-center items-center relative mx-auto mb-10">
             <svg viewBox="0 0 400 250" className="w-full h-full max-w-[500px] overflow-visible mx-auto">
@@ -155,7 +180,7 @@ export default function PrayerTool() {
               <line x1="260" y1="120" x2="300" y2="120" stroke="#60a5fa" strokeWidth="6" strokeLinecap="round" opacity="0.6"/>
             </svg>
           </div>
-          <div className="text-center max-w-2xl mx-auto z-10 px-4">
+          <div className="text-center max-w-2xl mx-auto px-4">
             <h2 className="text-3xl md:text-4xl font-extrabold mb-8 text-stone-900 tracking-tight">第二步：經歷信心的過程 <span className="text-blue-500 px-1">(尋找)</span></h2>
             <ul className="space-y-5 text-lg md:text-xl text-stone-600 font-medium mb-8 text-left max-w-xl mx-auto">
               <li className="flex gap-4 items-start"><span className="text-blue-400 font-black mt-1">•</span> <span><strong className="text-stone-900">不只是求：</strong>不再只停留在求好處，而是主動尋求認識神、親近神。</span></li>
@@ -167,15 +192,23 @@ export default function PrayerTool() {
         </FadeSection>
       </section>
 
+      {/* 🌟 提問 3：引導至「叩門」 */}
+      <TransitionQuestion 
+        question="在你身邊，有沒有一種朋友，你找他不是為了請他幫忙做事，而只是單純覺得『有他在身邊真好』？" 
+        subtext="叩門，代表我們想進入對方的世界。禱告的最高境界，不是為了解決問題，而是渴望擁有天父的陪伴與同在。"
+        iconColor="text-violet-500"
+        bgHover="bg-violet-50"
+        borderStyle="border-violet-400"
+      />
+
       {/* === 3. 叩門 (Knock) === */}
-      <section className="min-h-[80vh] flex flex-col justify-center items-center py-24 px-6 relative">
+      <section className="min-h-[70vh] flex flex-col justify-center items-center py-24 px-6 relative">
         <FadeSection>
           <div className="w-full h-[200px] flex justify-center items-center relative mx-auto mb-10">
             <svg viewBox="0 0 400 250" className="w-full h-full max-w-[500px] overflow-visible mx-auto">
               <rect x="140" y="50" width="120" height="160" fill="none" stroke="#d6d3d1" strokeWidth="6" rx="4" />
               <polygon points="140,50 220,30 220,190 140,210" fill="#a855f7" opacity="0.1" /> 
               <polygon points="140,50 220,30 220,190 140,210" fill="none" stroke="#a855f7" strokeWidth="4" />
-              
               <path d="M 220 30 L 320 10 L 320 230 L 220 190 Z" fill="url(#light-gradient)" opacity="0.3"/>
               <defs>
                   <linearGradient id="light-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -186,7 +219,7 @@ export default function PrayerTool() {
               <circle cx="205" cy="130" r="6" fill="#a855f7" />
             </svg>
           </div>
-          <div className="text-center max-w-2xl mx-auto z-10 px-4">
+          <div className="text-center max-w-2xl mx-auto px-4">
             <h2 className="text-3xl md:text-4xl font-extrabold mb-8 text-stone-900 tracking-tight">第三步：渴慕天父的同在 <span className="text-violet-500 px-1">(叩門)</span></h2>
             <ul className="space-y-5 text-lg md:text-xl text-stone-600 font-medium mb-8 text-left max-w-xl mx-auto">
               <li className="flex gap-4 items-start"><span className="text-violet-400 font-black mt-1">•</span> <span><strong className="text-stone-900">遇見神：</strong>不單單滿足於問題被解決，更是渴望遇見神自己。</span></li>
@@ -198,8 +231,17 @@ export default function PrayerTool() {
         </FadeSection>
       </section>
 
+      {/* 🌟 提問 4：引導至「好東西」 */}
+      <TransitionQuestion 
+        question="回想小時候，父母是否曾經拒絕過你的要求？現在長大回頭看，會不會覺得當時的拒絕，其實是為了要把更適合、更好的留給你？" 
+        subtext="我們想要的，不一定是對我們最好的。但天父承諾，只要我們願意祈求，祂給的一定是對我們生命『最好的東西』。"
+        iconColor="text-teal-500"
+        bgHover="bg-teal-50"
+        borderStyle="border-teal-400"
+      />
+
       {/* === 4. 明白天父的好東西 === */}
-      <section className="min-h-[80vh] flex flex-col justify-center items-center py-24 px-6 relative">
+      <section className="min-h-[70vh] flex flex-col justify-center items-center py-24 px-6 relative">
         <FadeSection>
           <div className="w-full h-[200px] flex justify-center items-center relative mx-auto mb-10">
             <svg viewBox="0 0 400 250" className="w-full h-full max-w-[500px] overflow-visible mx-auto">
@@ -209,63 +251,27 @@ export default function PrayerTool() {
               <line x1="180" y1="95" x2="220" y2="95" stroke="#14b8a6" strokeWidth="6" strokeLinecap="round"/>
             </svg>
           </div>
-          <div className="text-center max-w-2xl mx-auto z-10 px-4">
+          <div className="text-center max-w-2xl mx-auto px-4">
             <h2 className="text-3xl md:text-4xl font-extrabold mb-8 text-stone-900 tracking-tight">關鍵：明白天父的 <span className="text-teal-500 px-1">好東西</span></h2>
             <ul className="space-y-5 text-lg md:text-xl text-stone-600 font-medium mb-8 text-left max-w-xl mx-auto">
               <li className="flex gap-4 items-start"><span className="text-teal-400 font-black mt-1">•</span> <span><strong className="text-stone-900">相同的 DNA：</strong>禱告不是法律規定，而是出自生命與愛的連結，我們是祂的兒女。</span></li>
-              <li className="flex gap-4 items-start"><span className="text-teal-400 font-bold mt-1">•</span> <span><strong className="text-stone-900">看似堅硬的恩典：</strong>神給的看似辛苦（如耶穌的十字架），其實是生命最需要的養分。</span></li>
-              <li className="flex gap-4 items-start"><span className="text-teal-400 font-bold mt-1">•</span> <span><strong className="text-stone-900">永恆的預備：</strong>地上的父親為今生打算，但天父為我們預備的是永生與得勝。</span></li>
+              <li className="flex gap-4 items-start"><span className="text-teal-400 font-bold mt-1">•</span> <span><strong className="text-stone-900">看似堅硬的恩典：</strong>神給的看似辛苦，其實是生命成長最需要的養分。</span></li>
+              <li className="flex gap-4 items-start"><span className="text-teal-400 font-bold mt-1">•</span> <span><strong className="text-stone-900">永恆的預備：</strong>地上的父親為今生打算，但天父為我們預備的是永生的平靜與得勝。</span></li>
             </ul>
             <p className="text-xl text-teal-600 font-bold">祂給的不只是短暫的滿足，而是永恆最美好的禮物。</p>
           </div>
         </FadeSection>
       </section>
 
-      {/* 🌟 2. 新增：靜心思考區塊 (給慕道友的回應與反思) */}
-      <section className="py-24 px-6 relative mt-10">
-        <div className="absolute inset-0 bg-stone-100/50 skew-y-3 -z-10"></div>
-        <FadeSection>
-          <div className="max-w-4xl mx-auto w-full">
-            <div className="flex flex-col items-center justify-center mb-12 text-center">
-              <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mb-6">
-                <Lightbulb className="w-8 h-8 text-amber-500" />
-              </div>
-              <h2 className="text-3xl md:text-4xl font-extrabold text-stone-900 tracking-tight">靜心思考</h2>
-              <p className="text-stone-500 mt-4 text-lg">在真正開口禱告之前，不妨先問問自己這三個問題</p>
-            </div>
-            
-            <div className="grid md:grid-cols-3 gap-6">
-              <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-stone-100 hover:shadow-xl hover:border-cyan-200 transition-all duration-300">
-                <span className="text-4xl font-black text-cyan-100 mb-4 block">01</span>
-                <p className="text-xl font-bold text-stone-800 mb-4 tracking-tight">你覺得「禱告」是什麼？</p>
-                <p className="text-stone-600 leading-relaxed font-medium">是像對著購物清單許願、向機器人下指令，還是與一位深愛你的天父進行真實的對話？</p>
-              </div>
-              
-              <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-stone-100 hover:shadow-xl hover:border-blue-200 transition-all duration-300">
-                <span className="text-4xl font-black text-blue-100 mb-4 block">02</span>
-                <p className="text-xl font-bold text-stone-800 mb-4 tracking-tight">目前的缺口在哪裡？</p>
-                <p className="text-stone-600 leading-relaxed font-medium">現在的你，最需要向天父「祈求」、「尋找」或「叩門」的事情是什麼？是平安、方向，還是力量？</p>
-              </div>
-              
-              <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-stone-100 hover:shadow-xl hover:border-teal-200 transition-all duration-300">
-                <span className="text-4xl font-black text-teal-100 mb-4 block">03</span>
-                <p className="text-xl font-bold text-stone-800 mb-4 tracking-tight">關於「好東西」</p>
-                <p className="text-stone-600 leading-relaxed font-medium">如果你確信天父真的會把「最好的安排」給你（即使當下看不懂），這會如何改變你面對眼前困難的態度？</p>
-              </div>
-            </div>
-          </div>
-        </FadeSection>
-      </section>
-
       {/* === 5. 決志行動呼籲 === */}
-      <section className="min-h-[90vh] flex flex-col justify-center items-center py-24 px-6 relative">
+      <section className="min-h-[90vh] flex flex-col justify-center items-center py-24 px-6 relative mt-10">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-cyan-400/10 rounded-full blur-[200px] pointer-events-none"></div>
         <FadeSection>
           <div className="text-center max-w-2xl relative z-10 bg-white/60 p-10 md:p-16 rounded-[3rem] border border-white backdrop-blur-xl shadow-[0_20px_60px_rgb(0,0,0,0.05)]">
             <h2 className="text-4xl md:text-5xl font-extrabold mb-8 text-stone-900 tracking-tight">現在，換你來敲門了</h2>
             <p className="text-lg md:text-xl text-stone-500 mb-12 leading-relaxed font-medium">
               天父正在等候聽你的聲音。<br/>不論是你自己正面臨的挑戰、需要做的決定，或是你心裡掛念的家人、朋友... <br/><br/>
-              <span className="text-stone-800 font-bold text-xl block">大膽地寫下你最真實的需要，<br/>為那個人祈求祝福吧！</span>
+              <span className="text-stone-800 font-bold text-xl block">只要你願意，大膽地寫下來，<br/>為你愛的人、為你自己祈求祝福吧！</span>
             </p>
             
             <button 
