@@ -2,8 +2,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
-import { useRouter } from 'next/navigation'; // 🌟 加入轉址功能
-import { ArrowLeft, MessageCircleHeart, Sparkles, ArrowDown } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, MessageCircleHeart, Sparkles, ArrowDown, Lightbulb } from 'lucide-react'; // 🌟 新增 Lightbulb 圖示
 
 // 平滑出現的動畫 Hook
 function useOnScreen(options: IntersectionObserverInit) {
@@ -32,16 +32,15 @@ function FadeSection({ children }: { children: React.ReactNode }) {
 }
 
 export default function PrayerTool() {
-  const router = useRouter(); // 🌟 初始化 router
+  const router = useRouter(); 
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [prayerText, setPrayerText] = useState('');
-  const [isRedirecting, setIsRedirecting] = useState(false); // 🌟 新增轉址狀態
+  const [isRedirecting, setIsRedirecting] = useState(false); 
 
   const handleSubmit = () => {
     if (prayerText.trim() === '') return;
     
-    // 🌟 直接進入轉址狀態，帶參數跳轉去 /letters 觸發抽卡動畫
     setIsRedirecting(true);
     const encodedPrayer = encodeURIComponent(prayerText);
     
@@ -58,7 +57,7 @@ export default function PrayerTool() {
         <title>禱告的大能 | 烏鴉的嗎哪</title>
       </Head>
 
-      {/* 明亮、清爽的背景光暈 (天空藍/水藍色系) */}
+      {/* 明亮、清爽的背景光暈 */}
       <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[50%] bg-cyan-400/15 rounded-full blur-[120px] pointer-events-none"></div>
       <div className="absolute bottom-[20%] right-[-10%] w-[50%] h-[40%] bg-blue-400/10 rounded-full blur-[120px] pointer-events-none"></div>
 
@@ -102,8 +101,10 @@ export default function PrayerTool() {
               </div>
               
               <div className="bg-slate-50/50 p-6 md:p-8 rounded-2xl border-l-4 border-cyan-400 text-left">
-                 <p className="text-lg md:text-xl font-bold leading-snug mb-4 text-stone-800 tracking-tight">
-                   「你們祈求，就給你們；尋找，就尋見；叩門，就給你們開門... 何況你們在天上的父，豈不更把好東西給求他的人嗎？」
+                 {/* 🌟 1. 修改為完整的馬太福音經文 */}
+                 <p className="text-lg md:text-xl font-bold leading-relaxed mb-4 text-stone-800 tracking-tight">
+                   「你們祈求，就給你們；尋找，就尋見；叩門，就給你們開門。因為凡祈求的，就得著；尋找的，就尋見；叩門的，就給他開門。<br/><br/>
+                   你們中間誰有兒子求餅，反給他石頭呢？求魚，反給他蛇呢？你們雖然不好，尚且知道拿好東西給兒女，何況你們在天上的父，豈不更把好東西給求他的人嗎？」
                  </p>
                  <p className="text-base text-stone-400 font-mono italic">— 馬太福音 7:7-11</p>
               </div>
@@ -122,9 +123,9 @@ export default function PrayerTool() {
         <FadeSection>
           <div className="w-full h-[200px] flex justify-center items-center relative mx-auto mb-10">
             <svg viewBox="0 0 400 250" className="w-full h-full max-w-[500px] overflow-visible mx-auto">
-              <path d="M120 180 C 150 200, 250 200, 280 180" fill="none" stroke="#d6d3d1" strokeWidth="8" strokeLinecap="round"/> {/* 淺灰色底線 */}
+              <path d="M120 180 C 150 200, 250 200, 280 180" fill="none" stroke="#d6d3d1" strokeWidth="8" strokeLinecap="round"/> 
               <path d="M150 185 C 170 195, 230 195, 250 185" fill="none" stroke="#e7e5e4" strokeWidth="8" strokeLinecap="round"/>
-              <circle cx="200" cy="140" r="16" fill="white" stroke="#22d3ee" strokeWidth="6" className="drop-shadow-md" /> {/* Cyan */}
+              <circle cx="200" cy="140" r="16" fill="white" stroke="#22d3ee" strokeWidth="6" className="drop-shadow-md" /> 
               <path d="M190 110 Q 200 90, 210 110" fill="none" stroke="#22d3ee" strokeWidth="4" opacity="0.6"/>
               <path d="M180 80 Q 200 50, 220 80" fill="none" stroke="#22d3ee" strokeWidth="4" opacity="0.3"/>
             </svg>
@@ -146,7 +147,7 @@ export default function PrayerTool() {
         <FadeSection>
           <div className="w-full h-[200px] flex justify-center items-center relative mx-auto mb-10">
             <svg viewBox="0 0 400 250" className="w-full h-full max-w-[500px] overflow-visible mx-auto">
-              <circle cx="200" cy="120" r="50" fill="none" stroke="#60a5fa" strokeWidth="6" opacity="0.2"/> {/* Blue */}
+              <circle cx="200" cy="120" r="50" fill="none" stroke="#60a5fa" strokeWidth="6" opacity="0.2"/> 
               <circle cx="200" cy="120" r="20" fill="white" stroke="#60a5fa" strokeWidth="6" className="drop-shadow-md"/>
               <line x1="200" y1="20" x2="200" y2="60" stroke="#60a5fa" strokeWidth="6" strokeLinecap="round" opacity="0.6"/>
               <line x1="200" y1="180" x2="200" y2="220" stroke="#60a5fa" strokeWidth="6" strokeLinecap="round" opacity="0.6"/>
@@ -172,7 +173,7 @@ export default function PrayerTool() {
           <div className="w-full h-[200px] flex justify-center items-center relative mx-auto mb-10">
             <svg viewBox="0 0 400 250" className="w-full h-full max-w-[500px] overflow-visible mx-auto">
               <rect x="140" y="50" width="120" height="160" fill="none" stroke="#d6d3d1" strokeWidth="6" rx="4" />
-              <polygon points="140,50 220,30 220,190 140,210" fill="#a855f7" opacity="0.1" /> {/* Violet */}
+              <polygon points="140,50 220,30 220,190 140,210" fill="#a855f7" opacity="0.1" /> 
               <polygon points="140,50 220,30 220,190 140,210" fill="none" stroke="#a855f7" strokeWidth="4" />
               
               <path d="M 220 30 L 320 10 L 320 230 L 220 190 Z" fill="url(#light-gradient)" opacity="0.3"/>
@@ -202,7 +203,6 @@ export default function PrayerTool() {
         <FadeSection>
           <div className="w-full h-[200px] flex justify-center items-center relative mx-auto mb-10">
             <svg viewBox="0 0 400 250" className="w-full h-full max-w-[500px] overflow-visible mx-auto">
-              {/* Teal (Gift shape) */}
               <path d="M 200 180 C 200 180, 120 120, 120 80 C 120 40, 180 30, 200 70 C 220 30, 280 40, 280 80 C 280 120, 200 180, 200 180 Z" fill="none" stroke="#14b8a6" strokeWidth="8" strokeLinejoin="round" />
               <circle cx="200" cy="95" r="30" fill="#14b8a6" opacity="0.1" />
               <line x1="200" y1="60" x2="200" y2="130" stroke="#14b8a6" strokeWidth="6" strokeLinecap="round"/>
@@ -217,6 +217,42 @@ export default function PrayerTool() {
               <li className="flex gap-4 items-start"><span className="text-teal-400 font-bold mt-1">•</span> <span><strong className="text-stone-900">永恆的預備：</strong>地上的父親為今生打算，但天父為我們預備的是永生與得勝。</span></li>
             </ul>
             <p className="text-xl text-teal-600 font-bold">祂給的不只是短暫的滿足，而是永恆最美好的禮物。</p>
+          </div>
+        </FadeSection>
+      </section>
+
+      {/* 🌟 2. 新增：靜心思考區塊 (給慕道友的回應與反思) */}
+      <section className="py-24 px-6 relative mt-10">
+        <div className="absolute inset-0 bg-stone-100/50 skew-y-3 -z-10"></div>
+        <FadeSection>
+          <div className="max-w-4xl mx-auto w-full">
+            <div className="flex flex-col items-center justify-center mb-12 text-center">
+              <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mb-6">
+                <Lightbulb className="w-8 h-8 text-amber-500" />
+              </div>
+              <h2 className="text-3xl md:text-4xl font-extrabold text-stone-900 tracking-tight">靜心思考</h2>
+              <p className="text-stone-500 mt-4 text-lg">在真正開口禱告之前，不妨先問問自己這三個問題</p>
+            </div>
+            
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-stone-100 hover:shadow-xl hover:border-cyan-200 transition-all duration-300">
+                <span className="text-4xl font-black text-cyan-100 mb-4 block">01</span>
+                <p className="text-xl font-bold text-stone-800 mb-4 tracking-tight">你覺得「禱告」是什麼？</p>
+                <p className="text-stone-600 leading-relaxed font-medium">是像對著購物清單許願、向機器人下指令，還是與一位深愛你的天父進行真實的對話？</p>
+              </div>
+              
+              <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-stone-100 hover:shadow-xl hover:border-blue-200 transition-all duration-300">
+                <span className="text-4xl font-black text-blue-100 mb-4 block">02</span>
+                <p className="text-xl font-bold text-stone-800 mb-4 tracking-tight">目前的缺口在哪裡？</p>
+                <p className="text-stone-600 leading-relaxed font-medium">現在的你，最需要向天父「祈求」、「尋找」或「叩門」的事情是什麼？是平安、方向，還是力量？</p>
+              </div>
+              
+              <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-stone-100 hover:shadow-xl hover:border-teal-200 transition-all duration-300">
+                <span className="text-4xl font-black text-teal-100 mb-4 block">03</span>
+                <p className="text-xl font-bold text-stone-800 mb-4 tracking-tight">關於「好東西」</p>
+                <p className="text-stone-600 leading-relaxed font-medium">如果你確信天父真的會把「最好的安排」給你（即使當下看不懂），這會如何改變你面對眼前困難的態度？</p>
+              </div>
+            </div>
           </div>
         </FadeSection>
       </section>
@@ -245,7 +281,6 @@ export default function PrayerTool() {
       {/* === Modal 彈出視窗 === */}
       <div className={`fixed inset-0 w-full h-full ${isRedirecting ? 'bg-white/90' : 'bg-stone-900/40 backdrop-blur-md'} flex justify-center items-center z-[1000] transition-all duration-500 ease-in-out ${isModalOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} onClick={(e) => { if (e.target === e.currentTarget && !isRedirecting) closeModal(); }}>
           
-          {/* 🌟 只有在尚未跳轉時才顯示輸入框 */}
           {!isRedirecting && (
             <div className={`bg-white w-[92%] max-w-[500px] rounded-[2rem] p-8 md:p-10 shadow-[0_40px_80px_rgb(0,0,0,0.1)] border border-white relative transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] max-h-[90vh] overflow-y-auto ${isModalOpen ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-10 opacity-0 scale-95'}`}>
               <button onClick={closeModal} className="absolute top-5 right-6 text-2xl text-stone-300 hover:text-stone-600 transition-colors">&times;</button>
@@ -262,7 +297,6 @@ export default function PrayerTool() {
             </div>
           )}
           
-          {/* 🌟 轉址 (跳轉至天父的信) 的 Loading 狀態 */}
           {isRedirecting && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/95 backdrop-blur-sm z-50">
               <div className="w-10 h-10 border-4 border-cyan-100 border-t-cyan-500 rounded-full mb-5 animate-spin"></div>
