@@ -27,14 +27,22 @@ export default function ToolsHub() {
             <p className="text-[#8E867A] text-sm">破冰抽卡、寫下心聲求問天父</p>
           </Link>
 
-          {/* 🌟 關鍵修改：這裡的 href 從 /tools 改成 /tools-hub 了！ */}
-          <Link href="/tools-hub/dm-generator" className="p-8 rounded-3xl bg-[#F5F3FF] border border-[#E0D7FF] hover:shadow-md transition-shadow group block md:col-span-2">
-            <div className="flex flex-col md:flex-row md:items-center gap-4">
-              <div className="text-3xl group-hover:scale-110 transition-transform origin-left w-fit">🪄</div>
-              <div>
-                <h3 className="text-xl font-bold mb-1 text-[#6D28D9]">小組 DM 產生器</h3>
-                <p className="text-[#8E867A] text-sm">告別文案難產！自訂風格與活動，讓 AI 幫你生出有溫度的邀請文。</p>
-              </div>
+          {/* 🪄 小組 DM 產生器 (修改為佔一格寬度) */}
+          <Link href="/tools-hub/dm-generator" className="p-8 rounded-3xl bg-[#F5F3FF] border border-[#E0D7FF] hover:shadow-md transition-shadow group block">
+            <div className="text-3xl mb-3 group-hover:scale-110 transition-transform origin-left w-fit">🪄</div>
+            <h3 className="text-xl font-bold mb-2 text-[#6D28D9]">小組 DM 產生器</h3>
+            <p className="text-[#8E867A] text-sm">告別文案難產！自訂風格與活動，讓 AI 幫你生出有溫度的邀請文。</p>
+          </Link>
+
+          {/* 🕹️ 聖經大會考 (新增的小遊戲區塊) */}
+          <Link href="/tools-hub/bible-quiz" className="p-8 rounded-3xl bg-[#1E293B] border border-[#0F172A] hover:shadow-xl hover:-translate-y-1 transition-all group block relative overflow-hidden">
+            {/* 裝飾用的發光效果 */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-400/10 rounded-bl-full -z-0"></div>
+            
+            <div className="relative z-10">
+              <div className="text-3xl mb-3 group-hover:scale-110 group-hover:-rotate-12 transition-transform origin-left w-fit drop-shadow-md">🕹️</div>
+              <h3 className="text-xl font-black mb-2 text-[#FBBF24] tracking-wide">聖經大會考 BATTLE</h3>
+              <p className="text-slate-300 text-sm leading-relaxed">KOF 街機格鬥風！分組對抗、專屬角色技能，50 題聖經知識熱血挑戰。</p>
             </div>
           </Link>
 
