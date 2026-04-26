@@ -1,20 +1,12 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+// 🌟 引入剛剛建立的外部題庫！這樣不管加到幾百題都不會讓程式碼變亂
+import { BIBLE_QUESTIONS } from './questionsData';
 
-// --- 題庫 ---
-const BIBLE_QUESTIONS = [
-  { id: 1, category: "猜人物", difficulty: "簡單", question: "帶領以色列人出埃及，並在西奈山領受十誡的領袖是誰？", answer: "摩西" },
-  { id: 2, category: "聖經填空", difficulty: "簡單", question: "「起初，神創造______。」(創世記1:1)", answer: "天地" },
-  { id: 3, category: "聖經歷史", difficulty: "中等", question: "以色列的第一位國王是誰？", answer: "掃羅" },
-  { id: 4, category: "猜人物", difficulty: "中等", question: "耶穌的十二門徒中，為了三十塊錢出賣耶穌的是誰？", answer: "加略人猶大" },
-  { id: 6, category: "聖經歷史", difficulty: "困難", question: "尼希米帶領以色列人回歸耶路撒冷，主要是為了重建什麼？", answer: "城牆" },
-  { id: 7, category: "猜人物", difficulty: "困難", question: "原本名叫亞伯蘭，後來被神改名，並被稱為「信心之父」的是誰？", answer: "亞伯拉罕" },
-  { id: 50, category: "聖經填空", difficulty: "困難", question: "「草必枯乾，花必凋殘，惟有我們神的話必______。」(以賽亞書40:8)", answer: "永遠立定" }
-];
-
+// 🌟 角色設定 (大衛的連結已經更新，請記得上傳 david.png)
 const CHARACTERS = [
-  { id: 'david', name: '大衛', title: '巨人殺手', desc: '答對「困難」題目時，傷害 x 1.5', img: 'https://mc-heads.net/body/David/256' },
+  { id: 'david', name: '大衛', title: '巨人殺手', desc: '答對「困難」題目時，傷害 x 1.5', img: 'https://raw.githubusercontent.com/woodylin0403/bible-quiz-assets/main/david.png' },
   { id: 'solomon', name: '所羅門', title: '智慧之王', desc: '任何題目答對，基礎傷害 x 1.2', img: 'https://raw.githubusercontent.com/woodylin0403/bible-quiz-assets/main/%E6%89%80%E7%BE%85%E9%96%80.png' },
   { id: 'peter', name: '彼得', title: '磐石爆發', desc: '答對「簡單」題目時，傷害 x 1.5', img: 'https://raw.githubusercontent.com/woodylin0403/bible-quiz-assets/main/peter.png' },
   { id: 'moses', name: '摩西', title: '逆境分海', desc: '當己方血量「低於」對手時，傷害 x 1.5', img: 'https://raw.githubusercontent.com/woodylin0403/bible-quiz-assets/main/mose.png' },
@@ -59,28 +51,22 @@ export default function BibleQuiz() {
   const [teamAChar, setTeamAChar] = useState<string | null>(null);
   const [teamBChar, setTeamBChar] = useState<string | null>(null);
 
-  // 音效 Refs
   const introAudioRef = useRef<HTMLAudioElement>(null);
   const gameAudioRef = useRef<HTMLAudioElement>(null);
   const cheerAudioRef = useRef<HTMLAudioElement>(null);
-  const winnerAudioRef = useRef<HTMLAudioElement>(null); // 🌟 補回勝利音效 Ref
+  const winnerAudioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
-    // 🌟 補回所有開場動畫所需的 CSS Keyframes
     const style = document.createElement('style');
     style.innerHTML = `
-      /* 飄浮傷害數字 */
       @keyframes float-up { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-60px) scale(1.2); opacity: 0; } }
       .anim-float-dmg { animation: float-up 1s ease-out forwards; text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000; }
-      
-      /* 角色動畫 */
       @keyframes breathing { 0%, 100% { transform: scaleY(1) translateY(0); } 50% { transform: scaleY(0.95) translateY(3px); } }
       .anim-idle { animation: breathing 2s infinite ease-in-out; transform-origin: bottom center; }
       @keyframes hit-shake { 0%, 100% { transform: translateX(0); filter: hue-rotate(0deg); } 25%, 75% { transform: translateX(-15px); filter: hue-rotate(90deg) brightness(0.5); } 50% { transform: translateX(15px); } }
       .anim-hit { animation: hit-shake 0.4s ease-in-out; }
       .hp-bar-fill { transition: width 0.5s ease-out, background-color 0.5s; }
 
-      /* KOF 開場專屬動畫 */
       @keyframes flash-screen { 0%, 10%, 20%, 30%, 40% { background-color: white; } 5%, 15%, 25%, 35%, 45% { background-color: black; } 100% { background-color: #1e293b; } }
       @keyframes slide-left { 0% { transform: translateX(-150%) skewX(-15deg); opacity: 0; } 100% { transform: translateX(0) skewX(-15deg); opacity: 1; } }
       @keyframes slide-right { 0% { transform: translateX(150%) skewX(-15deg); opacity: 0; } 100% { transform: translateX(0) skewX(-15deg); opacity: 1; } }
@@ -95,7 +81,6 @@ export default function BibleQuiz() {
     return () => { document.head.removeChild(style); };
   }, []);
 
-  // 🌟 勝利語音播報機制
   const handleWinnerAudioEnded = () => {
     let winnerText = "It's a draw! No winner this time.";
     if (hp.teamA > hp.teamB) winnerText = "The champion is... TEAM A!!!";
@@ -112,7 +97,6 @@ export default function BibleQuiz() {
     window.speechSynthesis.speak(utterance);
   };
 
-  // 🌟 處理音樂播放與遊戲結束時的背景音壓低
   useEffect(() => {
     if (!introAudioRef.current || !gameAudioRef.current) return;
     
@@ -171,7 +155,6 @@ export default function BibleQuiz() {
   const initGame = () => {
     setBgmPlaying(true);
     setGameState('intro');
-    // 預先載入語音引擎
     window.speechSynthesis.getVoices();
     setTimeout(() => setGameState('start'), 3000);
   };
@@ -187,6 +170,7 @@ export default function BibleQuiz() {
     }
   };
 
+  // 🌟 將整包 BIBLE_QUESTIONS 打亂並塞入陣列
   const startBattle = () => {
     const shuffledQuestions = shuffleArray(BIBLE_QUESTIONS);
     setQuestions(shuffledQuestions);
@@ -232,8 +216,9 @@ export default function BibleQuiz() {
       if (currentHp.teamA <= 0 || currentHp.teamB <= 0) {
         setGameState('end'); 
       } else {
+        // 🌟 確實從 0 遍歷到 200，用盡後重新洗牌
         setCurrentIndex(prevIndex => {
-          if (prevIndex + 1 >= BIBLE_QUESTIONS.length) {
+          if (prevIndex + 1 >= questions.length) {
             setQuestions(shuffleArray(BIBLE_QUESTIONS));
             return 0;
           }
@@ -269,7 +254,6 @@ export default function BibleQuiz() {
     <div className="h-screen w-full bg-black flex justify-center items-center relative overflow-hidden font-dotgothic selection:bg-yellow-400">
       <div className="w-full h-full bg-slate-300 relative flex flex-col items-center justify-center p-4 md:p-6 border-x-[8px] md:border-x-[12px] border-slate-900 overflow-hidden">
         
-        {/* 左上角導覽與右上角音量 */}
         <div className="absolute top-2 left-2 md:top-4 md:left-4 z-[120] flex flex-col gap-2">
           <Link href="/tools-hub" className="bg-slate-700 text-white border-2 md:border-4 border-black px-3 py-1 md:px-4 md:py-2 text-xs md:text-lg shadow-[3px_3px_0px_rgba(0,0,0,1)] hover:bg-slate-600 font-bold hover:-translate-y-0.5 transition-transform">
             ← 回工具箱
@@ -285,7 +269,6 @@ export default function BibleQuiz() {
           {bgmPlaying ? "🔊 BGM ON" : "🔇 BGM OFF"}
         </button>
 
-        {/* 🌟 載入所有音檔 (包含勝利音效) */}
         <audio ref={introAudioRef} src="https://github.com/woodylin0403/bible-quiz-assets/raw/refs/heads/main/song_1.mp3" loop />
         <audio ref={gameAudioRef} src="https://github.com/woodylin0403/bible-quiz-assets/raw/refs/heads/main/song_2.mp3" loop />
         <audio ref={cheerAudioRef} src="https://github.com/woodylin0403/bible-quiz-assets/raw/refs/heads/main/song3.mp3" />
@@ -298,7 +281,6 @@ export default function BibleQuiz() {
           </div>
         )}
 
-        {/* 🌟 恢復完整的 KOF 開場動畫結構 */}
         {gameState === 'intro' && (
           <div className="z-[100] w-full h-full flex items-center justify-center anim-kof-bg absolute inset-0">
             <div className="relative w-full flex items-center justify-center flex-col md:flex-row h-full px-4 overflow-hidden">
@@ -323,7 +305,7 @@ export default function BibleQuiz() {
         )}
 
         {(gameState === 'selectA' || gameState === 'selectB') && (
-           <div className="z-10 w-full max-w-5xl">
+           <div className="z-10 w-full max-w-6xl">
            <h2 className="text-3xl md:text-4xl text-white font-black mb-6 text-center bg-slate-900 border-2 md:border-4 border-black p-3 inline-block shadow-[4px_4px_0px_rgba(0,0,0,1)] w-full">
              {gameState === 'selectA' ? "PLAYER 1 (A隊) 選擇角色" : "PLAYER 2 (B隊) 選擇角色"}
            </h2>
@@ -338,11 +320,9 @@ export default function BibleQuiz() {
 
                return (
                  <button key={char.id} onClick={() => handleCharSelect(char.id)} disabled={isP1 || isP2} className={`${pixelBoxClass} ${boxStyles} flex flex-col items-center justify-center p-2 md:p-4 relative transition-all duration-200`}>
-                   
                    {isP1 && <span className="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold px-2 py-1 border-b-2 border-l-2 border-black z-20">P1 已選</span>}
                    {isP2 && <span className="absolute top-0 right-0 bg-blue-600 text-white text-xs font-bold px-2 py-1 border-b-2 border-l-2 border-black z-20">P2 已選</span>}
-
-                   <img src={char.img} className="w-16 h-16 md:w-24 md:h-24 mb-3 md:mb-4 anim-idle bg-slate-600 p-1 md:p-2 border-2 border-black object-contain" alt="character" />
+                   <img src={char.img} className="w-20 h-20 md:w-32 md:h-32 mb-3 md:mb-4 anim-idle bg-slate-600 p-1 md:p-2 border-2 border-black object-contain" alt="character" />
                    <h3 className="text-xl md:text-2xl text-yellow-400 font-black text-center leading-tight">{char.name}</h3>
                  </button>
                );
