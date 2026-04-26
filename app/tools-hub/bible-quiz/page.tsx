@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { BIBLE_QUESTIONS } from './questionsData'; // 🌟 引入你的 100 題大題庫
+import { BIBLE_QUESTIONS } from './questionsData'; 
 
 const CHARACTERS = [
   { id: 'david', name: '大衛', title: '巨人殺手', desc: '對抗「困難」時，傷害 x 1.5', img: 'https://raw.githubusercontent.com/woodylin0403/bible-quiz-assets/main/david.png' },
@@ -43,7 +43,10 @@ export default function BibleQuiz() {
   const [hp, setHp] = useState({ teamA: MAX_HP, teamB: MAX_HP });
   const [combo, setCombo] = useState({ teamA: 0, teamB: 0 });
   const [floatingText, setFloatingText] = useState({ teamA: [] as any[], teamB: [] as any[] });
+  
+  // 🌟 動畫狀態
   const [hitState, setHitState] = useState<'A' | 'B' | null>(null);
+  const [attackState, setAttackState] = useState<'A' | 'B' | null>(null); // 🌟 新增：誰正在發動攻擊衝刺
 
   const [showAnswer, setShowAnswer] = useState(false);
   const [bgmPlaying, setBgmPlaying] = useState(false);
@@ -60,11 +63,11 @@ export default function BibleQuiz() {
   useEffect(() => {
     const style = document.createElement('style');
     style.innerHTML = `
-      @keyframes float-up { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-60px) scale(1.2); opacity: 0; } }
+      @keyframes float-up { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-80px) scale(1.2); opacity: 0; } }
       .anim-float-dmg { animation: float-up 1s ease-out forwards; text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000; }
       
-      @keyframes skill-pop { 0% { transform: translateY(0) scale(0.5); opacity: 0; } 20% { transform: translateY(-20px) scale(1.3) rotate(-5deg); opacity: 1; } 80% { transform: translateY(-30px) scale(1) rotate(0deg); opacity: 1; } 100% { transform: translateY(-40px) scale(0.8); opacity: 0; } }
-      .anim-float-skill { animation: skill-pop 1.2s ease-out forwards; color: #FCD34D; text-shadow: 2px 2px 0 #B45309, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000; z-index: 60; }
+      @keyframes skill-pop { 0% { transform: translateY(0) scale(0.5); opacity: 0; } 20% { transform: translateY(-20px) scale(1.3) rotate(-5deg); opacity: 1; } 80% { transform: translateY(-30px) scale(1) rotate(0deg); opacity: 1; } 100% { transform: translateY(-50px) scale(0.8); opacity: 0; } }
+      .anim-float-skill { animation: skill-pop 1.2s ease-out forwards; color: #FCD34D; text-shadow: 2px 2px 0 #B45309, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000; }
 
       @keyframes breathing { 0%, 100% { transform: scaleY(1) translateY(0); } 50% { transform: scaleY(0.95) translateY(3px); } }
       .anim-idle { animation: breathing 2s infinite ease-in-out; transform-origin: bottom center; }
@@ -171,7 +174,6 @@ export default function BibleQuiz() {
     } 
     else if (gameState === 'selectB') { 
       setTeamBChar(charId); 
-      // 🌟 兩邊選完後，切換到「技能揭曉」畫面！
       setTimeout(() => setGameState('reveal'), 400);
     }
   };
@@ -187,43 +189,58 @@ export default function BibleQuiz() {
     setGameState('playing');
   };
 
+  // 🌟 全新重構的攻擊演出時序邏輯
   const handleScore = (attacker: 'A' | 'B') => {
     if (isScoring) return; 
     setIsScoring(true);
-    playHitSound();
-
-    const currentQ = questions[currentIndex];
-    const newId = Date.now();
     
-    if (attacker === 'A') {
-      const { dmg, skillTriggered } = calculateDamage(teamAChar, hp.teamA, hp.teamB, currentQ, combo.teamA);
-      setHp(prev => ({ ...prev, teamB: Math.max(0, prev.teamB - dmg) }));
-      setCombo(prev => ({ teamA: prev.teamA + 1, teamB: 0 })); 
-      setHitState('B'); 
-      
-      const newTexts = [{ id: newId, text: `-${dmg}`, type: 'dmg' }];
-      if (skillTriggered) newTexts.push({ id: newId + 1, text: '✨SKILL!', type: 'skill' });
-      setFloatingText(prev => ({ ...prev, teamB: [...prev.teamB, ...newTexts] }));
-      
-    } else {
-      const { dmg, skillTriggered } = calculateDamage(teamBChar, hp.teamB, hp.teamA, currentQ, combo.teamB);
-      setHp(prev => ({ ...prev, teamA: Math.max(0, prev.teamA - dmg) }));
-      setCombo(prev => ({ teamB: prev.teamB + 1, teamA: 0 })); 
-      setHitState('A'); 
-      
-      const newTexts = [{ id: newId, text: `-${dmg}`, type: 'dmg' }];
-      if (skillTriggered) newTexts.push({ id: newId + 1, text: '✨SKILL!', type: 'skill' });
-      setFloatingText(prev => ({ ...prev, teamA: [...prev.teamA, ...newTexts] }));
-    }
+    // 1️⃣ 啟動攻擊衝刺 (此時畫面上的題目會被 CSS 隱藏，角色衝向中央)
+    setAttackState(attacker);
 
-    setTimeout(() => setHitState(null), 400);
+    // 2️⃣ 衝刺 300 毫秒後，擊中對手！
     setTimeout(() => {
-      setFloatingText(prev => ({ 
-        teamA: prev.teamA.filter(t => t.id !== newId && t.id !== newId + 1), 
-        teamB: prev.teamB.filter(t => t.id !== newId && t.id !== newId + 1) 
-      }));
-      checkWinCondition();
-    }, 1500);
+      playHitSound();
+
+      const currentQ = questions[currentIndex];
+      const newId = Date.now();
+      
+      if (attacker === 'A') {
+        const { dmg, skillTriggered } = calculateDamage(teamAChar, hp.teamA, hp.teamB, currentQ, combo.teamA);
+        setHp(prev => ({ ...prev, teamB: Math.max(0, prev.teamB - dmg) }));
+        setCombo(prev => ({ teamA: prev.teamA + 1, teamB: 0 })); 
+        setHitState('B'); 
+        
+        const newTexts = [{ id: newId, text: `-${dmg}`, type: 'dmg' }];
+        if (skillTriggered) newTexts.push({ id: newId + 1, text: '✨SKILL!', type: 'skill' });
+        setFloatingText(prev => ({ ...prev, teamB: [...prev.teamB, ...newTexts] }));
+      } else {
+        const { dmg, skillTriggered } = calculateDamage(teamBChar, hp.teamB, hp.teamA, currentQ, combo.teamB);
+        setHp(prev => ({ ...prev, teamA: Math.max(0, prev.teamA - dmg) }));
+        setCombo(prev => ({ teamB: prev.teamB + 1, teamA: 0 })); 
+        setHitState('A'); 
+        
+        const newTexts = [{ id: newId, text: `-${dmg}`, type: 'dmg' }];
+        if (skillTriggered) newTexts.push({ id: newId + 1, text: '✨SKILL!', type: 'skill' });
+        setFloatingText(prev => ({ ...prev, teamA: [...prev.teamA, ...newTexts] }));
+      }
+
+      // 3️⃣ 停留展示傷害 1.2 秒後，收起特效與衝刺狀態
+      setTimeout(() => {
+        setHitState(null);
+        setFloatingText(prev => ({ 
+          teamA: prev.teamA.filter(t => t.id !== newId && t.id !== newId + 1), 
+          teamB: prev.teamB.filter(t => t.id !== newId && t.id !== newId + 1) 
+        }));
+        setAttackState(null); // 角色退回原位
+
+        // 4️⃣ 退回原位 300 毫秒後，進入下一題
+        setTimeout(() => {
+          checkWinCondition();
+        }, 300);
+
+      }, 1200);
+
+    }, 300); // 衝刺時間
   };
 
   const checkWinCondition = () => {
@@ -318,7 +335,6 @@ export default function BibleQuiz() {
           </div>
         )}
 
-        {/* 🌟 隱藏技能說明的選角畫面 */}
         {(gameState === 'selectA' || gameState === 'selectB') && (
            <div className="z-10 w-full max-w-6xl">
            <h2 className="text-3xl md:text-4xl text-white font-black mb-6 text-center bg-slate-900 border-2 md:border-4 border-black p-3 inline-block shadow-[4px_4px_0px_rgba(0,0,0,1)] w-full">
@@ -339,7 +355,6 @@ export default function BibleQuiz() {
                    {isP2 && <span className="absolute top-0 right-0 bg-blue-600 text-white text-xs font-bold px-2 py-1 border-b-2 border-l-2 border-black z-20">P2 已選</span>}
                    <img src={char.img} className="w-20 h-20 md:w-28 md:h-28 mb-3 md:mb-4 anim-idle bg-slate-600 p-1 md:p-2 border-2 border-black object-contain" alt="character" />
                    <h3 className="text-lg md:text-2xl text-yellow-400 font-black text-center leading-tight">{char.name}</h3>
-                   {/* 🌟 隱藏真實技能，改為閃爍的神祕文字 */}
                    <p className="text-[10px] md:text-xs text-slate-400 font-medium text-center leading-tight hidden md:block mt-2 animate-pulse">??? 隱藏技能 ???</p>
                  </button>
                );
@@ -348,7 +363,6 @@ export default function BibleQuiz() {
          </div>
         )}
 
-        {/* 🌟 雙方選定後，進入專屬的 SKILL REVEAL 揭曉畫面 */}
         {gameState === 'reveal' && (
           <div className="z-10 w-full max-w-4xl text-center">
             <h2 className="text-4xl md:text-6xl text-yellow-400 font-black mb-6 md:mb-10 drop-shadow-[3px_3px_0px_black]">SKILL REVEAL!</h2>
@@ -398,7 +412,8 @@ export default function BibleQuiz() {
         {gameState === 'playing' && currentQ && (
           <div className="z-10 w-full max-w-5xl flex flex-col h-full py-2">
             
-            <div className="flex justify-between items-start mb-3 bg-slate-900 border-[3px] md:border-4 border-black p-2 md:p-3 shadow-[4px_4px_0px_rgba(0,0,0,1)] relative">
+            {/* 血條 */}
+            <div className="flex justify-between items-start mb-3 bg-slate-900 border-[3px] md:border-4 border-black p-2 md:p-3 shadow-[4px_4px_0px_rgba(0,0,0,1)] relative z-20">
               <div className="absolute left-1/2 transform -translate-x-1/2 top-2 md:top-3 text-center z-20">
                 <span className="text-lg md:text-2xl text-yellow-400 font-black block drop-shadow-[2px_2px_0px_black] bg-black px-3 py-1 md:px-4 md:py-2 border-2 border-white">ROUND {currentIndex + 1}</span>
               </div>
@@ -424,52 +439,59 @@ export default function BibleQuiz() {
               </div>
             </div>
 
+            {/* 戰鬥舞台本體 */}
             <div className={`bg-slate-800 border-[3px] md:border-4 border-slate-900 shadow-[6px_6px_0px_rgba(0,0,0,1)] text-white flex-1 flex flex-col justify-between mb-3 relative overflow-hidden`}>
               
-              <div className="flex justify-between items-start z-20 p-3">
-                <span className="bg-yellow-400 text-black px-4 py-1 text-sm md:text-lg font-black border-2 border-black">{currentQ.category}</span>
-                <span className={`px-4 py-1 text-sm md:text-lg font-black border-2 border-black text-white ${currentQ.difficulty === '困難' ? 'bg-red-600' : 'bg-orange-500'}`}>{currentQ.difficulty}</span>
-              </div>
-
-              <div className="absolute inset-0 flex justify-between items-end px-4 md:px-8 pb-4 pointer-events-none">
-                <div className="relative">
+              {/* 🌟 角色區塊：加入了攻擊衝刺的 transform */}
+              <div className="absolute inset-0 flex justify-between items-end px-4 md:px-8 pb-4 pointer-events-none z-30">
+                <div className={`relative transition-all duration-300 ease-in-out z-[60] ${attackState === 'A' ? 'translate-x-[30vw] md:translate-x-[40vw] -translate-y-10 scale-[1.3]' : 'translate-x-0'}`}>
                   <img src={CHARACTERS.find(c => c.id === teamAChar)?.img} className={`w-28 h-28 md:w-44 md:h-44 rendering-pixelated object-contain bg-slate-700/80 p-2 md:p-3 border-2 md:border-4 border-black ${hitState === 'A' ? 'anim-hit' : 'anim-idle'}`} alt="Player A" />
                   {floatingText.teamA.map(txt => (
-                    <div key={txt.id} className={`absolute z-50 ${txt.type === 'skill' ? 'anim-float-skill -top-16 left-6 text-4xl md:text-5xl font-black' : 'anim-float-dmg -top-12 md:-top-16 left-2 md:left-6 text-3xl md:text-4xl text-red-500 font-black'}`}>
+                    <div key={txt.id} className={`absolute z-[100] ${txt.type === 'skill' ? 'anim-float-skill -top-20 left-6 text-4xl md:text-5xl font-black' : 'anim-float-dmg -top-16 left-2 md:left-6 text-4xl md:text-5xl text-red-500 font-black'}`}>
                       {txt.text}
                     </div>
                   ))}
                 </div>
-                <div className="relative">
+                
+                <div className={`relative transition-all duration-300 ease-in-out z-[60] ${attackState === 'B' ? '-translate-x-[30vw] md:-translate-x-[40vw] -translate-y-10 scale-[1.3]' : 'translate-x-0'}`}>
                   <img src={CHARACTERS.find(c => c.id === teamBChar)?.img} className={`w-28 h-28 md:w-44 md:h-44 rendering-pixelated object-contain bg-slate-700/80 p-2 md:p-3 border-2 md:border-4 border-black transform scale-x-[-1] ${hitState === 'B' ? 'anim-hit' : 'anim-idle'}`} alt="Player B" />
                   {floatingText.teamB.map(txt => (
-                    <div key={txt.id} className={`absolute z-50 transform scale-x-[-1] ${txt.type === 'skill' ? 'anim-float-skill -top-16 right-6 text-4xl md:text-5xl font-black' : 'anim-float-dmg -top-12 md:-top-16 right-2 md:right-6 text-3xl md:text-4xl text-red-500 font-black'}`}>
+                    <div key={txt.id} className={`absolute z-[100] transform scale-x-[-1] ${txt.type === 'skill' ? 'anim-float-skill -top-20 right-6 text-4xl md:text-5xl font-black' : 'anim-float-dmg -top-16 right-2 md:right-6 text-4xl md:text-5xl text-red-500 font-black'}`}>
                       {txt.text}
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="flex-1 flex items-center justify-center py-2 px-12 md:py-4 md:px-24 z-20">
-                <h2 className="text-2xl md:text-4xl lg:text-5xl text-white font-bold leading-normal md:leading-snug text-center drop-shadow-[3px_3px_0px_black] bg-slate-800/80 p-4 rounded-2xl backdrop-blur-sm w-full">
-                  {currentQ.question}
-                </h2>
-              </div>
+              {/* 🌟 題目與按鈕區塊：當攻擊狀態啟動時，透明度歸零隱藏！ */}
+              <div className={`flex-1 flex flex-col justify-between w-full h-full transition-opacity duration-300 z-10 ${attackState ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+                
+                <div className="flex justify-between items-start p-3">
+                  <span className="bg-yellow-400 text-black px-4 py-1 text-sm md:text-lg font-black border-2 border-black">{currentQ.category}</span>
+                  <span className={`px-4 py-1 text-sm md:text-lg font-black border-2 border-black text-white ${currentQ.difficulty === '困難' ? 'bg-red-600' : 'bg-orange-500'}`}>{currentQ.difficulty}</span>
+                </div>
 
-              {!showAnswer ? (
-                <div className="flex justify-center gap-4 md:gap-8 mb-4 md:mb-6 z-20">
-                  <button onClick={() => setShowAnswer(true)} className={`${pixelButtonClass} bg-blue-600 text-white text-xl md:text-3xl px-8 py-3 md:px-12 md:py-4`}>SHOW ANSWER</button>
-                  <button onClick={skipQuestion} disabled={isScoring} className={`${pixelButtonClass} bg-slate-600 text-white text-lg md:text-xl px-6 py-3 md:px-8 md:py-4`}>SKIP</button>
+                <div className="flex-1 flex items-center justify-center py-2 px-12 md:py-4 md:px-24">
+                  <h2 className="text-2xl md:text-4xl lg:text-5xl text-white font-bold leading-normal md:leading-snug text-center drop-shadow-[3px_3px_0px_black] bg-slate-800/80 p-4 rounded-2xl backdrop-blur-sm w-full">
+                    {currentQ.question}
+                  </h2>
                 </div>
-              ) : (
-                <div className="text-center mb-4 md:mb-6 mx-6 md:mx-12 bg-slate-900 border-[3px] md:border-4 border-yellow-400 p-3 md:p-4 z-20 shadow-[0_0_20px_rgba(250,204,21,0.3)]">
-                  <h3 className="text-3xl md:text-5xl text-green-400 font-black drop-shadow-[2px_2px_0px_black]">{currentQ.answer}</h3>
-                </div>
-              )}
+
+                {!showAnswer ? (
+                  <div className="flex justify-center gap-4 md:gap-8 mb-4 md:mb-6">
+                    <button onClick={() => setShowAnswer(true)} className={`${pixelButtonClass} bg-blue-600 text-white text-xl md:text-3xl px-8 py-3 md:px-12 md:py-4`}>SHOW ANSWER</button>
+                    <button onClick={skipQuestion} disabled={isScoring} className={`${pixelButtonClass} bg-slate-600 text-white text-lg md:text-xl px-6 py-3 md:px-8 md:py-4`}>SKIP</button>
+                  </div>
+                ) : (
+                  <div className="text-center mb-4 md:mb-6 mx-6 md:mx-12 bg-slate-900 border-[3px] md:border-4 border-yellow-400 p-3 md:p-4 shadow-[0_0_20px_rgba(250,204,21,0.3)]">
+                    <h3 className="text-3xl md:text-5xl text-green-400 font-black drop-shadow-[2px_2px_0px_black]">{currentQ.answer}</h3>
+                  </div>
+                )}
+              </div>
             </div>
 
             {showAnswer && (
-              <div className="grid grid-cols-2 gap-4 md:gap-6 pb-1">
+              <div className={`grid grid-cols-2 gap-4 md:gap-6 pb-1 transition-opacity duration-300 ${attackState ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                 <button onClick={() => handleScore('A')} disabled={isScoring} className={`${pixelButtonClass} bg-red-600 hover:bg-red-500 text-white text-2xl md:text-4xl py-3 md:py-5 border-4 md:border-8 border-black group`}>
                   <span className="group-hover:scale-110 transition-transform block">A隊 攻擊! 🗡️</span>
                 </button>
