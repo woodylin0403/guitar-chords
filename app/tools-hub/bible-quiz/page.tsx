@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { BIBLE_QUESTIONS } from './questionsData'; 
 
+// 🌟 角色設定 (再次確認您上傳的保羅、彼得、摩西的 Raw 連結)
 const CHARACTERS = [
   { id: 'david', name: '大衛', title: '巨人殺手', desc: '對抗「困難」時，傷害 x 1.5', img: 'https://raw.githubusercontent.com/woodylin0403/bible-quiz-assets/main/david.png' },
   { id: 'solomon', name: '所羅門', title: '智慧之王', desc: '任何題目答對，傷害 x 1.2', img: 'https://raw.githubusercontent.com/woodylin0403/bible-quiz-assets/main/%E6%89%80%E7%BE%85%E9%96%80.png' },
@@ -44,9 +45,9 @@ export default function BibleQuiz() {
   const [combo, setCombo] = useState({ teamA: 0, teamB: 0 });
   const [floatingText, setFloatingText] = useState({ teamA: [] as any[], teamB: [] as any[] });
   
-  // 🌟 動畫狀態
+  // 動畫狀態
   const [hitState, setHitState] = useState<'A' | 'B' | null>(null);
-  const [attackState, setAttackState] = useState<'A' | 'B' | null>(null); // 🌟 新增：誰正在發動攻擊衝刺
+  const [attackState, setAttackState] = useState<'A' | 'B' | null>(null);
 
   const [showAnswer, setShowAnswer] = useState(false);
   const [bgmPlaying, setBgmPlaying] = useState(false);
@@ -189,15 +190,12 @@ export default function BibleQuiz() {
     setGameState('playing');
   };
 
-  // 🌟 全新重構的攻擊演出時序邏輯
   const handleScore = (attacker: 'A' | 'B') => {
     if (isScoring) return; 
     setIsScoring(true);
     
-    // 1️⃣ 啟動攻擊衝刺 (此時畫面上的題目會被 CSS 隱藏，角色衝向中央)
     setAttackState(attacker);
 
-    // 2️⃣ 衝刺 300 毫秒後，擊中對手！
     setTimeout(() => {
       playHitSound();
 
@@ -224,23 +222,21 @@ export default function BibleQuiz() {
         setFloatingText(prev => ({ ...prev, teamA: [...prev.teamA, ...newTexts] }));
       }
 
-      // 3️⃣ 停留展示傷害 1.2 秒後，收起特效與衝刺狀態
       setTimeout(() => {
         setHitState(null);
         setFloatingText(prev => ({ 
           teamA: prev.teamA.filter(t => t.id !== newId && t.id !== newId + 1), 
           teamB: prev.teamB.filter(t => t.id !== newId && t.id !== newId + 1) 
         }));
-        setAttackState(null); // 角色退回原位
+        setAttackState(null); 
 
-        // 4️⃣ 退回原位 300 毫秒後，進入下一題
         setTimeout(() => {
           checkWinCondition();
         }, 300);
 
       }, 1200);
 
-    }, 300); // 衝刺時間
+    }, 300); 
   };
 
   const checkWinCondition = () => {
@@ -283,7 +279,16 @@ export default function BibleQuiz() {
 
   return (
     <div className="h-screen w-full bg-black flex justify-center items-center relative overflow-hidden font-dotgothic selection:bg-yellow-400">
-      <div className="w-full h-full bg-slate-300 relative flex flex-col items-center justify-center p-4 md:p-6 border-x-[8px] md:border-x-[12px] border-slate-900 overflow-hidden">
+      <div 
+        className="w-full h-full relative flex flex-col items-center justify-center p-4 md:p-6 border-x-[8px] md:border-x-[12px] border-slate-900 overflow-hidden"
+        style={{
+          // 🌟 核心修改點：應用背景圖片，並設定正確對齊
+          backgroundImage: 'url(/quiz_battle_bg.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+      >
         
         <div className="absolute top-2 left-2 md:top-4 md:left-4 z-[120] flex flex-col gap-2">
           <Link href="/tools-hub" className="bg-slate-700 text-white border-2 md:border-4 border-black px-3 py-1 md:px-4 md:py-2 text-xs md:text-lg shadow-[3px_3px_0px_rgba(0,0,0,1)] hover:bg-slate-600 font-bold hover:-translate-y-0.5 transition-transform">
@@ -305,6 +310,7 @@ export default function BibleQuiz() {
         <audio ref={cheerAudioRef} src="https://github.com/woodylin0403/bible-quiz-assets/raw/refs/heads/main/song3.mp3" />
         <audio ref={winnerAudioRef} src="https://github.com/woodylin0403/bible-quiz-assets/raw/refs/heads/main/song4.mp3" onEnded={handleWinnerAudioEnded} />
         
+        {/* 🌟 修改點：將 bg-slate-300 移出，讓背景圖片顯現 */}
         {gameState === 'init' && (
           <div className="z-10 text-center">
             <h1 className="text-6xl md:text-[6rem] lg:text-[7rem] text-transparent bg-clip-text bg-gradient-to-b from-slate-600 to-slate-900 font-black mb-8 md:mb-12 drop-shadow-[3px_3px_0px_rgba(0,0,0,0.3)] stroke-black tracking-widest leading-tight">BIBLE QUIZ <br /> BATTLE</h1>
@@ -329,7 +335,7 @@ export default function BibleQuiz() {
         )}
 
         {gameState === 'start' && (
-          <div className={`${pixelBoxClass} z-10 w-full max-w-3xl text-center`}>
+          <div className={`${pixelBoxClass} z-10 w-full max-w-3xl text-center bg-slate-800/80 backdrop-blur-sm rounded-2xl`}>
             <h1 className="text-5xl md:text-7xl text-yellow-400 font-black mb-8 drop-shadow-[3px_3px_0px_black]">QUIZ BATTLE</h1>
             <button onClick={() => setGameState('selectA')} className={`${pixelButtonClass} bg-green-500 text-white text-3xl md:text-4xl px-8 py-4`}>START</button>
           </div>
@@ -364,11 +370,11 @@ export default function BibleQuiz() {
         )}
 
         {gameState === 'reveal' && (
-          <div className="z-10 w-full max-w-4xl text-center">
+          <div className="z-10 w-full max-w-4xl text-center bg-slate-800/80 backdrop-blur-sm rounded-2xl p-6 md:p-10">
             <h2 className="text-4xl md:text-6xl text-yellow-400 font-black mb-6 md:mb-10 drop-shadow-[3px_3px_0px_black]">SKILL REVEAL!</h2>
             <div className="flex justify-center items-center gap-4 md:gap-12 mb-8 md:mb-10">
               
-              <div className={`${pixelBoxClass} anim-slide-l flex flex-col items-center w-[45%] md:w-64`}>
+              <div className={`${pixelBoxClass} anim-slide-l flex flex-col items-center w-[45%] md:w-64 bg-slate-900`}>
                 <span className="text-xl md:text-3xl text-red-500 font-black mb-2 md:mb-4 drop-shadow-[2px_2px_0px_white]">TEAM A</span>
                 {teamAChar && (() => {
                   const c = CHARACTERS.find(x => x.id === teamAChar);
@@ -377,7 +383,7 @@ export default function BibleQuiz() {
                       <img src={c.img} className="w-16 h-16 md:w-28 md:h-28 mb-2 md:mb-4 rendering-pixelated object-contain bg-slate-700/80 p-2 border-2 border-black" alt="P1" />
                       <h3 className="text-lg md:text-3xl text-yellow-400 font-black mb-1">{c.name}</h3>
                       <p className="text-xs md:text-sm text-blue-300 font-bold mb-2 md:mb-3">{c.title}</p>
-                      <div className="bg-slate-900 border-2 border-yellow-400 p-2 w-full">
+                      <div className="bg-slate-800 border-2 border-yellow-400 p-2 w-full">
                         <p className="text-[10px] md:text-sm text-white font-bold">{c.desc}</p>
                       </div>
                     </>
@@ -387,7 +393,7 @@ export default function BibleQuiz() {
 
               <div className="text-4xl md:text-7xl text-white font-black italic anim-boom drop-shadow-[4px_4px_0px_black]">VS</div>
 
-              <div className={`${pixelBoxClass} anim-slide-r flex flex-col items-center w-[45%] md:w-64`}>
+              <div className={`${pixelBoxClass} anim-slide-r flex flex-col items-center w-[45%] md:w-64 bg-slate-900`}>
                 <span className="text-xl md:text-3xl text-blue-500 font-black mb-2 md:mb-4 drop-shadow-[2px_2px_0px_white]">TEAM B</span>
                 {teamBChar && (() => {
                   const c = CHARACTERS.find(x => x.id === teamBChar);
@@ -396,7 +402,7 @@ export default function BibleQuiz() {
                       <img src={c.img} className="w-16 h-16 md:w-28 md:h-28 mb-2 md:mb-4 rendering-pixelated object-contain bg-slate-700/80 p-2 border-2 border-black transform scale-x-[-1]" alt="P2" />
                       <h3 className="text-lg md:text-3xl text-yellow-400 font-black mb-1">{c.name}</h3>
                       <p className="text-xs md:text-sm text-blue-300 font-bold mb-2 md:mb-3">{c.title}</p>
-                      <div className="bg-slate-900 border-2 border-yellow-400 p-2 w-full">
+                      <div className="bg-slate-800 border-2 border-yellow-400 p-2 w-full">
                         <p className="text-[10px] md:text-sm text-white font-bold">{c.desc}</p>
                       </div>
                     </>
@@ -410,7 +416,7 @@ export default function BibleQuiz() {
         )}
 
         {gameState === 'playing' && currentQ && (
-          <div className="z-10 w-full max-w-5xl flex flex-col h-full py-2">
+          <div className="z-10 w-full max-w-5xl flex flex-col h-full py-2 bg-slate-800/80 backdrop-blur-sm rounded-2xl p-4 md:p-6">
             
             {/* 血條 */}
             <div className="flex justify-between items-start mb-3 bg-slate-900 border-[3px] md:border-4 border-black p-2 md:p-3 shadow-[4px_4px_0px_rgba(0,0,0,1)] relative z-20">
@@ -440,9 +446,8 @@ export default function BibleQuiz() {
             </div>
 
             {/* 戰鬥舞台本體 */}
-            <div className={`bg-slate-800 border-[3px] md:border-4 border-slate-900 shadow-[6px_6px_0px_rgba(0,0,0,1)] text-white flex-1 flex flex-col justify-between mb-3 relative overflow-hidden`}>
+            <div className={`bg-slate-900 border-[3px] md:border-4 border-slate-950 shadow-[6px_6px_0px_rgba(0,0,0,1)] text-white flex-1 flex flex-col justify-between mb-3 relative overflow-hidden`}>
               
-              {/* 🌟 角色區塊：加入了攻擊衝刺的 transform */}
               <div className="absolute inset-0 flex justify-between items-end px-4 md:px-8 pb-4 pointer-events-none z-30">
                 <div className={`relative transition-all duration-300 ease-in-out z-[60] ${attackState === 'A' ? 'translate-x-[30vw] md:translate-x-[40vw] -translate-y-10 scale-[1.3]' : 'translate-x-0'}`}>
                   <img src={CHARACTERS.find(c => c.id === teamAChar)?.img} className={`w-28 h-28 md:w-44 md:h-44 rendering-pixelated object-contain bg-slate-700/80 p-2 md:p-3 border-2 md:border-4 border-black ${hitState === 'A' ? 'anim-hit' : 'anim-idle'}`} alt="Player A" />
@@ -463,8 +468,7 @@ export default function BibleQuiz() {
                 </div>
               </div>
 
-              {/* 🌟 題目與按鈕區塊：當攻擊狀態啟動時，透明度歸零隱藏！ */}
-              <div className={`flex-1 flex flex-col justify-between w-full h-full transition-opacity duration-300 z-10 ${attackState ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+              <div className={`flex-1 flex flex-col justify-between w-full h-full transition-opacity duration-300 z-10 bg-slate-800/80 p-3 md:p-4 ${attackState ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                 
                 <div className="flex justify-between items-start p-3">
                   <span className="bg-yellow-400 text-black px-4 py-1 text-sm md:text-lg font-black border-2 border-black">{currentQ.category}</span>
@@ -472,7 +476,7 @@ export default function BibleQuiz() {
                 </div>
 
                 <div className="flex-1 flex items-center justify-center py-2 px-12 md:py-4 md:px-24">
-                  <h2 className="text-2xl md:text-4xl lg:text-5xl text-white font-bold leading-normal md:leading-snug text-center drop-shadow-[3px_3px_0px_black] bg-slate-800/80 p-4 rounded-2xl backdrop-blur-sm w-full">
+                  <h2 className="text-2xl md:text-4xl lg:text-5xl text-white font-bold leading-normal md:leading-snug text-center drop-shadow-[3px_3px_0px_black] bg-black/60 p-4 rounded-2xl backdrop-blur-sm w-full">
                     {currentQ.question}
                   </h2>
                 </div>
@@ -483,7 +487,7 @@ export default function BibleQuiz() {
                     <button onClick={skipQuestion} disabled={isScoring} className={`${pixelButtonClass} bg-slate-600 text-white text-lg md:text-xl px-6 py-3 md:px-8 md:py-4`}>SKIP</button>
                   </div>
                 ) : (
-                  <div className="text-center mb-4 md:mb-6 mx-6 md:mx-12 bg-slate-900 border-[3px] md:border-4 border-yellow-400 p-3 md:p-4 shadow-[0_0_20px_rgba(250,204,21,0.3)]">
+                  <div className="text-center mb-4 md:mb-6 mx-6 md:mx-12 bg-black border-[3px] md:border-4 border-yellow-400 p-3 md:p-4 shadow-[0_0_20px_rgba(250,204,21,0.3)]">
                     <h3 className="text-3xl md:text-5xl text-green-400 font-black drop-shadow-[2px_2px_0px_black]">{currentQ.answer}</h3>
                   </div>
                 )}
@@ -504,14 +508,14 @@ export default function BibleQuiz() {
         )}
 
         {gameState === 'end' && (
-          <div className="z-10 w-full max-w-4xl text-center">
+          <div className="z-10 w-full max-w-4xl text-center bg-slate-800/80 backdrop-blur-sm rounded-2xl p-6 md:p-10">
             <h1 className="text-6xl md:text-[6rem] text-yellow-400 font-black mb-10 drop-shadow-[4px_4px_0px_black]">K.O.!</h1>
             <div className="flex justify-center gap-10 md:gap-20 mb-10">
-              <div className={`${pixelBoxClass} ${hp.teamA > hp.teamB ? 'border-yellow-400 scale-110' : 'opacity-50'} p-6 md:p-8 w-1/2 max-w-[250px]`}>
+              <div className={`${pixelBoxClass} ${hp.teamA > hp.teamB ? 'border-yellow-400 scale-110' : 'opacity-50'} p-6 md:p-8 w-1/2 max-w-[250px] bg-slate-900`}>
                 <span className="text-3xl md:text-4xl text-red-500 font-black mb-3 block">TEAM A</span>
                 <span className="text-2xl md:text-3xl text-white font-black block">HP: {hp.teamA}</span>
               </div>
-              <div className={`${pixelBoxClass} ${hp.teamB > hp.teamA ? 'border-yellow-400 scale-110' : 'opacity-50'} p-6 md:p-8 w-1/2 max-w-[250px]`}>
+              <div className={`${pixelBoxClass} ${hp.teamB > hp.teamA ? 'border-yellow-400 scale-110' : 'opacity-50'} p-6 md:p-8 w-1/2 max-w-[250px] bg-slate-900`}>
                 <span className="text-3xl md:text-4xl text-blue-500 font-black mb-3 block">TEAM B</span>
                 <span className="text-2xl md:text-3xl text-white font-black block">HP: {hp.teamB}</span>
               </div>
