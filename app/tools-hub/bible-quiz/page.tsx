@@ -1,9 +1,8 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { BIBLE_QUESTIONS } from './questionsData'; // 🌟 引入強大的外部題庫
+import { BIBLE_QUESTIONS } from './questionsData'; // 🌟 引入你的 100 題大題庫
 
-// 🌟 角色設定 (維持你的專屬圖片)
 const CHARACTERS = [
   { id: 'david', name: '大衛', title: '巨人殺手', desc: '對抗「困難」時，傷害 x 1.5', img: 'https://raw.githubusercontent.com/woodylin0403/bible-quiz-assets/main/david.png' },
   { id: 'solomon', name: '所羅門', title: '智慧之王', desc: '任何題目答對，傷害 x 1.2', img: 'https://raw.githubusercontent.com/woodylin0403/bible-quiz-assets/main/%E6%89%80%E7%BE%85%E9%96%80.png' },
@@ -21,7 +20,6 @@ const shuffleArray = (array: any[]) => {
   return newArr;
 };
 
-// 🌟 傷害計算：同時回傳「是否觸發技能」以便顯示特效
 const calculateDamage = (charId: string | null, myHp: number, enemyHp: number, question: any, combo: number) => {
   let baseDmg = question.difficulty === '簡單' ? 100 : question.difficulty === '中等' ? 150 : 200;
   let skillTriggered = false;
@@ -65,7 +63,6 @@ export default function BibleQuiz() {
       @keyframes float-up { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-60px) scale(1.2); opacity: 0; } }
       .anim-float-dmg { animation: float-up 1s ease-out forwards; text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000; }
       
-      /* 🌟 新增技能特效動畫 */
       @keyframes skill-pop { 0% { transform: translateY(0) scale(0.5); opacity: 0; } 20% { transform: translateY(-20px) scale(1.3) rotate(-5deg); opacity: 1; } 80% { transform: translateY(-30px) scale(1) rotate(0deg); opacity: 1; } 100% { transform: translateY(-40px) scale(0.8); opacity: 0; } }
       .anim-float-skill { animation: skill-pop 1.2s ease-out forwards; color: #FCD34D; text-shadow: 2px 2px 0 #B45309, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000; z-index: 60; }
 
@@ -174,6 +171,7 @@ export default function BibleQuiz() {
     } 
     else if (gameState === 'selectB') { 
       setTeamBChar(charId); 
+      // 🌟 兩邊選完後，切換到「技能揭曉」畫面！
       setTimeout(() => setGameState('reveal'), 400);
     }
   };
@@ -189,7 +187,6 @@ export default function BibleQuiz() {
     setGameState('playing');
   };
 
-  // 🌟 修改點：處理傷害特效與技能發動字樣
   const handleScore = (attacker: 'A' | 'B') => {
     if (isScoring) return; 
     setIsScoring(true);
@@ -321,7 +318,7 @@ export default function BibleQuiz() {
           </div>
         )}
 
-        {/* 🌟 找回角色的技能文字說明 */}
+        {/* 🌟 隱藏技能說明的選角畫面 */}
         {(gameState === 'selectA' || gameState === 'selectB') && (
            <div className="z-10 w-full max-w-6xl">
            <h2 className="text-3xl md:text-4xl text-white font-black mb-6 text-center bg-slate-900 border-2 md:border-4 border-black p-3 inline-block shadow-[4px_4px_0px_rgba(0,0,0,1)] w-full">
@@ -342,9 +339,8 @@ export default function BibleQuiz() {
                    {isP2 && <span className="absolute top-0 right-0 bg-blue-600 text-white text-xs font-bold px-2 py-1 border-b-2 border-l-2 border-black z-20">P2 已選</span>}
                    <img src={char.img} className="w-20 h-20 md:w-28 md:h-28 mb-3 md:mb-4 anim-idle bg-slate-600 p-1 md:p-2 border-2 border-black object-contain" alt="character" />
                    <h3 className="text-lg md:text-2xl text-yellow-400 font-black text-center leading-tight">{char.name}</h3>
-                   {/* 🌟 補回的技能說明區塊 */}
-                   <p className="text-xs md:text-sm text-blue-300 font-bold mb-1 mt-2 text-center leading-tight hidden md:block">{char.title}</p>
-                   <p className="text-[10px] md:text-xs text-slate-300 font-medium text-center leading-tight hidden md:block">{char.desc}</p>
+                   {/* 🌟 隱藏真實技能，改為閃爍的神祕文字 */}
+                   <p className="text-[10px] md:text-xs text-slate-400 font-medium text-center leading-tight hidden md:block mt-2 animate-pulse">??? 隱藏技能 ???</p>
                  </button>
                );
              })}
@@ -352,7 +348,52 @@ export default function BibleQuiz() {
          </div>
         )}
 
-        {gameState === 'reveal' && (<div className="text-6xl md:text-8xl text-white font-black animate-pulse"><button onClick={startBattle} className={`${pixelButtonClass} bg-red-600 text-white p-6 md:p-8`}>FIGHT!</button></div>)}
+        {/* 🌟 雙方選定後，進入專屬的 SKILL REVEAL 揭曉畫面 */}
+        {gameState === 'reveal' && (
+          <div className="z-10 w-full max-w-4xl text-center">
+            <h2 className="text-4xl md:text-6xl text-yellow-400 font-black mb-6 md:mb-10 drop-shadow-[3px_3px_0px_black]">SKILL REVEAL!</h2>
+            <div className="flex justify-center items-center gap-4 md:gap-12 mb-8 md:mb-10">
+              
+              <div className={`${pixelBoxClass} anim-slide-l flex flex-col items-center w-[45%] md:w-64`}>
+                <span className="text-xl md:text-3xl text-red-500 font-black mb-2 md:mb-4 drop-shadow-[2px_2px_0px_white]">TEAM A</span>
+                {teamAChar && (() => {
+                  const c = CHARACTERS.find(x => x.id === teamAChar);
+                  return c && (
+                    <>
+                      <img src={c.img} className="w-16 h-16 md:w-28 md:h-28 mb-2 md:mb-4 rendering-pixelated object-contain bg-slate-700/80 p-2 border-2 border-black" alt="P1" />
+                      <h3 className="text-lg md:text-3xl text-yellow-400 font-black mb-1">{c.name}</h3>
+                      <p className="text-xs md:text-sm text-blue-300 font-bold mb-2 md:mb-3">{c.title}</p>
+                      <div className="bg-slate-900 border-2 border-yellow-400 p-2 w-full">
+                        <p className="text-[10px] md:text-sm text-white font-bold">{c.desc}</p>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+
+              <div className="text-4xl md:text-7xl text-white font-black italic anim-boom drop-shadow-[4px_4px_0px_black]">VS</div>
+
+              <div className={`${pixelBoxClass} anim-slide-r flex flex-col items-center w-[45%] md:w-64`}>
+                <span className="text-xl md:text-3xl text-blue-500 font-black mb-2 md:mb-4 drop-shadow-[2px_2px_0px_white]">TEAM B</span>
+                {teamBChar && (() => {
+                  const c = CHARACTERS.find(x => x.id === teamBChar);
+                  return c && (
+                    <>
+                      <img src={c.img} className="w-16 h-16 md:w-28 md:h-28 mb-2 md:mb-4 rendering-pixelated object-contain bg-slate-700/80 p-2 border-2 border-black transform scale-x-[-1]" alt="P2" />
+                      <h3 className="text-lg md:text-3xl text-yellow-400 font-black mb-1">{c.name}</h3>
+                      <p className="text-xs md:text-sm text-blue-300 font-bold mb-2 md:mb-3">{c.title}</p>
+                      <div className="bg-slate-900 border-2 border-yellow-400 p-2 w-full">
+                        <p className="text-[10px] md:text-sm text-white font-bold">{c.desc}</p>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+              
+            </div>
+            <button onClick={startBattle} className={`${pixelButtonClass} bg-red-600 text-white text-3xl md:text-5xl px-12 md:px-16 py-4 md:py-6 animate-pulse`}>FIGHT!</button>
+          </div>
+        )}
 
         {gameState === 'playing' && currentQ && (
           <div className="z-10 w-full max-w-5xl flex flex-col h-full py-2">
@@ -393,7 +434,6 @@ export default function BibleQuiz() {
               <div className="absolute inset-0 flex justify-between items-end px-4 md:px-8 pb-4 pointer-events-none">
                 <div className="relative">
                   <img src={CHARACTERS.find(c => c.id === teamAChar)?.img} className={`w-28 h-28 md:w-44 md:h-44 rendering-pixelated object-contain bg-slate-700/80 p-2 md:p-3 border-2 md:border-4 border-black ${hitState === 'A' ? 'anim-hit' : 'anim-idle'}`} alt="Player A" />
-                  {/* 🌟 結合傷害與技能特效 */}
                   {floatingText.teamA.map(txt => (
                     <div key={txt.id} className={`absolute z-50 ${txt.type === 'skill' ? 'anim-float-skill -top-16 left-6 text-4xl md:text-5xl font-black' : 'anim-float-dmg -top-12 md:-top-16 left-2 md:left-6 text-3xl md:text-4xl text-red-500 font-black'}`}>
                       {txt.text}
