@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
-import Link from 'next/link'; // 🌟 引入 Link 組件
+import Link from 'next/link';
 
 // --- 題庫 (放入你的 50 題) ---
 const BIBLE_QUESTIONS = [
@@ -14,12 +14,12 @@ const BIBLE_QUESTIONS = [
   { id: 50, category: "聖經填空", difficulty: "困難", question: "「草必枯乾，花必凋殘，惟有我們神的話必______。」(以賽亞書40:8)", answer: "永遠立定" }
 ];
 
-// 🌟 角色設定 (已換上你的專屬圖片連結)
+// 🌟 角色設定 (全面換上你的專屬圖片 raw 連結)
 const CHARACTERS = [
   { id: 'david', name: '大衛', title: '巨人殺手', desc: '答對「困難」題目時，傷害 x 1.5', img: 'https://mc-heads.net/body/David/256' },
   { id: 'solomon', name: '所羅門', title: '智慧之王', desc: '任何題目答對，基礎傷害 x 1.2', img: 'https://raw.githubusercontent.com/woodylin0403/bible-quiz-assets/main/%E6%89%80%E7%BE%85%E9%96%80.png' },
-  { id: 'peter', name: '彼得', title: '磐石爆發', desc: '答對「簡單」題目時，傷害 x 1.5', img: 'https://mc-heads.net/body/Peter/256' },
-  { id: 'moses', name: '摩西', title: '逆境分海', desc: '當己方血量「低於」對手時，傷害 x 1.5', img: 'https://mc-heads.net/body/Moses/256' },
+  { id: 'peter', name: '彼得', title: '磐石爆發', desc: '答對「簡單」題目時，傷害 x 1.5', img: 'https://raw.githubusercontent.com/woodylin0403/bible-quiz-assets/main/peter.png' },
+  { id: 'moses', name: '摩西', title: '逆境分海', desc: '當己方血量「低於」對手時，傷害 x 1.5', img: 'https://raw.githubusercontent.com/woodylin0403/bible-quiz-assets/main/mose.png' },
   { id: 'paul', name: '保羅', title: '外邦使徒', desc: '答對「聖經歷史」與「猜人物」時，傷害 x 1.2', img: 'https://raw.githubusercontent.com/woodylin0403/bible-quiz-assets/main/paul.png' }
 ];
 
@@ -61,8 +61,10 @@ export default function BibleQuiz() {
   const [teamAChar, setTeamAChar] = useState<string | null>(null);
   const [teamBChar, setTeamBChar] = useState<string | null>(null);
 
+  // 🌟 音效 Refs
   const introAudioRef = useRef<HTMLAudioElement>(null);
   const gameAudioRef = useRef<HTMLAudioElement>(null);
+  const cheerAudioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
     const style = document.createElement('style');
@@ -71,7 +73,7 @@ export default function BibleQuiz() {
       .anim-float-dmg { animation: float-up 1s ease-out forwards; text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000; }
       @keyframes breathing { 0%, 100% { transform: scaleY(1) translateY(0); } 50% { transform: scaleY(0.95) translateY(3px); } }
       .anim-idle { animation: breathing 2s infinite ease-in-out; transform-origin: bottom center; }
-      @keyframes hit-shake { 0%, 100% { transform: translateX(0); filter: hue-rotate(0deg); } 25%, 75% { transform: translateX(-8px); filter: hue-rotate(90deg) brightness(0.5); } 50% { transform: translateX(8px); } }
+      @keyframes hit-shake { 0%, 100% { transform: translateX(0); filter: hue-rotate(0deg); } 25%, 75% { transform: translateX(-15px); filter: hue-rotate(90deg) brightness(0.5); } 50% { transform: translateX(15px); } }
       .anim-hit { animation: hit-shake 0.4s ease-in-out; }
       .hp-bar-fill { transition: width 0.5s ease-out, background-color 0.5s; }
     `;
@@ -79,36 +81,72 @@ export default function BibleQuiz() {
     return () => { document.head.removeChild(style); };
   }, []);
 
+  // 🌟 切換背景音樂的邏輯
+  useEffect(() => {
+    if (!introAudioRef.current || !gameAudioRef.current) return;
+    
+    if (!bgmPlaying) {
+      introAudioRef.current.pause();
+      gameAudioRef.current.pause();
+      return;
+    }
+
+    if (gameState === 'playing') {
+      introAudioRef.current.pause();
+      gameAudioRef.current.play().catch(e => console.log(e));
+    } else {
+      gameAudioRef.current.pause();
+      introAudioRef.current.play().catch(e => console.log(e));
+    }
+  }, [gameState, bgmPlaying]);
+
+  // 🌟 更明顯的打擊音效 + 歡呼聲
   const playHitSound = () => {
     try {
+      // 1. 播放內建的 Punch 音效 (用較低的頻率製造震撼感)
       const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
       const ctx = new AudioContext();
       const osc = ctx.createOscillator();
       const gainNode = ctx.createGain();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(150, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
-      gainNode.gain.setValueAtTime(0.5, ctx.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(100, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+      gainNode.gain.setValueAtTime(2, ctx.currentTime); // 調大音量
+      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
       osc.connect(gainNode);
       gainNode.connect(ctx.destination);
       osc.start();
-      osc.stop(ctx.currentTime + 0.2);
+      osc.stop(ctx.currentTime + 0.3);
+
+      // 2. 同時播放歡呼聲音效檔
+      if (cheerAudioRef.current) {
+        cheerAudioRef.current.currentTime = 0;
+        cheerAudioRef.current.volume = 0.8;
+        cheerAudioRef.current.play().catch(e => console.log(e));
+      }
     } catch (e) { console.error(e); }
   };
 
   const initGame = () => {
     setBgmPlaying(true);
     setGameState('intro');
-    if (introAudioRef.current) introAudioRef.current.play().catch(e => e);
+    // 預載歡呼聲
+    if (cheerAudioRef.current) {
+      cheerAudioRef.current.volume = 0;
+      cheerAudioRef.current.play().then(() => {
+        if (cheerAudioRef.current) {
+          cheerAudioRef.current.pause();
+          cheerAudioRef.current.volume = 1;
+        }
+      }).catch(e => e);
+    }
     setTimeout(() => setGameState('start'), 3000);
   };
 
-  // 🌟 修改點 1：角色選擇加入視覺回饋與停頓延遲
   const handleCharSelect = (charId: string) => {
     if (gameState === 'selectA') { 
       setTeamAChar(charId); 
-      setTimeout(() => setGameState('selectB'), 400); // 停頓 0.4 秒讓玩家看清楚選了誰
+      setTimeout(() => setGameState('selectB'), 400); 
     } 
     else if (gameState === 'selectB') { 
       setTeamBChar(charId); 
@@ -116,7 +154,6 @@ export default function BibleQuiz() {
     }
   };
 
-  // 🌟 修改點 2：移除題數限制 (不再使用 slice)
   const startBattle = () => {
     const shuffledQuestions = shuffleArray(BIBLE_QUESTIONS);
     setQuestions(shuffledQuestions);
@@ -160,9 +197,8 @@ export default function BibleQuiz() {
   const checkWinCondition = () => {
     setHp(currentHp => {
       if (currentHp.teamA <= 0 || currentHp.teamB <= 0) {
-        setGameState('end'); // 血量歸零才結束
+        setGameState('end'); 
       } else {
-        // 🌟 修改點 2：無限題庫輪迴，題目用光就重新洗牌
         setCurrentIndex(prevIndex => {
           if (prevIndex + 1 >= BIBLE_QUESTIONS.length) {
             setQuestions(shuffleArray(BIBLE_QUESTIONS));
@@ -200,7 +236,7 @@ export default function BibleQuiz() {
     <div className="h-screen w-full bg-black flex justify-center items-center relative overflow-hidden font-dotgothic selection:bg-yellow-400">
       <div className="w-full h-full bg-slate-300 relative flex flex-col items-center justify-center p-4 md:p-6 border-x-[8px] md:border-x-[12px] border-slate-900 overflow-hidden">
         
-        {/* 🌟 修改點 3：導覽選單 (左上角) */}
+        {/* 左上角導覽與右上角音量 */}
         <div className="absolute top-2 left-2 md:top-4 md:left-4 z-[120] flex flex-col gap-2">
           <Link href="/tools-hub" className="bg-slate-700 text-white border-2 md:border-4 border-black px-3 py-1 md:px-4 md:py-2 text-xs md:text-lg shadow-[3px_3px_0px_rgba(0,0,0,1)] hover:bg-slate-600 font-bold hover:-translate-y-0.5 transition-transform">
             ← 回工具箱
@@ -212,7 +248,14 @@ export default function BibleQuiz() {
           )}
         </div>
 
+        <button onClick={() => setBgmPlaying(!bgmPlaying)} className="absolute top-2 right-2 md:top-4 md:right-4 z-[120] bg-yellow-400 text-black border-2 md:border-4 border-black px-3 py-1 md:px-4 md:py-2 text-xs md:text-lg shadow-[3px_3px_0px_rgba(0,0,0,1)] hover:bg-yellow-300 font-bold hover:-translate-y-0.5 transition-transform">
+          {bgmPlaying ? "🔊 BGM ON" : "🔇 BGM OFF"}
+        </button>
+
+        {/* 🌟 載入所有音檔 */}
         <audio ref={introAudioRef} src="https://github.com/woodylin0403/bible-quiz-assets/raw/refs/heads/main/song_1.mp3" loop />
+        <audio ref={gameAudioRef} src="https://github.com/woodylin0403/bible-quiz-assets/raw/refs/heads/main/song_2.mp3" loop />
+        <audio ref={cheerAudioRef} src="https://github.com/woodylin0403/bible-quiz-assets/raw/refs/heads/main/song3.mp3" />
         
         {gameState === 'init' && (
           <div className="z-10 text-center">
@@ -230,9 +273,9 @@ export default function BibleQuiz() {
           </div>
         )}
 
-        {/* 🌟 修改點 1：角色選擇的邊框與顏色反饋 */}
+        {/* 🌟 選角畫面：頭像放大 (w-20 -> w-28, h-20 -> h-28) 且加入 object-contain 防止變形 */}
         {(gameState === 'selectA' || gameState === 'selectB') && (
-           <div className="z-10 w-full max-w-5xl">
+           <div className="z-10 w-full max-w-6xl">
            <h2 className="text-3xl md:text-4xl text-white font-black mb-6 text-center bg-slate-900 border-2 md:border-4 border-black p-3 inline-block shadow-[4px_4px_0px_rgba(0,0,0,1)] w-full">
              {gameState === 'selectA' ? "PLAYER 1 (A隊) 選擇角色" : "PLAYER 2 (B隊) 選擇角色"}
            </h2>
@@ -248,11 +291,11 @@ export default function BibleQuiz() {
                return (
                  <button key={char.id} onClick={() => handleCharSelect(char.id)} disabled={isP1 || isP2} className={`${pixelBoxClass} ${boxStyles} flex flex-col items-center justify-center p-2 md:p-4 relative transition-all duration-200`}>
                    
-                   {/* 選擇標籤 */}
                    {isP1 && <span className="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold px-2 py-1 border-b-2 border-l-2 border-black z-20">P1 已選</span>}
                    {isP2 && <span className="absolute top-0 right-0 bg-blue-600 text-white text-xs font-bold px-2 py-1 border-b-2 border-l-2 border-black z-20">P2 已選</span>}
 
-                   <img src={char.img} className="w-16 h-16 md:w-24 md:h-24 mb-3 md:mb-4 anim-idle bg-slate-600 p-1 md:p-2 border-2 border-black" alt="character" />
+                   {/* 放大的選角圖片 */}
+                   <img src={char.img} className="w-20 h-20 md:w-32 md:h-32 mb-3 md:mb-4 anim-idle bg-slate-600 p-1 md:p-2 border-2 border-black object-contain" alt="character" />
                    <h3 className="text-xl md:text-2xl text-yellow-400 font-black text-center leading-tight">{char.name}</h3>
                  </button>
                );
@@ -263,7 +306,6 @@ export default function BibleQuiz() {
 
         {gameState === 'reveal' && (<div className="text-6xl md:text-8xl text-white font-black animate-pulse"><button onClick={startBattle} className={`${pixelButtonClass} bg-red-600 text-white p-6 md:p-8`}>FIGHT!</button></div>)}
 
-        {/* 遊戲進行中 */}
         {gameState === 'playing' && currentQ && (
           <div className="z-10 w-full max-w-5xl flex flex-col h-full py-2">
             
@@ -300,15 +342,16 @@ export default function BibleQuiz() {
                 <span className={`px-4 py-1 text-sm md:text-lg font-black border-2 border-black text-white ${currentQ.difficulty === '困難' ? 'bg-red-600' : 'bg-orange-500'}`}>{currentQ.difficulty}</span>
               </div>
 
+              {/* 🌟 戰鬥畫面：頭像再放大，並且確保比例正確 (object-contain) */}
               <div className="absolute inset-0 flex justify-between items-end px-4 md:px-8 pb-4 pointer-events-none">
                 <div className="relative">
-                  <img src={CHARACTERS.find(c => c.id === teamAChar)?.img} className={`w-20 h-20 md:w-28 md:h-28 rendering-pixelated bg-slate-700/80 p-1 md:p-2 border-2 md:border-4 border-black ${hitState === 'A' ? 'anim-hit' : 'anim-idle'}`} alt="Player A" />
+                  <img src={CHARACTERS.find(c => c.id === teamAChar)?.img} className={`w-28 h-28 md:w-44 md:h-44 rendering-pixelated object-contain bg-slate-700/80 p-2 md:p-3 border-2 md:border-4 border-black ${hitState === 'A' ? 'anim-hit' : 'anim-idle'}`} alt="Player A" />
                   {floatingText.teamA.map(txt => (
                     <div key={txt.id} className="absolute -top-12 md:-top-16 left-2 md:left-6 text-3xl md:text-4xl text-red-500 font-black anim-float-dmg z-50">{txt.text}</div>
                   ))}
                 </div>
                 <div className="relative">
-                  <img src={CHARACTERS.find(c => c.id === teamBChar)?.img} className={`w-20 h-20 md:w-28 md:h-28 rendering-pixelated bg-slate-700/80 p-1 md:p-2 border-2 md:border-4 border-black transform scale-x-[-1] ${hitState === 'B' ? 'anim-hit' : 'anim-idle'}`} alt="Player B" />
+                  <img src={CHARACTERS.find(c => c.id === teamBChar)?.img} className={`w-28 h-28 md:w-44 md:h-44 rendering-pixelated object-contain bg-slate-700/80 p-2 md:p-3 border-2 md:border-4 border-black transform scale-x-[-1] ${hitState === 'B' ? 'anim-hit' : 'anim-idle'}`} alt="Player B" />
                   {floatingText.teamB.map(txt => (
                     <div key={txt.id} className="absolute -top-12 md:-top-16 right-2 md:right-6 text-3xl md:text-4xl text-red-500 font-black anim-float-dmg z-50 transform scale-x-[-1]">{txt.text}</div>
                   ))}
