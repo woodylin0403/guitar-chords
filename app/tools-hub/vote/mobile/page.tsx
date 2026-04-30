@@ -1,48 +1,102 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { ref, onValue, runTransaction } from 'firebase/database';
+// 🌟 引入你的 Firebase
+import { rtdb as db } from '../../../../lib/firebase'; 
 
-// 戲劇隊伍資料 (可以根據實際情況修改名稱)
-const TEAMS = [
-  { id: 'team1', name: '摩西過紅海', icon: '🌊', color: 'from-blue-500 to-cyan-400', glow: 'shadow-blue-500/50' },
-  { id: 'team2', name: '大衛擊敗歌利亞', icon: '🗡️', color: 'from-red-500 to-orange-400', glow: 'shadow-orange-500/50' },
-  { id: 'team3', name: '五餅二魚', icon: '🥖', color: 'from-green-500 to-emerald-400', glow: 'shadow-emerald-500/50' },
-];
+interface Team {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  glow: string;
+}
 
 export default function MobileVote() {
+  // 🌟 動態隊伍資料
+  const [teams, setTeams] = useState<Team[]>([]);
+  
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [hasVoted, setHasVoted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentStage, setCurrentStage] = useState<'waiting' | 'voting' | 'reveal'>('waiting');
 
-  // 處理點擊卡片
+  useEffect(() => {
+    if (!db) return;
+    
+    // 監聽狀態
+    const stageRef = ref(db, 'voteState/stage');
+    const unsubscribeStage = onValue(stageRef, (snapshot) => {
+      const stage = snapshot.val();
+      if (stage) setCurrentStage(stage);
+      if (stage === 'waiting') {
+        setHasVoted(false);
+        setSelectedTeam(null);
+        localStorage.removeItem('hasVoted_cyberark');
+      }
+    });
+
+    // 🌟 監聽隊伍清單
+    const teamsListRef = ref(db, 'teamsList');
+    const unsubscribeTeams = onValue(teamsListRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const teamsArray = Object.keys(data).map(key => ({
+          id: key,
+          ...data[key]
+        }));
+        setTeams(teamsArray);
+      } else {
+        setTeams([]);
+      }
+    });
+
+    if (localStorage.getItem('hasVoted_cyberark')) {
+      setHasVoted(true);
+    }
+
+    return () => {
+      unsubscribeStage();
+      unsubscribeTeams();
+    };
+  }, []);
+
   const handleSelect = (id: string) => {
-    if (hasVoted) return;
+    if (hasVoted || currentStage !== 'voting') return;
     setSelectedTeam(id);
-    // 觸發手機震動 (如果裝置支援)
     if (typeof window !== 'undefined' && window.navigator && window.navigator.vibrate) {
       window.navigator.vibrate(50);
     }
   };
 
-  // 送出投票
-  const handleVote = () => {
-    if (!selectedTeam) return;
+  const handleVote = async () => {
+    if (!selectedTeam || currentStage !== 'voting') return;
     setIsSubmitting(true);
 
-    // 模擬送出到資料庫的延遲 (未來會換成真實 API)
-    setTimeout(() => {
+    try {
+      const teamRef = ref(db, `teamVotes/${selectedTeam}`);
+      await runTransaction(teamRef, (currentVotes) => (currentVotes || 0) + 1);
+
+      const totalRef = ref(db, 'voteState/totalVotes');
+      await runTransaction(totalRef, (currentTotal) => (currentTotal || 0) + 1);
+
       setIsSubmitting(false);
       setHasVoted(true);
-    }, 1200);
+      localStorage.setItem('hasVoted_cyberark', 'true');
+
+    } catch (error) {
+      console.error("投票失敗:", error);
+      setIsSubmitting(false);
+      alert("連線不穩定，請再試一次！");
+    }
   };
 
   return (
     <div className="min-h-screen w-full bg-slate-950 flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans selection:bg-indigo-500/30">
       
-      {/* 科技感背景光暈 */}
       <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-indigo-600/20 rounded-full blur-[100px] pointer-events-none z-0"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-amber-500/10 rounded-full blur-[100px] pointer-events-none z-0"></div>
 
-      {/* 標題區 */}
       <div className="text-center mb-10 z-10">
         <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-yellow-500 mb-2 drop-shadow-[0_0_15px_rgba(251,191,36,0.3)] tracking-widest">
           數位聖殿
@@ -52,12 +106,29 @@ export default function MobileVote() {
         </p>
       </div>
 
-      {/* 投票卡片區或完成畫面 */}
-      {!hasVoted ? (
+      {currentStage === 'waiting' && !hasVoted && (
+        <div className="z-10 text-center bg-slate-900/60 p-8 rounded-3xl border border-slate-700/50 backdrop-blur-md">
+           <span className="text-5xl mb-4 block animate-pulse">⏳</span>
+           <h2 className="text-2xl font-bold text-amber-400 mb-2">等待指示</h2>
+           <p className="text-slate-300">請等待主持人宣佈「開放投票」</p>
+        </div>
+      )}
+
+      {currentStage === 'reveal' && (
+        <div className="z-10 text-center bg-slate-900/60 p-8 rounded-3xl border border-red-500/50 backdrop-blur-md shadow-[0_0_30px_rgba(239,68,68,0.2)] animate-fade-in">
+           <span className="text-5xl mb-4 block animate-bounce">👑</span>
+           <h2 className="text-2xl font-bold text-red-400 mb-2 tracking-widest">投票已截止</h2>
+           <p className="text-slate-300">請看大螢幕，正在進行揭曉儀式！</p>
+        </div>
+      )}
+
+      {currentStage === 'voting' && !hasVoted && (
         <div className="w-full max-w-sm flex flex-col gap-4 z-10 animate-fade-in">
           <p className="text-center text-slate-300 mb-2 font-medium tracking-wide">請選擇您心中的最佳戲劇</p>
           
-          {TEAMS.map((team) => (
+          {teams.length === 0 && <p className="text-center text-slate-500">載入參賽隊伍中...</p>}
+          
+          {teams.map((team) => (
             <button
               key={team.id}
               onClick={() => handleSelect(team.id)}
@@ -71,7 +142,6 @@ export default function MobileVote() {
                 backdrop-blur-md group
               `}
             >
-              {/* 選中時的左側發光條 */}
               {selectedTeam === team.id && (
                 <div className="absolute left-0 top-0 bottom-0 w-2 bg-amber-400 shadow-[0_0_15px_#fbbf24]"></div>
               )}
@@ -87,13 +157,12 @@ export default function MobileVote() {
             </button>
           ))}
 
-          {/* 送出按鈕 */}
           <button
             onClick={handleVote}
-            disabled={!selectedTeam || isSubmitting}
+            disabled={!selectedTeam || isSubmitting || teams.length === 0}
             className={`
               mt-8 w-full py-4 rounded-xl font-black text-lg tracking-widest transition-all duration-300 relative overflow-hidden
-              ${!selectedTeam 
+              ${(!selectedTeam || teams.length === 0)
                 ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700' 
                 : isSubmitting
                   ? 'bg-amber-600 text-white cursor-wait'
@@ -101,19 +170,12 @@ export default function MobileVote() {
               }
             `}
           >
-            {isSubmitting ? (
-              <span className="flex items-center justify-center gap-2 animate-pulse">
-                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                傳送中...
-              </span>
-            ) : '送出神聖一票'}
+            {isSubmitting ? '傳送中...' : '送出神聖一票'}
           </button>
         </div>
-      ) : (
-        /* 完成投票畫面 (Wait Screen) */
+      )}
+
+      {hasVoted && currentStage !== 'reveal' && (
         <div className="w-full max-w-sm flex flex-col items-center justify-center text-center bg-slate-900/60 p-10 rounded-3xl border border-slate-700/50 backdrop-blur-md z-10 animate-fade-in shadow-2xl shadow-indigo-500/10">
           <div className="relative w-24 h-24 flex items-center justify-center mb-8">
             <div className="absolute inset-0 bg-amber-400/20 rounded-full animate-ping"></div>
@@ -126,21 +188,15 @@ export default function MobileVote() {
           </h2>
           <p className="text-indigo-200 leading-relaxed font-medium">
             感謝您的神聖一票！<br />
-            請將目光移至前方大螢幕<br />
-            準備觀看最終結果啟示
+            請等待主持人進行開票
           </p>
-          <div className="mt-8 px-6 py-2 bg-indigo-900/50 rounded-full border border-indigo-500/30">
-            <span className="text-xs text-indigo-300 tracking-widest">請保持手機畫面開啟</span>
-          </div>
         </div>
       )}
 
-      {/* 底部裝飾 */}
       <div className="absolute bottom-4 text-[10px] text-slate-600 font-mono tracking-widest">
         SYSTEM: CYBER_ARK_V1.0
       </div>
 
-      {/* 簡單的淡入動畫 CSS */}
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes fade-in {
           from { opacity: 0; transform: translateY(10px); }
