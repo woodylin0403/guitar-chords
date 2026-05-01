@@ -1,13 +1,12 @@
 {
-  "apphosting": {
-    "backendId": "vote-backend",
-    "rootDir": "/",
+  "hosting": {
+    "public": "out",
     "ignore": [
-      "node_modules",
-      ".git",
-      "firebase-debug.log",
-      "firebase-debug.*.log",
-      "functions"
-    ]
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "cleanUrls": true,
+    "trailingSlash": false
   }
 }
