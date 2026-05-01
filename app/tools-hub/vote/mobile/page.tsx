@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ref, onValue, runTransaction } from 'firebase/database';
 // 🌟 引入你的 Firebase
 import { rtdb as db } from '../../../../lib/firebase'; 
@@ -149,15 +149,17 @@ export default function MobileVote() {
 
           {/* 輪播容器 */}
           <div 
-            className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar w-full flex-1 min-h-[450px]"
+            className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar w-full flex-1"
             onScroll={handleScroll}
           >
             {PREVIEWS.map((preview) => (
-              <div key={preview.id} className="w-full h-full flex-shrink-0 snap-center px-2 py-1 flex flex-col">
-                <div className="relative w-full h-full rounded-2xl overflow-hidden border border-slate-600/50 shadow-[0_0_30px_rgba(0,0,0,0.8)] bg-slate-900/80 flex flex-col transform transition-transform duration-500">
+              <div key={preview.id} className="w-full flex-shrink-0 snap-center px-2 py-2 flex flex-col justify-center">
+                
+                {/* 🌟 卡片外框：加入明確的高度限制 */}
+                <div className="relative w-full h-[60vh] min-h-[420px] max-h-[550px] rounded-2xl overflow-hidden border border-slate-600/50 shadow-[0_0_30px_rgba(0,0,0,0.8)] bg-slate-900/80 flex flex-col transform transition-transform duration-500">
                   
-                  {/* 上半部：圖片與暗角漸層 */}
-                  <div className="relative h-3/5 w-full bg-slate-800">
+                  {/* 上半部：圖片區塊 (改用 flex-1 填滿上半部) */}
+                  <div className="relative flex-1 w-full bg-slate-800 min-h-[200px]">
                     <img 
                       src={preview.image} 
                       alt={preview.title} 
@@ -167,8 +169,8 @@ export default function MobileVote() {
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
                   </div>
 
-                  {/* 下半部：文字介紹 (玻璃擬態) */}
-                  <div className="relative h-2/5 p-5 flex flex-col justify-start backdrop-blur-xl bg-slate-900/60 border-t border-slate-700/50">
+                  {/* 下半部：文字介紹 (加上 shrink-0 防止被壓縮) */}
+                  <div className="relative shrink-0 p-5 flex flex-col justify-start backdrop-blur-xl bg-slate-900/60 border-t border-slate-700/50">
                     <h3 className="text-xl font-bold text-amber-300 mb-2 drop-shadow-md">
                       {preview.title}
                     </h3>
