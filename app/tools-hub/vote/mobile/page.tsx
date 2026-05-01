@@ -12,7 +12,7 @@ interface Team {
   glow: string;
 }
 
-// 🌟 劇本預覽資料 (對應你的三張圖片與簡介)
+// 🌟 劇本預覽資料
 const PREVIEWS = [
   {
     id: '1',
@@ -41,9 +41,12 @@ export default function MobileVote() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStage, setCurrentStage] = useState<'waiting' | 'voting' | 'reveal'>('waiting');
   
-  // 🌟 用於追蹤輪播到哪一頁的狀態
+  // 🌟 輪播狀態與手勢追蹤
   const [activeSlide, setActiveSlide] = useState(0);
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
 
+  // Firebase 監聽 (維持不變)
   useEffect(() => {
     if (!db) return;
     
@@ -82,6 +85,46 @@ export default function MobileVote() {
     };
   }, []);
 
+  // 🌟 自動輪播計時器 (每 4 秒換下一張)
+  useEffect(() => {
+    if (currentStage !== 'waiting' || hasVoted) return;
+
+    // 使用 setTimeout 而不是 setInterval，這樣手動滑動時會重新計算 4 秒
+    const timer = setTimeout(() => {
+      setActiveSlide((prev) => (prev + 1) % PREVIEWS.length);
+    }, 4000);
+
+    return () => clearTimeout(timer);
+  }, [activeSlide, currentStage, hasVoted]);
+
+  // 🌟 手勢滑動偵測邏輯
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;  // 向左滑動 (看下一張)
+    const isRightSwipe = distance < -50; // 向右滑動 (看上一張)
+
+    if (isLeftSwipe) {
+      // 無限循環：最後一張的下一張是第一張
+      setActiveSlide((prev) => (prev + 1) % PREVIEWS.length);
+    } else if (isRightSwipe) {
+      // 無限循環：第一張的上一張是最後一張
+      setActiveSlide((prev) => (prev - 1 + PREVIEWS.length) % PREVIEWS.length);
+    }
+
+    // 重置手勢座標
+    setTouchStart(0);
+    setTouchEnd(0);
+  };
+
   const handleSelect = (id: string) => {
     if (hasVoted || currentStage !== 'voting') return;
     setSelectedTeam(id);
@@ -112,14 +155,6 @@ export default function MobileVote() {
     }
   };
 
-  // 🌟 監聽輪播圖滑動以更新小圓點
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const scrollLeft = e.currentTarget.scrollLeft;
-    const width = e.currentTarget.clientWidth;
-    const index = Math.round(scrollLeft / width);
-    setActiveSlide(index);
-  };
-
   return (
     <div className="min-h-screen w-full bg-slate-950 flex flex-col items-center justify-start p-4 relative overflow-hidden font-sans selection:bg-indigo-500/30">
       
@@ -137,7 +172,7 @@ export default function MobileVote() {
         </p>
       </div>
 
-      {/* 🌟 階段一：等待中 (橫式全螢幕輪播) */}
+      {/* 🌟 階段一：等待中 (自動輪播與手勢滑動) */}
       {currentStage === 'waiting' && !hasVoted && (
         <div className="w-full flex-1 flex flex-col max-w-md mx-auto z-10 pb-10">
           
@@ -147,50 +182,54 @@ export default function MobileVote() {
              </span>
           </div>
 
-          {/* 輪播容器 */}
+          {/* 🌟 新版：自訂的手勢與 Transform 輪播容器 */}
           <div 
-            className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar w-full flex-1"
-            onScroll={handleScroll}
+            className="relative w-full overflow-hidden flex-1 rounded-2xl"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
           >
-            {PREVIEWS.map((preview) => (
-              <div key={preview.id} className="w-full flex-shrink-0 snap-center px-2 py-2 flex flex-col justify-center">
-                
-                {/* 🌟 卡片外框：加入明確的高度限制 */}
-                <div className="relative w-full h-[60vh] min-h-[420px] max-h-[550px] rounded-2xl overflow-hidden border border-slate-600/50 shadow-[0_0_30px_rgba(0,0,0,0.8)] bg-slate-900/80 flex flex-col transform transition-transform duration-500">
+            <div 
+              className="flex w-full h-full transition-transform duration-500 ease-out"
+              style={{ transform: `translateX(-${activeSlide * 100}%)` }}
+            >
+              {PREVIEWS.map((preview) => (
+                <div key={preview.id} className="w-full h-full flex-shrink-0 px-2 py-2 flex flex-col justify-center">
                   
-                  {/* 上半部：圖片區塊 (改用 flex-1 填滿上半部) */}
-                  <div className="relative flex-1 w-full bg-slate-800 min-h-[200px]">
-                    <img 
-                      src={preview.image} 
-                      alt={preview.title} 
-                      className="absolute inset-0 w-full h-full object-cover object-top opacity-90"
-                      onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/400x600/1e293b/fbbf24?text=IMAGE+LOADING' }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
-                  </div>
-
-                  {/* 下半部：文字介紹 (加上 shrink-0 防止被壓縮) */}
-                  <div className="relative shrink-0 p-5 flex flex-col justify-start backdrop-blur-xl bg-slate-900/60 border-t border-slate-700/50">
-                    <h3 className="text-xl font-bold text-amber-300 mb-2 drop-shadow-md">
-                      {preview.title}
-                    </h3>
-                    <p className="text-slate-300 text-sm leading-relaxed tracking-wide text-justify opacity-90">
-                      {preview.desc}
-                    </p>
+                  {/* 卡片本體 */}
+                  <div className="relative w-full h-[60vh] min-h-[420px] max-h-[550px] rounded-2xl overflow-hidden border border-slate-600/50 shadow-[0_0_30px_rgba(0,0,0,0.8)] bg-slate-900/80 flex flex-col">
                     
-                    {/* 裝飾線條 */}
-                    <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent"></div>
+                    <div className="relative flex-1 w-full bg-slate-800 min-h-[200px]">
+                      <img 
+                        src={preview.image} 
+                        alt={preview.title} 
+                        className="absolute inset-0 w-full h-full object-cover object-top opacity-90"
+                        onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/400x600/1e293b/fbbf24?text=IMAGE+LOADING' }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
+                    </div>
+
+                    <div className="relative shrink-0 p-5 flex flex-col justify-start backdrop-blur-xl bg-slate-900/60 border-t border-slate-700/50">
+                      <h3 className="text-xl font-bold text-amber-300 mb-2 drop-shadow-md">
+                        {preview.title}
+                      </h3>
+                      <p className="text-slate-300 text-sm leading-relaxed tracking-wide text-justify opacity-90">
+                        {preview.desc}
+                      </p>
+                      <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent"></div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
-          {/* 輪播進度點點 */}
+          {/* 輪播進度點點 (現在支援點擊直接切換！) */}
           <div className="flex justify-center items-center gap-2 mt-6">
             {PREVIEWS.map((_, i) => (
-              <div 
+              <button 
                 key={i} 
+                onClick={() => setActiveSlide(i)}
                 className={`h-2 rounded-full transition-all duration-300 ${i === activeSlide ? 'w-6 bg-amber-400 shadow-[0_0_10px_#fbbf24]' : 'w-2 bg-slate-700'}`} 
               />
             ))}
@@ -284,10 +323,9 @@ export default function MobileVote() {
       )}
 
       <div className="absolute bottom-2 text-[10px] text-slate-600 font-mono tracking-widest z-0">
-        SYSTEM: CYBER_ARK_V1.1
+        SYSTEM: CYBER_ARK_V1.2
       </div>
 
-      {/* 隱藏原生滾動條的 CSS */}
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes fade-in {
           from { opacity: 0; transform: translateY(10px); }
@@ -295,13 +333,6 @@ export default function MobileVote() {
         }
         .animate-fade-in {
           animation: fade-in 0.6s ease-out forwards;
-        }
-        .hide-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .hide-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
         }
       `}} />
     </div>
