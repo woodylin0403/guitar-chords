@@ -47,7 +47,7 @@ export default function MobileVote() {
   const [currentStage, setCurrentStage] = useState<'waiting' | 'voting' | 'reveal'>('waiting');
   
   // 🌟 無縫輪播狀態
-  const [currentIndex, setCurrentIndex] = useState(1); // 初始停在真實的第 1 張 (索引 1)
+  const [currentIndex, setCurrentIndex] = useState(1);
   const [isTransitioning, setIsTransitioning] = useState(true);
 
   // 🌟 滑鼠與手勢追蹤
@@ -73,7 +73,6 @@ export default function MobileVote() {
       if (stage) {
         setCurrentStage(stage);
         
-        // 階段切換時自動換音樂
         if (audioRef.current && isAudioEnabled) {
           audioRef.current.src = musicTracks[stage as keyof typeof musicTracks];
           audioRef.current.play().catch(e => console.log("播放失敗", e));
@@ -111,7 +110,7 @@ export default function MobileVote() {
     };
   }, [isAudioEnabled]);
 
-  // 🌟 自動輪播計時器 (每 4 秒自動往右滑)
+  // 自動輪播計時器
   useEffect(() => {
     if (currentStage !== 'waiting' || hasVoted) return;
     const timer = setTimeout(() => {
@@ -120,7 +119,6 @@ export default function MobileVote() {
     return () => clearTimeout(timer);
   }, [currentIndex, currentStage, hasVoted]);
 
-  // 🌟 輪播控制邏輯
   const nextSlide = () => {
     if (currentIndex >= EXTENDED_PREVIEWS.length - 1) return;
     setIsTransitioning(true);
@@ -133,20 +131,16 @@ export default function MobileVote() {
     setCurrentIndex(prev => prev - 1);
   };
 
-  // 當 CSS 動畫結束時，偷偷把假的分身「瞬間切換」回本尊
   const handleTransitionEnd = () => {
     if (currentIndex === EXTENDED_PREVIEWS.length - 1) {
-      // 滑到假的第一張 -> 瞬間切回真實的第一張
       setIsTransitioning(false);
       setCurrentIndex(1);
     } else if (currentIndex === 0) {
-      // 滑到假的最後一張 -> 瞬間切回真實的最後一張
       setIsTransitioning(false);
       setCurrentIndex(EXTENDED_PREVIEWS.length - 2);
     }
   };
 
-  // 🌟 綜合處理滑動手勢與滑鼠拖曳
   const handleDragStart = (clientX: number) => {
     setStartX(clientX);
     setIsDragging(true);
@@ -155,20 +149,16 @@ export default function MobileVote() {
   const handleDragEnd = (clientX: number) => {
     if (!isDragging || !startX) return;
     const distance = startX - clientX;
-    
     if (distance > 50) nextSlide();
     else if (distance < -50) prevSlide();
-    
     setIsDragging(false);
     setStartX(0);
   };
 
-  // 處理點點與真實 Index 的換算
   let realIndex = currentIndex - 1;
   if (currentIndex === 0) realIndex = PREVIEWS.length - 1;
   if (currentIndex === EXTENDED_PREVIEWS.length - 1) realIndex = 0;
 
-  // 音樂啟動按鈕
   const enableAudio = () => {
     setIsAudioEnabled(true);
     if (audioRef.current) {
@@ -200,10 +190,8 @@ export default function MobileVote() {
   return (
     <div className="min-h-screen w-full bg-slate-950 flex flex-col items-center justify-start p-4 relative overflow-hidden font-sans selection:bg-indigo-500/30">
       
-      {/* 隱藏的音樂播放器 */}
       <audio ref={audioRef} loop />
 
-      {/* 音樂啟動按鈕 */}
       {!isAudioEnabled && (
         <button 
           onClick={enableAudio}
@@ -213,7 +201,6 @@ export default function MobileVote() {
         </button>
       )}
 
-      {/* 背景特效 */}
       <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-indigo-600/20 rounded-full blur-[100px] pointer-events-none z-0"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-amber-500/10 rounded-full blur-[100px] pointer-events-none z-0"></div>
 
@@ -226,17 +213,15 @@ export default function MobileVote() {
         </p>
       </div>
 
-      {/* 🌟 階段一：等待中 (完美無限輪播) */}
+      {/* 階段一：等待中 (無限輪播) */}
       {currentStage === 'waiting' && !hasVoted && (
         <div className="w-full flex-1 flex flex-col max-w-md mx-auto z-10 pb-10 select-none">
-          
           <div className="text-center mb-4">
              <span className="text-sm font-bold text-amber-400 tracking-widest animate-pulse border border-amber-400/30 bg-amber-400/10 px-4 py-1 rounded-full shadow-[0_0_15px_rgba(251,191,36,0.2)]">
                等待投票開始
              </span>
           </div>
 
-          {/* 手勢與滑鼠偵測區塊 */}
           <div 
             className="relative w-full overflow-hidden flex-1 rounded-2xl cursor-grab active:cursor-grabbing"
             onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
@@ -245,7 +230,6 @@ export default function MobileVote() {
             onMouseUp={(e) => handleDragEnd(e.clientX)}
             onMouseLeave={(e) => isDragging && handleDragEnd(e.clientX)}
           >
-            {/* 實際負責滑動的容器 */}
             <div 
               className={`flex w-full h-full ${isTransitioning ? 'transition-transform duration-500 ease-out' : 'transition-none'}`}
               style={{ transform: `translateX(-${currentIndex * 100}%)` }}
@@ -273,7 +257,6 @@ export default function MobileVote() {
             </div>
           </div>
 
-          {/* 輪播進度點點 (綁定真實 Index) */}
           <div className="flex justify-center items-center gap-2 mt-6">
             {PREVIEWS.map((_, i) => (
               <button 
@@ -301,38 +284,121 @@ export default function MobileVote() {
         </div>
       )}
 
-      {/* 階段三：投票進行中 */}
+      {/* 🌟 階段三：投票進行中 (尊爵直式電影海報 + 手風琴特效) */}
       {currentStage === 'voting' && !hasVoted && (
-        <div className="w-full max-w-sm flex flex-col gap-4 z-10 animate-fade-in mt-10">
-          <p className="text-center text-slate-300 mb-2 font-medium tracking-wide">請選擇您心中的最佳戲劇</p>
+        <div className="w-full max-w-sm flex flex-col gap-4 z-10 animate-fade-in mt-6">
+          <div className="text-center mb-4">
+            <span className="text-amber-500 text-xs font-black tracking-[0.3em] bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
+              STAGE 02
+            </span>
+            <h2 className="text-2xl text-white font-bold mt-3 tracking-widest drop-shadow-md">
+              請選擇您的最佳啟示
+            </h2>
+            <p className="text-indigo-300/60 text-xs mt-1 flex justify-center items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+              全場通道已開啟，即時接收中...
+            </p>
+          </div>
           
-          {teams.length === 0 && <p className="text-center text-slate-500">載入參賽隊伍中...</p>}
+          {teams.length === 0 && <p className="text-center text-slate-500 my-10 animate-pulse">神聖印記載入中...</p>}
           
-          {teams.map((team) => (
-            <button
-              key={team.id}
-              onClick={() => {
-                if (hasVoted || currentStage !== 'voting') return;
-                setSelectedTeam(team.id);
-                if (typeof window !== 'undefined' && window.navigator && window.navigator.vibrate) window.navigator.vibrate(50);
-              }}
-              disabled={isSubmitting}
-              className={`relative overflow-hidden w-full p-4 rounded-2xl border transition-all duration-300 text-left ${selectedTeam === team.id ? 'bg-slate-800/90 border-amber-400 shadow-[0_0_20px_rgba(251,191,36,0.25)] scale-[1.02]' : 'bg-slate-900/50 border-slate-700/50 hover:bg-slate-800 hover:border-slate-600'} backdrop-blur-md group`}
-            >
-              {selectedTeam === team.id && <div className="absolute left-0 top-0 bottom-0 w-2 bg-amber-400 shadow-[0_0_15px_#fbbf24]"></div>}
-              <div className="flex items-center gap-5 relative z-10 pl-2">
-                <div className={`w-14 h-14 rounded-full flex items-center justify-center text-3xl bg-gradient-to-br ${team.color} ${team.glow} shadow-lg transition-transform duration-300 ${selectedTeam === team.id ? 'scale-110' : 'group-hover:scale-105'}`}>{team.icon}</div>
-                <h3 className={`text-xl font-bold transition-colors duration-300 ${selectedTeam === team.id ? 'text-amber-400 drop-shadow-[0_0_5px_rgba(251,191,36,0.5)]' : 'text-slate-200'}`}>{team.name}</h3>
-              </div>
-            </button>
-          ))}
+          {/* 投票選項區：手風琴直式列表 */}
+          <div className="flex flex-col gap-3">
+            {teams.map((team, index) => {
+              // 自動配對圖片
+              const previewData = PREVIEWS.find(p => p.id === team.id) || PREVIEWS[index % PREVIEWS.length];
+              const isSelected = selectedTeam === team.id;
+              const isOtherSelected = selectedTeam !== null && !isSelected;
 
+              return (
+                <button
+                  key={team.id}
+                  onClick={() => {
+                    if (hasVoted || currentStage !== 'voting') return;
+                    setSelectedTeam(team.id);
+                    if (typeof window !== 'undefined' && window.navigator && window.navigator.vibrate) window.navigator.vibrate(50);
+                  }}
+                  disabled={isSubmitting}
+                  className={`
+                    relative overflow-hidden w-full rounded-2xl transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] text-left group border
+                    ${isSelected 
+                      ? 'h-[240px] border-amber-400 shadow-[0_0_30px_rgba(251,191,36,0.3)] ring-1 ring-amber-400/50 scale-[1.02] z-20' 
+                      : 'h-[100px] border-slate-700/50 hover:border-slate-500 z-10'
+                    }
+                    ${isOtherSelected ? 'opacity-40 grayscale-[70%] h-[70px]' : 'opacity-100'}
+                  `}
+                >
+                  {/* 背景圖片層 */}
+                  <div className={`absolute inset-0 transition-transform duration-1000 ${isSelected ? 'scale-110' : 'scale-100 group-hover:scale-105'}`}>
+                    <img 
+                      src={previewData.image} 
+                      alt={team.name}
+                      className="w-full h-full object-cover object-center"
+                      onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/400x200/1e293b/fbbf24?text=IMAGE+LOADING' }}
+                    />
+                  </div>
+
+                  {/* 漸層遮罩層 */}
+                  <div className={`absolute inset-0 transition-colors duration-700 ${
+                    isSelected 
+                      ? 'bg-gradient-to-t from-slate-950 via-slate-900/60 to-amber-900/20' 
+                      : 'bg-gradient-to-t from-slate-950 via-slate-900/80 to-slate-900/60'
+                  }`}></div>
+
+                  {/* 內容排版層 */}
+                  <div className={`absolute inset-0 p-4 flex flex-col transition-all duration-700 ${isSelected ? 'justify-end' : 'justify-center'}`}>
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex flex-col gap-1">
+                        <p className={`font-mono tracking-[0.2em] transition-all duration-500 ${isSelected ? 'text-amber-400 text-[10px]' : 'text-slate-400 text-[9px]'}`}>
+                          CANDIDATE // 0{index + 1}
+                        </p>
+                        <h3 className={`font-bold transition-all duration-500 ${isSelected ? 'text-2xl text-white drop-shadow-lg' : 'text-lg text-slate-200'}`}>
+                          {team.name}
+                        </h3>
+                      </div>
+
+                      {/* 打勾印記 */}
+                      <div className={`
+                        w-10 h-10 rounded-full border-2 border-amber-400 flex items-center justify-center bg-slate-900/80 shadow-[0_0_15px_rgba(251,191,36,0.5)] backdrop-blur-md
+                        transition-all duration-500 transform origin-center
+                        ${isSelected ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-50 -rotate-90 absolute right-4'}
+                      `}>
+                        <span className="text-amber-400 font-black text-xl">✓</span>
+                      </div>
+                    </div>
+
+                    {/* 展開時才顯示的詳細說明 */}
+                    <div className={`overflow-hidden transition-all duration-700 ease-out ${isSelected ? 'max-h-[60px] opacity-100 mt-2' : 'max-h-0 opacity-0 mt-0'}`}>
+                       <p className="text-xs text-slate-300/90 leading-relaxed line-clamp-2">
+                         {previewData.desc}
+                       </p>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* 帶有流光特效的送出按鈕 */}
           <button
             onClick={handleVote}
             disabled={!selectedTeam || isSubmitting || teams.length === 0}
-            className={`mt-8 w-full py-4 rounded-xl font-black text-lg tracking-widest transition-all duration-300 relative overflow-hidden ${(!selectedTeam || teams.length === 0) ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700' : isSubmitting ? 'bg-amber-600 text-white cursor-wait' : 'bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-900 shadow-[0_0_20px_rgba(251,191,36,0.4)] hover:shadow-[0_0_30px_rgba(251,191,36,0.6)] hover:-translate-y-1'}`}
+            className={`
+              mt-6 w-full py-4 rounded-xl font-black text-lg tracking-widest transition-all duration-500 relative overflow-hidden group
+              ${(!selectedTeam || teams.length === 0)
+                ? 'bg-slate-800/80 text-slate-500 cursor-not-allowed border border-slate-700/50 backdrop-blur-sm' 
+                : isSubmitting
+                  ? 'bg-amber-700 text-white cursor-wait scale-95'
+                  : 'bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-slate-900 shadow-[0_0_25px_rgba(251,191,36,0.5)] hover:shadow-[0_0_40px_rgba(251,191,36,0.7)] hover:-translate-y-1 active:scale-95'
+              }
+            `}
           >
-            {isSubmitting ? '傳送中...' : '送出神聖一票'}
+            {selectedTeam && !isSubmitting && (
+              <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent group-hover:animate-[shimmer_1.5s_infinite]"></div>
+            )}
+            <span className="relative z-10">
+              {isSubmitting ? '正在銘刻您的選擇...' : '送出神聖一票'}
+            </span>
           </button>
         </div>
       )}
@@ -350,12 +416,15 @@ export default function MobileVote() {
       )}
 
       <div className="absolute bottom-2 text-[10px] text-slate-600 font-mono tracking-widest z-0">
-        SYSTEM: CYBER_ARK_V1.3_PRO
+        SYSTEM: CYBER_ARK_V1.4_PRO_MAX
       </div>
 
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fade-in 0.6s ease-out forwards; }
+        
+        /* 🌟 流光特效 CSS */
+        @keyframes shimmer { 100% { transform: translateX(100%); } }
       `}} />
     </div>
   );
