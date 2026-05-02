@@ -32,7 +32,6 @@ const PREVIEWS = [
   }
 ];
 
-// 🌟 無限循環技巧：在頭尾偷偷複製一份陣列資料 [3, 1, 2, 3, 1]
 const EXTENDED_PREVIEWS = [
   PREVIEWS[PREVIEWS.length - 1],
   ...PREVIEWS,
@@ -46,22 +45,32 @@ export default function MobileVote() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStage, setCurrentStage] = useState<'waiting' | 'voting' | 'reveal'>('waiting');
   
-  // 🌟 無縫輪播狀態
+  // 輪播狀態
   const [currentIndex, setCurrentIndex] = useState(1);
   const [isTransitioning, setIsTransitioning] = useState(true);
 
-  // 🌟 滑鼠與手勢追蹤
+  // 滑鼠與手勢追蹤
   const [startX, setStartX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
-  // 🌟 音樂播放器設定
+  // 🌟 音樂播放器與開關狀態
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isAudioEnabled, setIsAudioEnabled] = useState(false);
+  // 用來追蹤使用者是否主動暫停了音樂
+  const [userMuted, setUserMuted] = useState(false); 
+
   const musicTracks = {
     waiting: '/music/waiting.mp3',
     voting: '/music/voting.mp3',
     reveal: '/music/reveal.mp3'
   };
+
+  // 🌟 揭曉階段的狀態管理
+  const [revealStep, setRevealStep] = useState<number>(0); // 0: 準備, 1: 季軍, 2: 亞軍, 3: 冠軍
+  const [rankedTeams, setRankedTeams] = useState<any[]>([]);
+
+  // 取得票數
+  const [teamVotes, setTeamVotes] = useState<Record<string, number>>({});
 
   // Firebase 監聽 & 音樂切換
   useEffect(() => {
@@ -73,7 +82,8 @@ export default function MobileVote() {
       if (stage) {
         setCurrentStage(stage);
         
-        if (audioRef.current && isAudioEnabled) {
+        // 音樂自動切換邏輯
+        if (audioRef.current && isAudioEnabled && !userMuted) {
           audioRef.current.src = musicTracks[stage as keyof typeof musicTracks];
           audioRef.current.play().catch(e => console.log("播放失敗", e));
         }
@@ -82,6 +92,7 @@ export default function MobileVote() {
           setHasVoted(false);
           setSelectedTeam(null);
           localStorage.removeItem('hasVoted_cyberark');
+          setRevealStep(0); // 重置揭曉狀態
         }
       }
     });
@@ -100,6 +111,15 @@ export default function MobileVote() {
       }
     });
 
+    // 🌟 監聽票數，用於揭曉排名
+    const teamsVoteRef = ref(db, 'teamVotes');
+    const unsubTeamsVote = onValue(teamsVoteRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        setTeamVotes(data);
+      }
+    });
+
     if (localStorage.getItem('hasVoted_cyberark')) {
       setHasVoted(true);
     }
@@ -107,8 +127,38 @@ export default function MobileVote() {
     return () => {
       unsubscribeStage();
       unsubscribeTeams();
+      unsubTeamsVote();
     };
-  }, [isAudioEnabled]);
+  }, [isAudioEnabled, userMuted]);
+
+  // 🌟 揭曉階段：當切換到 reveal 且有票數資料時，計算排名
+  useEffect(() => {
+    if (currentStage === 'reveal' && teams.length > 0) {
+      const sorted = [...teams].sort((a, b) => (teamVotes[b.id] || 0) - (teamVotes[a.id] || 0));
+      // 組合隊伍資訊與預覽圖片資料
+      const rankedData = sorted.map((team, index) => {
+        const preview = PREVIEWS.find(p => p.id === team.id) || PREVIEWS[index % PREVIEWS.length];
+        return {
+          ...team,
+          votes: teamVotes[team.id] || 0,
+          rank: index + 1,
+          preview
+        };
+      });
+      setRankedTeams(rankedData);
+      
+      // 這裡可以做成自動倒數揭曉，或是由主持人後台控制
+      // 為了展示效果，我們設定自動每隔幾秒揭曉下一個
+      if (revealStep === 0) {
+        setTimeout(() => setRevealStep(1), 2000); // 2秒後揭曉季軍
+      } else if (revealStep === 1) {
+        setTimeout(() => setRevealStep(2), 4000); // 4秒後揭曉亞軍
+      } else if (revealStep === 2) {
+        setTimeout(() => setRevealStep(3), 5000); // 5秒後揭曉冠軍
+      }
+    }
+  }, [currentStage, teams, teamVotes, revealStep]);
+
 
   // 自動輪播計時器
   useEffect(() => {
@@ -159,11 +209,26 @@ export default function MobileVote() {
   if (currentIndex === 0) realIndex = PREVIEWS.length - 1;
   if (currentIndex === EXTENDED_PREVIEWS.length - 1) realIndex = 0;
 
-  const enableAudio = () => {
-    setIsAudioEnabled(true);
-    if (audioRef.current) {
-      audioRef.current.src = musicTracks[currentStage];
-      audioRef.current.play();
+  // 🌟 音樂啟動與切換按鈕
+  const toggleAudio = () => {
+    if (!isAudioEnabled) {
+      setIsAudioEnabled(true);
+      setUserMuted(false);
+      if (audioRef.current) {
+        audioRef.current.src = musicTracks[currentStage as keyof typeof musicTracks];
+        audioRef.current.play().catch(e => console.log("播放失敗", e));
+      }
+    } else {
+      // 已經開啟了，進行播放/暫停切換
+      if (audioRef.current) {
+        if (userMuted) {
+          audioRef.current.play();
+          setUserMuted(false);
+        } else {
+          audioRef.current.pause();
+          setUserMuted(true);
+        }
+      }
     }
   };
 
@@ -187,25 +252,88 @@ export default function MobileVote() {
     }
   };
 
+  // 🌟 輔助函式：渲染得獎者卡片
+  const renderWinnerCard = (rankIndex: number, rankTitle: string, medal: string, delayClass: string) => {
+    const winner = rankedTeams[rankIndex];
+    if (!winner) return null;
+
+    const isChampion = rankIndex === 0;
+
+    return (
+      <div className={`w-full flex flex-col items-center animate-slide-up-fade ${delayClass}`}>
+        <div className={`
+          relative overflow-hidden rounded-2xl border shadow-2xl transition-all duration-700
+          ${isChampion 
+            ? 'w-full max-w-sm h-[380px] border-amber-400 shadow-[0_0_50px_rgba(251,191,36,0.4)] z-30 scale-105' 
+            : 'w-64 h-[220px] border-slate-600/50 shadow-[0_0_20px_rgba(0,0,0,0.8)] z-10 opacity-80'
+          }
+        `}>
+          {/* 金色/銀色邊框發光 */}
+          <div className={`absolute inset-0 z-0 ${isChampion ? 'bg-gradient-to-br from-amber-200/20 via-transparent to-amber-600/20' : ''}`}></div>
+
+          {/* 劇本圖片 */}
+          <img 
+            src={winner.preview.image} 
+            alt={winner.name}
+            className="absolute inset-0 w-full h-full object-cover object-center"
+            onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/400x600/1e293b/fbbf24?text=IMAGE+LOADING' }}
+          />
+
+          {/* 漸層遮罩 */}
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/80 to-transparent"></div>
+
+          {/* 內容資訊 */}
+          <div className={`absolute inset-0 p-5 flex flex-col justify-end text-center z-10`}>
+            <div className={`text-5xl drop-shadow-md mb-2 ${isChampion ? 'animate-bounce' : ''}`}>{medal}</div>
+            <h4 className={`font-black uppercase tracking-widest ${isChampion ? 'text-amber-400 text-lg mb-1 drop-shadow-[0_0_10px_rgba(251,191,36,0.8)]' : 'text-slate-400 text-sm'}`}>
+              {rankTitle}
+            </h4>
+            <h3 className={`font-bold text-white leading-tight ${isChampion ? 'text-3xl drop-shadow-lg' : 'text-xl'}`}>
+              {winner.name}
+            </h3>
+            {isChampion && (
+               <p className="mt-3 text-sm text-slate-300 line-clamp-2 px-4 leading-relaxed font-medium">
+                 {winner.preview.title}
+               </p>
+            )}
+            <div className={`mt-4 mx-auto inline-flex items-center justify-center rounded-full bg-slate-900/80 backdrop-blur-sm border px-4 py-1.5 ${isChampion ? 'border-amber-400/50' : 'border-slate-600/50'}`}>
+              <span className={`font-mono font-bold ${isChampion ? 'text-amber-400 text-xl' : 'text-slate-300 text-base'}`}>
+                {winner.votes} 票
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen w-full bg-slate-950 flex flex-col items-center justify-start p-4 relative overflow-hidden font-sans selection:bg-indigo-500/30">
       
       <audio ref={audioRef} loop />
 
-      {!isAudioEnabled && (
-        <button 
-          onClick={enableAudio}
-          className="absolute top-4 left-4 z-50 bg-indigo-600/50 hover:bg-indigo-500 text-white text-xs px-3 py-1.5 rounded-full backdrop-blur-md transition-all border border-indigo-400 shadow-lg"
-        >
-          🎵 點擊開啟音效
-        </button>
-      )}
+      {/* 🌟 整合音樂開啟/暫停按鈕 */}
+      <button 
+        onClick={toggleAudio}
+        className={`absolute top-4 left-4 z-50 px-3 py-1.5 rounded-full backdrop-blur-md transition-all border shadow-lg flex items-center gap-2
+          ${isAudioEnabled && !userMuted 
+            ? 'bg-amber-500/20 border-amber-400 text-amber-300 hover:bg-amber-500/30' 
+            : 'bg-indigo-600/50 border-indigo-400 text-white hover:bg-indigo-500'
+          }
+        `}
+      >
+        <span className="text-base">{(!isAudioEnabled || userMuted) ? '🔇' : '🔊'}</span>
+        <span className="text-xs font-bold tracking-wider">
+          {!isAudioEnabled ? '點擊開啟音效' : (userMuted ? '音樂已暫停' : '音樂播放中')}
+        </span>
+      </button>
 
-      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-indigo-600/20 rounded-full blur-[100px] pointer-events-none z-0"></div>
+      {/* 背景特效 */}
+      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-indigo-600/20 rounded-full blur-[100px] pointer-events-none z-0 transition-colors duration-1000" style={{ backgroundColor: currentStage === 'reveal' ? 'rgba(251, 191, 36, 0.1)' : '' }}></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-amber-500/10 rounded-full blur-[100px] pointer-events-none z-0"></div>
 
-      <div className="text-center my-6 z-10 mt-14">
-        <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-yellow-500 mb-1 drop-shadow-[0_0_15px_rgba(251,191,36,0.3)] tracking-widest">
+      <div className="text-center my-6 z-10 mt-14 transition-all duration-700">
+        <h1 className={`text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r mb-1 tracking-widest transition-colors duration-700 ${currentStage === 'reveal' ? 'from-amber-100 to-amber-300 drop-shadow-[0_0_20px_rgba(251,191,36,0.6)] text-4xl' : 'from-amber-200 to-yellow-500 drop-shadow-[0_0_15px_rgba(251,191,36,0.3)]'}`}>
           數位聖殿
         </h1>
         <p className="text-indigo-200 text-[10px] tracking-[0.3em] uppercase opacity-80 font-bold">
@@ -275,16 +403,53 @@ export default function MobileVote() {
         </div>
       )}
 
-      {/* 階段二：揭曉結果 */}
+      {/* 🌟 階段二：揭曉結果 (專業影展風格) */}
       {currentStage === 'reveal' && (
-        <div className="z-10 text-center bg-slate-900/60 p-8 rounded-3xl border border-red-500/50 backdrop-blur-md shadow-[0_0_30px_rgba(239,68,68,0.2)] animate-fade-in mt-20">
-           <span className="text-5xl mb-4 block animate-bounce">👑</span>
-           <h2 className="text-2xl font-bold text-red-400 mb-2 tracking-widest">投票已截止</h2>
-           <p className="text-slate-300">請看大螢幕，正在進行揭曉儀式！</p>
+        <div className="z-10 w-full max-w-sm flex flex-col items-center mt-2 animate-fade-in relative">
+          
+          {/* 金色撒花背景特效 (使用 CSS 動畫模擬) */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            <div className="absolute top-0 left-1/4 w-1 h-32 bg-amber-400/30 blur-[2px] animate-[rain_2s_linear_infinite]"></div>
+            <div className="absolute top-10 left-3/4 w-1 h-20 bg-yellow-300/40 blur-[1px] animate-[rain_3s_linear_infinite_0.5s]"></div>
+            <div className="absolute top-5 left-1/2 w-1.5 h-40 bg-amber-500/20 blur-[3px] animate-[rain_2.5s_linear_infinite_1s]"></div>
+          </div>
+
+          <div className="text-center mb-8 relative z-20">
+            <span className="text-amber-500 text-xs font-black tracking-[0.4em] bg-amber-500/10 px-4 py-1.5 rounded-full border border-amber-500/30 drop-shadow-[0_0_10px_rgba(251,191,36,0.4)]">
+              THE WINNERS
+            </span>
+            <h2 className="text-2xl text-slate-200 font-medium mt-4 tracking-widest">
+              榮耀揭曉時刻
+            </h2>
+          </div>
+
+          <div className="w-full flex flex-col gap-6 relative z-10">
+            {/* 這裡控制揭曉順序：先 3 -> 2 -> 1 */}
+            
+            {/* 冠軍 (最後揭曉，放在最上面) */}
+            {revealStep >= 3 && renderWinnerCard(0, "Champion 最佳啟示", "🏆", "delay-0")}
+
+            <div className="flex gap-4 w-full justify-center">
+              {/* 亞軍 */}
+              {revealStep >= 2 && revealStep < 3 && renderWinnerCard(1, "Second Place", "🥈", "delay-0")}
+              {/* 當冠軍揭曉時，隱藏亞軍季軍，讓畫面聚焦冠軍 */}
+              
+              {/* 季軍 */}
+              {revealStep >= 1 && revealStep < 3 && renderWinnerCard(2, "Third Place", "🥉", "delay-300")}
+            </div>
+            
+            {/* 準備中動畫 */}
+            {revealStep === 0 && (
+              <div className="w-full py-20 flex flex-col items-center justify-center animate-pulse">
+                <div className="w-16 h-16 border-4 border-amber-400/30 border-t-amber-400 rounded-full animate-spin mb-6"></div>
+                <p className="text-amber-400 tracking-widest text-lg font-bold">正在計算神聖印記...</p>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
-      {/* 🌟 階段三：投票進行中 (尊爵直式電影海報 + 手風琴特效) */}
+      {/* 階段三：投票進行中 (尊爵直式電影海報) */}
       {currentStage === 'voting' && !hasVoted && (
         <div className="w-full max-w-sm flex flex-col gap-4 z-10 animate-fade-in mt-6">
           <div className="text-center mb-4">
@@ -302,10 +467,8 @@ export default function MobileVote() {
           
           {teams.length === 0 && <p className="text-center text-slate-500 my-10 animate-pulse">神聖印記載入中...</p>}
           
-          {/* 投票選項區：手風琴直式列表 */}
           <div className="flex flex-col gap-3">
             {teams.map((team, index) => {
-              // 自動配對圖片
               const previewData = PREVIEWS.find(p => p.id === team.id) || PREVIEWS[index % PREVIEWS.length];
               const isSelected = selectedTeam === team.id;
               const isOtherSelected = selectedTeam !== null && !isSelected;
@@ -328,7 +491,6 @@ export default function MobileVote() {
                     ${isOtherSelected ? 'opacity-40 grayscale-[70%] h-[70px]' : 'opacity-100'}
                   `}
                 >
-                  {/* 背景圖片層 */}
                   <div className={`absolute inset-0 transition-transform duration-1000 ${isSelected ? 'scale-110' : 'scale-100 group-hover:scale-105'}`}>
                     <img 
                       src={previewData.image} 
@@ -338,14 +500,12 @@ export default function MobileVote() {
                     />
                   </div>
 
-                  {/* 漸層遮罩層 */}
                   <div className={`absolute inset-0 transition-colors duration-700 ${
                     isSelected 
                       ? 'bg-gradient-to-t from-slate-950 via-slate-900/60 to-amber-900/20' 
                       : 'bg-gradient-to-t from-slate-950 via-slate-900/80 to-slate-900/60'
                   }`}></div>
 
-                  {/* 內容排版層 */}
                   <div className={`absolute inset-0 p-4 flex flex-col transition-all duration-700 ${isSelected ? 'justify-end' : 'justify-center'}`}>
                     <div className="flex items-center justify-between w-full">
                       <div className="flex flex-col gap-1">
@@ -357,7 +517,6 @@ export default function MobileVote() {
                         </h3>
                       </div>
 
-                      {/* 打勾印記 */}
                       <div className={`
                         w-10 h-10 rounded-full border-2 border-amber-400 flex items-center justify-center bg-slate-900/80 shadow-[0_0_15px_rgba(251,191,36,0.5)] backdrop-blur-md
                         transition-all duration-500 transform origin-center
@@ -367,7 +526,6 @@ export default function MobileVote() {
                       </div>
                     </div>
 
-                    {/* 展開時才顯示的詳細說明 */}
                     <div className={`overflow-hidden transition-all duration-700 ease-out ${isSelected ? 'max-h-[60px] opacity-100 mt-2' : 'max-h-0 opacity-0 mt-0'}`}>
                        <p className="text-xs text-slate-300/90 leading-relaxed line-clamp-2">
                          {previewData.desc}
@@ -379,7 +537,6 @@ export default function MobileVote() {
             })}
           </div>
 
-          {/* 帶有流光特效的送出按鈕 */}
           <button
             onClick={handleVote}
             disabled={!selectedTeam || isSubmitting || teams.length === 0}
@@ -416,15 +573,28 @@ export default function MobileVote() {
       )}
 
       <div className="absolute bottom-2 text-[10px] text-slate-600 font-mono tracking-widest z-0">
-        SYSTEM: CYBER_ARK_V1.4_PRO_MAX
+        SYSTEM: CYBER_ARK_V1.5_PRO_MAX
       </div>
 
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fade-in 0.6s ease-out forwards; }
         
-        /* 🌟 流光特效 CSS */
+        /* 🌟 流光與進場特效 CSS */
         @keyframes shimmer { 100% { transform: translateX(100%); } }
+        
+        @keyframes slide-up-fade {
+          from { opacity: 0; transform: translateY(30px) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .animate-slide-up-fade { animation: slide-up-fade 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        
+        /* 🌟 下雨/灑落光影特效 */
+        @keyframes rain {
+          0% { transform: translateY(-100px); opacity: 0; }
+          50% { opacity: 1; }
+          100% { transform: translateY(500px); opacity: 0; }
+        }
       `}} />
     </div>
   );
