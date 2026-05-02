@@ -1,7 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import { ref, onValue } from 'firebase/database';
-// 🌟 引入你的 Firebase
 import { rtdb as db } from '../../../../lib/firebase'; 
 import confetti from 'canvas-confetti';
 
@@ -13,7 +12,6 @@ interface Team {
   text: string;
 }
 
-// 🌟 這裡記得確認 ID 有跟你 Firebase 上的對齊！
 const PREVIEWS = [
   { id: '1', title: '《劃破夜空的雞啼》', image: '/images/play1.jpg' },
   { id: '2', title: '《沉入深淵的斧頭》', image: '/images/play2.jpg' },
@@ -25,11 +23,8 @@ export default function ScreenVote() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [totalVotes, setTotalVotes] = useState(0);
   const [teamVotes, setTeamVotes] = useState<Record<string, number>>({});
-  
-  // 🌟 揭曉階段控制 (0: 準備, 1: 季軍, 2: 亞軍, 3: 冠軍)
   const [revealStep, setRevealStep] = useState(0);
 
-  // 音樂控制
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isAudioEnabled, setIsAudioEnabled] = useState(false);
   const [userMuted, setUserMuted] = useState(false);
@@ -52,7 +47,6 @@ export default function ScreenVote() {
           audioRef.current.src = musicTracks[data as keyof typeof musicTracks];
           audioRef.current.play().catch(e => console.log("音樂播放被阻擋:", e));
         }
-        // 切換回其他階段時，重置揭曉進度
         if (data === 'waiting' || data === 'voting') {
           setRevealStep(0);
         }
@@ -87,24 +81,19 @@ export default function ScreenVote() {
     };
   }, [isAudioEnabled, userMuted]);
 
-  // 🌟 手動揭曉邏輯 (按鈕或鍵盤觸發)
   const handleNextReveal = () => {
     if (stage !== 'reveal') return;
     setRevealStep(prev => {
       const nextStep = prev + 1;
-      if (nextStep === 3) {
-        fireConfetti(); // 揭曉冠軍時噴發彩帶
-      }
-      return nextStep > 3 ? 3 : nextStep; // 最多到 3
+      if (nextStep === 3) fireConfetti();
+      return nextStep > 3 ? 3 : nextStep;
     });
   };
 
-  // 🌟 鍵盤事件監聽 (支援空白鍵、右方向鍵)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // 只有在揭曉階段，按下空白鍵或右鍵才會觸發
       if (stage === 'reveal' && (e.code === 'Space' || e.code === 'ArrowRight')) {
-        e.preventDefault(); // 防止畫面往下滾
+        e.preventDefault();
         handleNextReveal();
       }
     };
@@ -112,7 +101,6 @@ export default function ScreenVote() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [stage]);
 
-  // 灑花特效
   const fireConfetti = () => {
     const duration = 15 * 1000;
     const animationEnd = Date.now() + duration;
@@ -128,7 +116,6 @@ export default function ScreenVote() {
     }, 250);
   };
 
-  // 音樂開關
   const toggleAudio = () => {
     if (!isAudioEnabled) {
       setIsAudioEnabled(true);
@@ -150,7 +137,6 @@ export default function ScreenVote() {
     }
   };
 
-  // 計算並排序前三名
   const sortedTeams = [...teams].sort((a, b) => (teamVotes[b.id] || 0) - (teamVotes[a.id] || 0));
   const topThree = sortedTeams.slice(0, 3).map((team, index) => {
     const preview = PREVIEWS.find(p => team.name.includes(p.title.replace('《', '').replace('》', ''))) || PREVIEWS[0];
@@ -171,17 +157,12 @@ export default function ScreenVote() {
             : 'w-[300px] h-[450px] border-slate-600/50 shadow-[0_0_30px_rgba(0,0,0,0.8)] opacity-90 scale-95 mt-20'
           }
         `}>
-          <img 
-            src={team.preview.image} 
-            alt={team.name}
-            className="absolute inset-0 w-full h-full object-cover object-top"
-          />
+          <img src={team.preview.image} alt={team.name} className="absolute inset-0 w-full h-full object-cover object-top" />
           <div className={`absolute inset-0 bg-gradient-to-t ${isChampion ? 'from-black via-black/60 to-transparent' : 'from-black via-black/80 to-transparent'} `}></div>
-          
           <div className="absolute inset-x-0 bottom-0 p-8 flex flex-col items-center text-center">
             <span className={`text-6xl drop-shadow-lg mb-4 ${isChampion ? 'animate-bounce' : ''}`}>{medal}</span>
             <h4 className={`font-mono tracking-[0.3em] mb-2 ${isChampion ? 'text-amber-400 text-xl' : 'text-slate-400 text-sm'}`}>{title}</h4>
-            <h2 className={`font-bold text-white mb-4 ${isChampion ? 'text-4xl drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]' : 'text-2xl'}`}>{team.name}</h2>
+            <h2 className={`font-bold text-white mb-4 font-serif tracking-widest ${isChampion ? 'text-4xl drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]' : 'text-2xl'}`}>{team.name}</h2>
             <div className={`px-6 py-2 rounded-full backdrop-blur-md border ${isChampion ? 'bg-amber-500/20 border-amber-400/50' : 'bg-slate-800/60 border-slate-600'}`}>
                <span className={`font-black font-mono tracking-widest ${isChampion ? 'text-amber-400 text-3xl' : 'text-slate-200 text-xl'}`}>
                  {team.votes} 票
@@ -194,121 +175,123 @@ export default function ScreenVote() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-slate-950 flex flex-col items-center justify-center relative overflow-hidden font-sans selection:bg-indigo-500/30">
+    <div className="min-h-screen w-full bg-[#0a0c10] flex flex-col items-center justify-center relative overflow-hidden font-sans selection:bg-amber-500/30">
       
       <audio ref={audioRef} loop />
 
-      {/* 🌟 右下角控制面板群 (音樂 + 手動揭曉按鈕) */}
+      {/* 音控與手動切換區塊 */}
       <div className="absolute bottom-8 right-8 z-50 flex items-center gap-4">
-        
-        {/* 手動揭曉按鈕 (僅在 Reveal 階段且還沒揭曉完時顯示) */}
         {stage === 'reveal' && revealStep < 3 && (
-          <button 
-            onClick={handleNextReveal}
-            className="flex items-center gap-2 px-6 py-3 rounded-full bg-amber-500/80 hover:bg-amber-400 border border-amber-300 shadow-[0_0_15px_rgba(251,191,36,0.5)] text-slate-900 transition-all active:scale-95"
-          >
+          <button onClick={handleNextReveal} className="flex items-center gap-2 px-6 py-3 rounded-full bg-amber-500/80 hover:bg-amber-400 border border-amber-300 shadow-[0_0_15px_rgba(251,191,36,0.5)] text-slate-900 transition-all active:scale-95">
             <span className="text-xl font-black">⏭️</span>
             <span className="text-sm font-bold tracking-widest">NEXT REVEAL</span>
           </button>
         )}
-
-        {/* 音樂控制按鈕 */}
-        <button 
-          onClick={toggleAudio}
-          className={`flex items-center gap-3 px-4 py-2 rounded-full backdrop-blur-md border transition-all duration-300
-            ${isAudioEnabled && !userMuted 
-              ? 'bg-slate-900/40 border-slate-600/50 text-slate-300 hover:bg-slate-800/60 opacity-60 hover:opacity-100' 
-              : 'bg-red-900/30 border-red-500/30 text-red-400 opacity-80 hover:opacity-100'
-            }
-          `}
-        >
-          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-black/40">
-            <span className="text-lg">{(!isAudioEnabled || userMuted) ? '🔇' : '🔊'}</span>
-          </div>
+        <button onClick={toggleAudio} className={`flex items-center gap-3 px-4 py-2 rounded-full backdrop-blur-md border transition-all duration-300 ${isAudioEnabled && !userMuted ? 'bg-slate-900/40 border-slate-600/50 text-slate-300 hover:bg-slate-800/60 opacity-60 hover:opacity-100' : 'bg-red-900/30 border-red-500/30 text-red-400 opacity-80 hover:opacity-100'}`}>
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-black/40"><span className="text-lg">{(!isAudioEnabled || userMuted) ? '🔇' : '🔊'}</span></div>
           <div className="flex flex-col items-start pr-2">
             <span className="text-[10px] uppercase tracking-[0.2em] opacity-70">Audio System</span>
-            <span className="text-xs font-bold tracking-widest">
-              {!isAudioEnabled ? 'CLICK TO START' : (userMuted ? 'MUTED' : 'PLAYING')}
-            </span>
+            <span className="text-xs font-bold tracking-widest">{!isAudioEnabled ? 'CLICK TO START' : (userMuted ? 'MUTED' : 'PLAYING')}</span>
           </div>
         </button>
       </div>
 
-      {/* 背景視覺 */}
+      {/* 🌟 背景視覺：古典大廳 */}
       <div className="absolute inset-0 z-0">
-        {/* 套用剛才生成的奢華古典大廳背景圖 */}
         <img 
           src="/images/stage-bg.jpg" 
           alt="Stage Background"
-          className="w-full h-full object-cover opacity-30"
+          className="w-full h-full object-cover opacity-40 mix-blend-luminosity"
           onError={(e) => { e.currentTarget.style.display = 'none'; }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-transparent to-slate-950 opacity-80"></div>
-        <div className={`absolute top-[-20%] left-1/2 transform -translate-x-1/2 w-[1000px] h-[800px] rounded-full blur-[150px] pointer-events-none transition-colors duration-1000 ${stage === 'reveal' ? 'bg-amber-600/20' : 'bg-indigo-900/20'}`}></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0c10] via-transparent to-[#0a0c10] opacity-90"></div>
+        <div className={`absolute top-[-20%] left-1/2 transform -translate-x-1/2 w-[1200px] h-[800px] rounded-full blur-[150px] pointer-events-none transition-colors duration-1000 ${stage === 'reveal' ? 'bg-amber-600/20' : 'bg-blue-900/20'}`}></div>
       </div>
 
+      {/* 頂部標題 */}
       <div className="absolute top-12 text-center z-20">
-        <h1 className={`text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r tracking-[0.2em] transition-all duration-1000 mb-2 ${stage === 'reveal' ? 'from-amber-100 via-yellow-200 to-amber-400 drop-shadow-[0_0_30px_rgba(251,191,36,0.6)] scale-110' : 'from-amber-200 to-yellow-500 drop-shadow-[0_0_20px_rgba(251,191,36,0.4)]'}`}>
+        <h1 className={`text-6xl font-black text-transparent bg-clip-text font-serif tracking-[0.2em] transition-all duration-1000 mb-2 ${stage === 'reveal' ? 'bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-300 drop-shadow-[0_0_30px_rgba(251,191,36,0.5)] scale-110' : 'bg-gradient-to-b from-amber-200 to-amber-600 drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]'}`}>
           數位聖殿
         </h1>
-        <p className="text-indigo-300 tracking-[0.6em] text-xl uppercase font-bold opacity-80">
+        <p className="text-amber-500/60 tracking-[0.8em] text-lg uppercase font-bold mt-2">
           神學學院戲劇決選
         </p>
       </div>
 
+      {/* 🌟 階段一：等待中 (中世紀古典祭壇風) */}
       {stage === 'waiting' && (
-        <div className="z-10 flex flex-col items-center animate-fade-in mt-24">
-          <div className="relative p-2 bg-gradient-to-br from-amber-400 to-amber-600 rounded-3xl mb-10 shadow-[0_0_50px_rgba(251,191,36,0.3)]">
-            <div className="bg-white p-6 rounded-2xl flex flex-col items-center justify-center">
+        <div className="z-10 flex flex-col items-center animate-fade-in mt-16 relative w-full">
+          
+          {/* 背後的神聖光暈 */}
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-500/10 rounded-full blur-[80px] pointer-events-none"></div>
+
+          {/* 古典 QR Code 祭壇 */}
+          <div className="relative p-[3px] bg-gradient-to-b from-amber-300 via-amber-600 to-amber-900 rounded-sm mb-12 shadow-[0_0_40px_rgba(251,191,36,0.3)]">
+            <div className="bg-[#12151c] p-8 relative overflow-hidden">
+              
+              {/* 純 CSS 繪製的古典角落金屬裝飾 */}
+              <div className="absolute top-2 left-2 w-6 h-6 border-t-2 border-l-2 border-amber-500/50"></div>
+              <div className="absolute top-2 right-2 w-6 h-6 border-t-2 border-r-2 border-amber-500/50"></div>
+              <div className="absolute bottom-2 left-2 w-6 h-6 border-b-2 border-l-2 border-amber-500/50"></div>
+              <div className="absolute bottom-2 right-2 w-6 h-6 border-b-2 border-r-2 border-amber-500/50"></div>
+
+              {/* 🌟 將 QR code 設定為深石板藍搭配羊皮紙底色，完美融入中世紀風格 */}
               <img 
-                src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://guitarchordforworship.web.app/tools-hub/vote/mobile" 
+                src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://guitarchordforworship.web.app/tools-hub/vote/mobile&color=0f172a&bgcolor=fef3c7" 
                 alt="QR Code" 
-                className="w-80 h-80"
+                className="w-[280px] h-[280px] relative z-10 shadow-inner mix-blend-screen"
+                style={{ filter: 'contrast(1.2) brightness(0.9)' }}
               />
             </div>
           </div>
-          <h2 className="text-5xl text-white font-bold mb-4 tracking-[0.2em] drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">
-            請掃描 QR Code 進入投票所
+          
+          {/* 古典排版文字 */}
+          <h2 className="text-4xl text-amber-50 font-serif font-medium mb-6 tracking-[0.3em] drop-shadow-[0_4px_10px_rgba(0,0,0,0.8)] flex items-center gap-6">
+            <span className="w-16 h-[1px] bg-gradient-to-r from-transparent to-amber-500/80"></span>
+            請掃描印記以進入聖殿
+            <span className="w-16 h-[1px] bg-gradient-to-l from-transparent to-amber-500/80"></span>
           </h2>
-          <p className="text-amber-400/80 tracking-widest text-2xl mt-4 animate-pulse">請等待主持人指示後開始投票...</p>
+          
+          <p className="text-amber-500/80 tracking-[0.4em] text-xl animate-[pulse_4s_ease-in-out_infinite] font-light mt-2">
+            等待儀式啟動...
+          </p>
         </div>
       )}
 
+      {/* 階段二：投票中 */}
       {stage === 'voting' && (
         <div className="z-10 flex flex-col items-center animate-fade-in mt-10">
           <div className="w-64 h-64 mb-16 relative flex items-center justify-center">
-            <div className="absolute inset-0 border-[6px] border-t-amber-400 border-r-indigo-500 border-b-transparent border-l-transparent rounded-full animate-spin"></div>
-            <div className="absolute inset-6 border-[6px] border-t-transparent border-r-transparent border-b-amber-300 border-l-indigo-400 rounded-full animate-[spin_3s_linear_reverse]"></div>
-            <div className="absolute inset-12 bg-indigo-900/50 rounded-full blur-md animate-pulse"></div>
-            <span className="text-7xl text-amber-400 animate-pulse relative z-10 drop-shadow-[0_0_20px_#fbbf24]">⏳</span>
+            <div className="absolute inset-0 border-[4px] border-t-amber-400 border-r-amber-700 border-b-transparent border-l-transparent rounded-full animate-spin shadow-[0_0_15px_rgba(251,191,36,0.5)]"></div>
+            <div className="absolute inset-6 border-[2px] border-t-transparent border-r-transparent border-b-amber-300 border-l-amber-600 rounded-full animate-[spin_3s_linear_reverse]"></div>
+            <div className="absolute inset-12 bg-amber-900/30 rounded-full blur-md animate-pulse"></div>
+            <span className="text-7xl text-amber-400 animate-pulse relative z-10 drop-shadow-[0_0_20px_#fbbf24] font-serif">⌛</span>
           </div>
-          <h2 className="text-6xl text-white font-black mb-8 tracking-[0.2em] drop-shadow-[0_0_20px_rgba(255,255,255,0.5)]">
+          <h2 className="text-5xl text-white font-serif mb-8 tracking-[0.3em] drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]">
             神聖通道已開啟
           </h2>
-          <div className="flex items-center justify-center bg-slate-900/60 backdrop-blur-md border border-slate-700/50 px-12 py-6 rounded-full shadow-2xl">
-            <p className="text-3xl text-indigo-200 tracking-widest font-mono">
-              即時接收 <span className="text-7xl text-amber-400 font-bold mx-6 drop-shadow-[0_0_25px_#fbbf24]">{totalVotes}</span> 份啟示
+          <div className="flex items-center justify-center bg-[#12151c]/80 backdrop-blur-md border border-amber-900/50 px-12 py-6 rounded-full shadow-2xl">
+            <p className="text-2xl text-amber-100/80 tracking-[0.2em] font-serif">
+              已接收 <span className="text-6xl text-amber-400 font-bold mx-6 drop-shadow-[0_0_25px_#fbbf24] font-sans">{totalVotes}</span> 份啟示
             </p>
           </div>
         </div>
       )}
 
+      {/* 階段三：開票揭曉 */}
       {stage === 'reveal' && (
         <div className="z-10 w-full max-w-[1600px] flex flex-col items-center mt-32 px-10">
-          
           {revealStep === 0 && (
             <div className="flex flex-col items-center justify-center h-[50vh] animate-pulse">
-              <div className="w-32 h-32 border-4 border-amber-500/20 border-t-amber-400 rounded-full animate-spin mb-10 shadow-[0_0_30px_rgba(251,191,36,0.2)]"></div>
-              <h2 className="text-5xl font-black text-amber-400 tracking-[0.3em] drop-shadow-[0_0_15px_#fbbf24]">正在彙整神聖印記...</h2>
+              <div className="w-32 h-32 border-2 border-amber-500/20 border-t-amber-400 rounded-full animate-spin mb-10 shadow-[0_0_30px_rgba(251,191,36,0.2)]"></div>
+              <h2 className="text-5xl font-serif text-amber-400 tracking-[0.4em] drop-shadow-[0_0_15px_#fbbf24]">正在彙整神聖印記...</h2>
             </div>
           )}
-
           <div className="flex justify-center items-end gap-16 w-full mt-10">
             {renderPoster(3, "THIRD PLACE", "🥉", 2, revealStep >= 1)}
             {renderPoster(1, "CHAMPION", "🏆", 0, revealStep >= 3)}
             {renderPoster(2, "SECOND PLACE", "🥈", 1, revealStep >= 2)}
           </div>
-          
         </div>
       )}
 
