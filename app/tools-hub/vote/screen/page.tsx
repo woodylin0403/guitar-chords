@@ -1,7 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import { ref, onValue } from 'firebase/database';
-// 🌟 引入你的 Firebase
 import { rtdb as db } from '../../../../lib/firebase'; 
 import confetti from 'canvas-confetti';
 
@@ -13,7 +12,6 @@ interface Team {
   text: string;
 }
 
-// 🌟 對應手機端的劇本圖片與名稱 (請確保 title 中包含模糊比對的關鍵字)
 const PREVIEWS = [
   { id: '1', title: '《劃破夜空的雞啼》', image: '/images/play1.jpg' },
   { id: '2', title: '《沉入深淵的斧頭》', image: '/images/play2.jpg' },
@@ -26,10 +24,9 @@ export default function ScreenVote() {
   const [totalVotes, setTotalVotes] = useState(0);
   const [teamVotes, setTeamVotes] = useState<Record<string, number>>({});
   
-  // 🌟 揭曉階段控制 (0: 準備, 1: 季軍, 2: 亞軍, 3: 冠軍)
+  // 🌟 改由 Firebase 控制的揭曉階段
   const [revealStep, setRevealStep] = useState(0);
 
-  // 音樂控制
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isAudioEnabled, setIsAudioEnabled] = useState(false);
   const [userMuted, setUserMuted] = useState(false);
@@ -43,6 +40,7 @@ export default function ScreenVote() {
   useEffect(() => {
     if (!db) return;
 
+    // 監聽主階段
     const stageRef = ref(db, 'voteState/stage');
     const unsubStage = onValue(stageRef, (snapshot) => {
       const data = snapshot.val();
@@ -52,11 +50,14 @@ export default function ScreenVote() {
           audioRef.current.src = musicTracks[data as keyof typeof musicTracks];
           audioRef.current.play().catch(e => console.log("音樂播放被阻擋:", e));
         }
-        // 切換回其他階段時，重置揭曉進度
-        if (data === 'waiting' || data === 'voting') {
-          setRevealStep(0);
-        }
       }
+    });
+
+    // 🌟 監聽主持人的「揭曉進度」指令
+    const revealStepRef = ref(db, 'voteState/revealStep');
+    const unsubRevealStep = onValue(revealStepRef, (snapshot) => {
+      const step = snapshot.val() || 0;
+      setRevealStep(step);
     });
 
     const totalRef = ref(db, 'voteState/totalVotes');
@@ -83,35 +84,17 @@ export default function ScreenVote() {
     });
 
     return () => {
-      unsubStage(); unsubTotal(); unsubTeamsList(); unsubTeamsVote();
+      unsubStage(); unsubRevealStep(); unsubTotal(); unsubTeamsList(); unsubTeamsVote();
     };
   }, [isAudioEnabled, userMuted]);
 
-  // 🌟 手動揭曉邏輯 (按鈕或鍵盤觸發)
-  const handleNextReveal = () => {
-    if (stage !== 'reveal') return;
-    setRevealStep(prev => {
-      const nextStep = prev + 1;
-      if (nextStep === 3) {
-        fireConfetti(); // 揭曉冠軍時噴發彩帶
-      }
-      return nextStep > 3 ? 3 : nextStep; // 最多到 3
-    });
-  };
-
-  // 🌟 鍵盤事件監聽 (支援空白鍵、右方向鍵控制揭曉)
+  // 🌟 當收到 revealStep === 3 (冠軍) 的指令時，觸發彩帶
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (stage === 'reveal' && (e.code === 'Space' || e.code === 'ArrowRight')) {
-        e.preventDefault(); 
-        handleNextReveal();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [stage]);
+    if (revealStep === 3 && stage === 'reveal') {
+      fireConfetti();
+    }
+  }, [revealStep, stage]);
 
-  // 🌟 灑花特效 (金色史詩級)
   const fireConfetti = () => {
     const duration = 15 * 1000;
     const animationEnd = Date.now() + duration;
@@ -127,7 +110,6 @@ export default function ScreenVote() {
     }, 250);
   };
 
-  // 音樂開關
   const toggleAudio = () => {
     if (!isAudioEnabled) {
       setIsAudioEnabled(true);
@@ -149,7 +131,6 @@ export default function ScreenVote() {
     }
   };
 
-  // 計算並排序前三名 (防呆：以名稱模糊比對或拿第一張兜底)
   const sortedTeams = [...teams].sort((a, b) => (teamVotes[b.id] || 0) - (teamVotes[a.id] || 0));
   const topThree = sortedTeams.slice(0, 3).map((team, index) => {
     const preview = 
@@ -159,7 +140,6 @@ export default function ScreenVote() {
     return { ...team, votes: teamVotes[team.id] || 0, preview };
   });
 
-  // 繪製得獎海報
   const renderPoster = (rank: number, title: string, medal: string, index: number, isVisible: boolean) => {
     if (!isVisible || !topThree[index]) return null;
     const team = topThree[index];
@@ -174,13 +154,8 @@ export default function ScreenVote() {
             : 'w-[300px] h-[450px] border-slate-600/50 shadow-[0_0_30px_rgba(0,0,0,0.8)] opacity-90 scale-95 mt-20'
           }
         `}>
-          <img 
-            src={team.preview.image} 
-            alt={team.name}
-            className="absolute inset-0 w-full h-full object-cover object-top"
-          />
+          <img src={team.preview.image} alt={team.name} className="absolute inset-0 w-full h-full object-cover object-top" />
           <div className={`absolute inset-0 bg-gradient-to-t ${isChampion ? 'from-black via-black/60 to-transparent' : 'from-black via-black/80 to-transparent'} `}></div>
-          
           <div className="absolute inset-x-0 bottom-0 p-8 flex flex-col items-center text-center">
             <span className={`text-6xl drop-shadow-lg mb-4 ${isChampion ? 'animate-bounce' : ''}`}>{medal}</span>
             <h4 className={`font-mono tracking-[0.3em] mb-2 ${isChampion ? 'text-amber-400 text-xl' : 'text-slate-400 text-sm'}`}>{title}</h4>
@@ -199,19 +174,10 @@ export default function ScreenVote() {
   return (
     <div className="min-h-screen w-full bg-[#0a0c10] flex flex-col items-center justify-center relative overflow-hidden font-sans selection:bg-amber-500/30">
       
-      {/* 隱藏的音樂播放器 */}
       <audio ref={audioRef} loop />
 
-      {/* 🌟 控台與音控面板 (右下角) */}
+      {/* 音控面板 (移除揭曉按鈕，純留音控) */}
       <div className="absolute bottom-8 right-8 z-50 flex items-center gap-4">
-        {/* 手動揭曉按鈕 */}
-        {stage === 'reveal' && revealStep < 3 && (
-          <button onClick={handleNextReveal} className="flex items-center gap-2 px-6 py-3 rounded-full bg-amber-500/80 hover:bg-amber-400 border border-amber-300 shadow-[0_0_15px_rgba(251,191,36,0.5)] text-slate-900 transition-all active:scale-95">
-            <span className="text-xl font-black">⏭️</span>
-            <span className="text-sm font-bold tracking-widest">NEXT REVEAL</span>
-          </button>
-        )}
-        {/* 音樂控制 */}
         <button onClick={toggleAudio} className={`flex items-center gap-3 px-4 py-2 rounded-full backdrop-blur-md border transition-all duration-300 ${isAudioEnabled && !userMuted ? 'bg-slate-900/40 border-slate-600/50 text-slate-300 hover:bg-slate-800/60 opacity-60 hover:opacity-100' : 'bg-red-900/30 border-red-500/30 text-red-400 opacity-80 hover:opacity-100'}`}>
           <div className="flex items-center justify-center w-8 h-8 rounded-full bg-black/40"><span className="text-lg">{(!isAudioEnabled || userMuted) ? '🔇' : '🔊'}</span></div>
           <div className="flex flex-col items-start pr-2">
@@ -221,7 +187,7 @@ export default function ScreenVote() {
         </button>
       </div>
 
-      {/* 🌟 背景視覺：古典大廳 */}
+      {/* 背景視覺 */}
       <div className="absolute inset-0 z-0">
         <img 
           src="/images/stage-bg.jpg" 
@@ -230,7 +196,6 @@ export default function ScreenVote() {
           onError={(e) => { e.currentTarget.style.display = 'none'; }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-[#0a0c10] via-transparent to-[#0a0c10] opacity-90"></div>
-        {/* 動態光暈 */}
         <div className={`absolute top-[-20%] left-1/2 transform -translate-x-1/2 w-[1200px] h-[800px] rounded-full blur-[150px] pointer-events-none transition-colors duration-1000 ${stage === 'reveal' ? 'bg-amber-600/20' : 'bg-blue-900/20'}`}></div>
       </div>
 
@@ -239,10 +204,11 @@ export default function ScreenVote() {
         <h1 className={`text-6xl font-black text-transparent bg-clip-text font-serif tracking-[0.2em] transition-all duration-1000 mb-2 ${stage === 'reveal' ? 'bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-300 drop-shadow-[0_0_30px_rgba(251,191,36,0.5)] scale-110' : 'bg-gradient-to-b from-amber-200 to-amber-600 drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]'}`}>
           數位聖殿
         </h1>
+        {/* 修正：改成 .jpg，並加寬與特效 */}
         <img 
           src="/images/divider.png" 
           alt="Classical Divider" 
-          className="h-12 object-contain my-2 opacity-90 drop-shadow-lg"
+          className="h-20 md:h-24 object-contain opacity-90 drop-shadow-[0_0_15px_rgba(251,191,36,0.5)] mix-blend-screen"
           onError={(e) => { e.currentTarget.style.display = 'none'; }}
         />
         <p className="text-amber-500/60 tracking-[0.8em] text-lg uppercase font-bold mt-1">
@@ -250,22 +216,16 @@ export default function ScreenVote() {
         </p>
       </div>
 
-      {/* 🌟 階段一：等待中 (羊皮紙 QR Code 祭壇) */}
+      {/* 階段一：等待中 */}
       {stage === 'waiting' && (
-        <div className="z-10 flex flex-col items-center animate-fade-in mt-16 relative w-full">
-          {/* 背後神聖光暈 */}
+        <div className="z-10 flex flex-col items-center animate-fade-in mt-28 relative w-full">
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-500/10 rounded-full blur-[80px] pointer-events-none"></div>
-
-          {/* 古典 QR Code 祭壇 */}
-          <div className="relative p-[3px] bg-gradient-to-b from-amber-300 via-amber-600 to-amber-900 rounded-sm mb-12 shadow-[0_0_40px_rgba(251,191,36,0.3)]">
+          <div className="relative p-[3px] bg-gradient-to-b from-amber-300 via-amber-600 to-amber-900 rounded-sm mb-12 shadow-[0_0_40px_rgba(251,191,36,0.3)] z-10">
             <div className="bg-[#12151c] p-8 relative overflow-hidden">
-              {/* 金屬角落裝飾 */}
               <div className="absolute top-2 left-2 w-6 h-6 border-t-2 border-l-2 border-amber-500/50"></div>
               <div className="absolute top-2 right-2 w-6 h-6 border-t-2 border-r-2 border-amber-500/50"></div>
               <div className="absolute bottom-2 left-2 w-6 h-6 border-b-2 border-l-2 border-amber-500/50"></div>
               <div className="absolute bottom-2 right-2 w-6 h-6 border-b-2 border-r-2 border-amber-500/50"></div>
-
-              {/* 深藍與羊皮紙風格的 QR Code */}
               <img 
                 src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://guitarchordforworship.web.app/tools-hub/vote/mobile&color=0f172a&bgcolor=fef3c7" 
                 alt="QR Code" 
@@ -274,7 +234,6 @@ export default function ScreenVote() {
               />
             </div>
           </div>
-          
           <h2 className="text-4xl text-amber-50 font-serif font-medium mb-6 tracking-[0.3em] drop-shadow-[0_4px_10px_rgba(0,0,0,0.8)] flex items-center gap-6">
             <span className="w-16 h-[1px] bg-gradient-to-r from-transparent to-amber-500/80"></span>
             請掃描印記以進入聖殿
@@ -286,7 +245,7 @@ export default function ScreenVote() {
         </div>
       )}
 
-      {/* 🌟 階段二：投票中 (神聖沙漏倒數) */}
+      {/* 階段二：投票中 */}
       {stage === 'voting' && (
         <div className="z-10 flex flex-col items-center animate-fade-in mt-10">
           <div className="w-64 h-64 mb-16 relative flex items-center justify-center">
@@ -306,7 +265,7 @@ export default function ScreenVote() {
         </div>
       )}
 
-      {/* 🌟 階段三：開票揭曉 (三段式揭曉與彩帶) */}
+      {/* 階段三：開票揭曉 */}
       {stage === 'reveal' && (
         <div className="z-10 w-full max-w-[1600px] flex flex-col items-center mt-32 px-10">
           {revealStep === 0 && (
