@@ -13,7 +13,7 @@ interface Team {
   text: string;
 }
 
-// 🌟 對應手機端的劇本圖片與簡介
+// 🌟 這裡記得確認 ID 有跟你 Firebase 上的對齊！
 const PREVIEWS = [
   { id: '1', title: '《劃破夜空的雞啼》', image: '/images/play1.jpg' },
   { id: '2', title: '《沉入深淵的斧頭》', image: '/images/play2.jpg' },
@@ -29,7 +29,7 @@ export default function ScreenVote() {
   // 🌟 揭曉階段控制 (0: 準備, 1: 季軍, 2: 亞軍, 3: 冠軍)
   const [revealStep, setRevealStep] = useState(0);
 
-  // 🌟 音樂控制
+  // 音樂控制
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isAudioEnabled, setIsAudioEnabled] = useState(false);
   const [userMuted, setUserMuted] = useState(false);
@@ -48,14 +48,11 @@ export default function ScreenVote() {
       const data = snapshot.val();
       if (data) {
         setStage(data);
-        
-        // 音樂自動切換
         if (audioRef.current && isAudioEnabled && !userMuted) {
           audioRef.current.src = musicTracks[data as keyof typeof musicTracks];
           audioRef.current.play().catch(e => console.log("音樂播放被阻擋:", e));
         }
-
-        // 階段重置
+        // 切換回其他階段時，重置揭曉進度
         if (data === 'waiting' || data === 'voting') {
           setRevealStep(0);
         }
@@ -90,26 +87,34 @@ export default function ScreenVote() {
     };
   }, [isAudioEnabled, userMuted]);
 
-  // 🌟 影展級別的揭曉排程
+  // 🌟 手動揭曉邏輯 (按鈕或鍵盤觸發)
+  const handleNextReveal = () => {
+    if (stage !== 'reveal') return;
+    setRevealStep(prev => {
+      const nextStep = prev + 1;
+      if (nextStep === 3) {
+        fireConfetti(); // 揭曉冠軍時噴發彩帶
+      }
+      return nextStep > 3 ? 3 : nextStep; // 最多到 3
+    });
+  };
+
+  // 🌟 鍵盤事件監聽 (支援空白鍵、右方向鍵)
   useEffect(() => {
-    if (stage === 'reveal' && revealStep === 0 && teams.length > 0) {
-      // 等待 3 秒後揭曉季軍
-      const t1 = setTimeout(() => setRevealStep(1), 3000);
-      // 再等 4 秒後揭曉亞軍 (總計 7 秒)
-      const t2 = setTimeout(() => setRevealStep(2), 7000);
-      // 再等 5 秒後揭曉冠軍，並噴發彩帶 (總計 12 秒)
-      const t3 = setTimeout(() => {
-        setRevealStep(3);
-        fireConfetti();
-      }, 12000);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // 只有在揭曉階段，按下空白鍵或右鍵才會觸發
+      if (stage === 'reveal' && (e.code === 'Space' || e.code === 'ArrowRight')) {
+        e.preventDefault(); // 防止畫面往下滾
+        handleNextReveal();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [stage]);
 
-      return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
-    }
-  }, [stage, revealStep, teams]);
-
-  // 🌟 灑花特效 (加強版：金色與彩帶交錯)
+  // 灑花特效
   const fireConfetti = () => {
-    const duration = 10 * 1000;
+    const duration = 15 * 1000;
     const animationEnd = Date.now() + duration;
     const defaults = { startVelocity: 45, spread: 360, ticks: 100, zIndex: 100 };
     const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
@@ -118,13 +123,12 @@ export default function ScreenVote() {
       const timeLeft = animationEnd - Date.now();
       if (timeLeft <= 0) return clearInterval(interval);
       const particleCount = 60 * (timeLeft / duration);
-      // 兩側發射
       confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }, colors: ['#fbbf24', '#f59e0b', '#ffffff'] });
       confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }, colors: ['#fbbf24', '#f59e0b', '#ffffff'] });
     }, 250);
   };
 
-  // 🌟 音樂開關功能
+  // 音樂開關
   const toggleAudio = () => {
     if (!isAudioEnabled) {
       setIsAudioEnabled(true);
@@ -149,11 +153,10 @@ export default function ScreenVote() {
   // 計算並排序前三名
   const sortedTeams = [...teams].sort((a, b) => (teamVotes[b.id] || 0) - (teamVotes[a.id] || 0));
   const topThree = sortedTeams.slice(0, 3).map((team, index) => {
-    const preview = PREVIEWS.find(p => p.id === team.id) || PREVIEWS[index % PREVIEWS.length];
+    const preview = PREVIEWS.find(p => team.name.includes(p.title.replace('《', '').replace('》', ''))) || PREVIEWS[0];
     return { ...team, votes: teamVotes[team.id] || 0, preview };
   });
 
-  // 渲染獨立海報的函式
   const renderPoster = (rank: number, title: string, medal: string, index: number, isVisible: boolean) => {
     if (!isVisible || !topThree[index]) return null;
     const team = topThree[index];
@@ -161,7 +164,6 @@ export default function ScreenVote() {
 
     return (
       <div className={`flex flex-col items-center animate-slide-up-fade ${isChampion ? 'order-2 z-50' : rank === 2 ? 'order-1 z-10' : 'order-3 z-10'}`}>
-        {/* 海報外框 */}
         <div className={`
           relative overflow-hidden rounded-xl border-2 transition-all duration-1000
           ${isChampion 
@@ -174,7 +176,6 @@ export default function ScreenVote() {
             alt={team.name}
             className="absolute inset-0 w-full h-full object-cover object-top"
           />
-          {/* 下方漸層遮罩以突顯文字 */}
           <div className={`absolute inset-0 bg-gradient-to-t ${isChampion ? 'from-black via-black/60 to-transparent' : 'from-black via-black/80 to-transparent'} `}></div>
           
           <div className="absolute inset-x-0 bottom-0 p-8 flex flex-col items-center text-center">
@@ -195,40 +196,54 @@ export default function ScreenVote() {
   return (
     <div className="min-h-screen w-full bg-slate-950 flex flex-col items-center justify-center relative overflow-hidden font-sans selection:bg-indigo-500/30">
       
-      {/* 隱藏的音樂播放器 */}
       <audio ref={audioRef} loop />
 
-      {/* 🌟 右下角：低調專業的音樂控制面板 */}
-      <button 
-        onClick={toggleAudio}
-        className={`absolute bottom-8 right-8 z-50 flex items-center gap-3 px-4 py-2 rounded-full backdrop-blur-md border transition-all duration-300
-          ${isAudioEnabled && !userMuted 
-            ? 'bg-slate-900/40 border-slate-600/50 text-slate-300 hover:bg-slate-800/60 opacity-60 hover:opacity-100' 
-            : 'bg-red-900/30 border-red-500/30 text-red-400 opacity-80 hover:opacity-100'
-          }
-        `}
-      >
-        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-black/40">
-          <span className="text-lg">{(!isAudioEnabled || userMuted) ? '🔇' : '🔊'}</span>
-        </div>
-        <div className="flex flex-col items-start pr-2">
-          <span className="text-[10px] uppercase tracking-[0.2em] opacity-70">Audio System</span>
-          <span className="text-xs font-bold tracking-widest">
-            {!isAudioEnabled ? 'CLICK TO START' : (userMuted ? 'MUTED' : 'PLAYING')}
-          </span>
-        </div>
-      </button>
+      {/* 🌟 右下角控制面板群 (音樂 + 手動揭曉按鈕) */}
+      <div className="absolute bottom-8 right-8 z-50 flex items-center gap-4">
+        
+        {/* 手動揭曉按鈕 (僅在 Reveal 階段且還沒揭曉完時顯示) */}
+        {stage === 'reveal' && revealStep < 3 && (
+          <button 
+            onClick={handleNextReveal}
+            className="flex items-center gap-2 px-6 py-3 rounded-full bg-amber-500/80 hover:bg-amber-400 border border-amber-300 shadow-[0_0_15px_rgba(251,191,36,0.5)] text-slate-900 transition-all active:scale-95"
+          >
+            <span className="text-xl font-black">⏭️</span>
+            <span className="text-sm font-bold tracking-widest">NEXT REVEAL</span>
+          </button>
+        )}
 
-      {/* 🌟 背景視覺：建議你可以加上 /images/stage-bg.jpg */}
+        {/* 音樂控制按鈕 */}
+        <button 
+          onClick={toggleAudio}
+          className={`flex items-center gap-3 px-4 py-2 rounded-full backdrop-blur-md border transition-all duration-300
+            ${isAudioEnabled && !userMuted 
+              ? 'bg-slate-900/40 border-slate-600/50 text-slate-300 hover:bg-slate-800/60 opacity-60 hover:opacity-100' 
+              : 'bg-red-900/30 border-red-500/30 text-red-400 opacity-80 hover:opacity-100'
+            }
+          `}
+        >
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-black/40">
+            <span className="text-lg">{(!isAudioEnabled || userMuted) ? '🔇' : '🔊'}</span>
+          </div>
+          <div className="flex flex-col items-start pr-2">
+            <span className="text-[10px] uppercase tracking-[0.2em] opacity-70">Audio System</span>
+            <span className="text-xs font-bold tracking-widest">
+              {!isAudioEnabled ? 'CLICK TO START' : (userMuted ? 'MUTED' : 'PLAYING')}
+            </span>
+          </div>
+        </button>
+      </div>
+
+      {/* 背景視覺 */}
       <div className="absolute inset-0 z-0">
+        {/* 套用剛才生成的奢華古典大廳背景圖 */}
         <img 
           src="/images/stage-bg.jpg" 
           alt="Stage Background"
           className="w-full h-full object-cover opacity-30"
-          onError={(e) => { e.currentTarget.style.display = 'none'; }} // 如果沒這張圖就隱藏
+          onError={(e) => { e.currentTarget.style.display = 'none'; }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-transparent to-slate-950 opacity-80"></div>
-        {/* 動態金色光暈 */}
         <div className={`absolute top-[-20%] left-1/2 transform -translate-x-1/2 w-[1000px] h-[800px] rounded-full blur-[150px] pointer-events-none transition-colors duration-1000 ${stage === 'reveal' ? 'bg-amber-600/20' : 'bg-indigo-900/20'}`}></div>
       </div>
 
@@ -241,7 +256,6 @@ export default function ScreenVote() {
         </p>
       </div>
 
-      {/* 階段一：等待中 */}
       {stage === 'waiting' && (
         <div className="z-10 flex flex-col items-center animate-fade-in mt-24">
           <div className="relative p-2 bg-gradient-to-br from-amber-400 to-amber-600 rounded-3xl mb-10 shadow-[0_0_50px_rgba(251,191,36,0.3)]">
@@ -260,7 +274,6 @@ export default function ScreenVote() {
         </div>
       )}
 
-      {/* 階段二：投票中 (科技感神聖通道) */}
       {stage === 'voting' && (
         <div className="z-10 flex flex-col items-center animate-fade-in mt-10">
           <div className="w-64 h-64 mb-16 relative flex items-center justify-center">
@@ -280,11 +293,9 @@ export default function ScreenVote() {
         </div>
       )}
 
-      {/* 🌟 階段三：開票揭曉 (奧斯卡影展級) */}
       {stage === 'reveal' && (
         <div className="z-10 w-full max-w-[1600px] flex flex-col items-center mt-32 px-10">
           
-          {/* 懸念準備階段 */}
           {revealStep === 0 && (
             <div className="flex flex-col items-center justify-center h-[50vh] animate-pulse">
               <div className="w-32 h-32 border-4 border-amber-500/20 border-t-amber-400 rounded-full animate-spin mb-10 shadow-[0_0_30px_rgba(251,191,36,0.2)]"></div>
@@ -292,15 +303,9 @@ export default function ScreenVote() {
             </div>
           )}
 
-          {/* 排行榜海報展示區 (使用 Flex Order 排版，讓 1st 永遠在中間) */}
           <div className="flex justify-center items-end gap-16 w-full mt-10">
-            {/* 季軍 (Index 2 in topThree) */}
             {renderPoster(3, "THIRD PLACE", "🥉", 2, revealStep >= 1)}
-            
-            {/* 冠軍 (Index 0 in topThree) */}
             {renderPoster(1, "CHAMPION", "🏆", 0, revealStep >= 3)}
-            
-            {/* 亞軍 (Index 1 in topThree) */}
             {renderPoster(2, "SECOND PLACE", "🥈", 1, revealStep >= 2)}
           </div>
           
