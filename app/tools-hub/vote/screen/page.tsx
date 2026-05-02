@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import { ref, onValue } from 'firebase/database';
+// 🌟 引入你的 Firebase
 import { rtdb as db } from '../../../../lib/firebase'; 
 import confetti from 'canvas-confetti';
 
@@ -12,6 +13,7 @@ interface Team {
   text: string;
 }
 
+// 🌟 對應手機端的劇本圖片與名稱
 const PREVIEWS = [
   { id: '1', title: '《劃破夜空的雞啼》', image: '/images/play1.jpg' },
   { id: '2', title: '《沉入深淵的斧頭》', image: '/images/play2.jpg' },
@@ -24,11 +26,12 @@ export default function ScreenVote() {
   const [totalVotes, setTotalVotes] = useState(0);
   const [teamVotes, setTeamVotes] = useState<Record<string, number>>({});
   
-  // 🌟 改由 Firebase 控制的揭曉階段
   const [revealStep, setRevealStep] = useState(0);
 
+  // 🌟 音樂控制 (將 isAudioEnabled 預設改為 true)
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [isAudioEnabled, setIsAudioEnabled] = useState(false);
+  const cheerAudioRef = useRef<HTMLAudioElement>(null); // 🌟 新增：歡呼聲播放器
+  const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [userMuted, setUserMuted] = useState(false);
 
   const musicTracks = {
@@ -46,9 +49,12 @@ export default function ScreenVote() {
       const data = snapshot.val();
       if (data) {
         setStage(data);
+        
+        // 階段切換時自動換音樂
         if (audioRef.current && isAudioEnabled && !userMuted) {
           audioRef.current.src = musicTracks[data as keyof typeof musicTracks];
-          audioRef.current.play().catch(e => console.log("音樂播放被阻擋:", e));
+          // 加上 catch 防止瀏覽器阻擋未點擊的自動播放報錯
+          audioRef.current.play().catch(e => console.log("瀏覽器阻擋自動播放，請在畫面上點擊一下滑鼠解鎖音效！", e));
         }
       }
     });
@@ -57,6 +63,13 @@ export default function ScreenVote() {
     const revealStepRef = ref(db, 'voteState/revealStep');
     const unsubRevealStep = onValue(revealStepRef, (snapshot) => {
       const step = snapshot.val() || 0;
+      
+      // 如果進度往前推進 (1, 2, 3)，就播放歡呼聲！
+      if (step > revealStep && step > 0 && step <= 3 && cheerAudioRef.current && !userMuted) {
+        cheerAudioRef.current.currentTime = 0; // 從頭開始播放歡呼聲
+        cheerAudioRef.current.play().catch(e => console.log("音效播放失敗", e));
+      }
+      
       setRevealStep(step);
     });
 
@@ -86,9 +99,9 @@ export default function ScreenVote() {
     return () => {
       unsubStage(); unsubRevealStep(); unsubTotal(); unsubTeamsList(); unsubTeamsVote();
     };
-  }, [isAudioEnabled, userMuted]);
+  }, [isAudioEnabled, userMuted, revealStep]);
 
-  // 🌟 當收到 revealStep === 3 (冠軍) 的指令時，觸發彩帶
+  // 當揭曉到冠軍(3)時，除了歡呼聲，額外觸發彩帶
   useEffect(() => {
     if (revealStep === 3 && stage === 'reveal') {
       fireConfetti();
@@ -110,26 +123,28 @@ export default function ScreenVote() {
     }, 250);
   };
 
+  // 音控面板按鈕邏輯
   const toggleAudio = () => {
-    if (!isAudioEnabled) {
-      setIsAudioEnabled(true);
+    if (userMuted) {
       setUserMuted(false);
-      if (audioRef.current) {
-        audioRef.current.src = musicTracks[stage];
-        audioRef.current.play();
-      }
+      if (audioRef.current) audioRef.current.play();
     } else {
-      if (audioRef.current) {
-        if (userMuted) {
-          audioRef.current.play();
-          setUserMuted(false);
-        } else {
-          audioRef.current.pause();
-          setUserMuted(true);
-        }
-      }
+      setUserMuted(true);
+      if (audioRef.current) audioRef.current.pause();
     }
   };
+
+  // 解鎖瀏覽器音效：偵測使用者的第一次點擊
+  useEffect(() => {
+    const handleFirstClick = () => {
+      if (audioRef.current && isAudioEnabled && !userMuted && audioRef.current.paused) {
+        audioRef.current.play().catch(() => {});
+      }
+      window.removeEventListener('click', handleFirstClick);
+    };
+    window.addEventListener('click', handleFirstClick);
+    return () => window.removeEventListener('click', handleFirstClick);
+  }, [isAudioEnabled, userMuted]);
 
   const sortedTeams = [...teams].sort((a, b) => (teamVotes[b.id] || 0) - (teamVotes[a.id] || 0));
   const topThree = sortedTeams.slice(0, 3).map((team, index) => {
@@ -174,15 +189,17 @@ export default function ScreenVote() {
   return (
     <div className="min-h-screen w-full bg-[#0a0c10] flex flex-col items-center justify-center relative overflow-hidden font-sans selection:bg-amber-500/30">
       
+      {/* 隱藏的音樂播放器 */}
       <audio ref={audioRef} loop />
+      <audio ref={cheerAudioRef} src="/music/cheer.mp3" /> {/* 🌟 歡呼聲音效 */}
 
       {/* 音控面板 (移除揭曉按鈕，純留音控) */}
       <div className="absolute bottom-8 right-8 z-50 flex items-center gap-4">
-        <button onClick={toggleAudio} className={`flex items-center gap-3 px-4 py-2 rounded-full backdrop-blur-md border transition-all duration-300 ${isAudioEnabled && !userMuted ? 'bg-slate-900/40 border-slate-600/50 text-slate-300 hover:bg-slate-800/60 opacity-60 hover:opacity-100' : 'bg-red-900/30 border-red-500/30 text-red-400 opacity-80 hover:opacity-100'}`}>
-          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-black/40"><span className="text-lg">{(!isAudioEnabled || userMuted) ? '🔇' : '🔊'}</span></div>
+        <button onClick={toggleAudio} className={`flex items-center gap-3 px-4 py-2 rounded-full backdrop-blur-md border transition-all duration-300 ${!userMuted ? 'bg-slate-900/40 border-slate-600/50 text-slate-300 hover:bg-slate-800/60 opacity-60 hover:opacity-100' : 'bg-red-900/30 border-red-500/30 text-red-400 opacity-80 hover:opacity-100'}`}>
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-black/40"><span className="text-lg">{(!userMuted) ? '🔊' : '🔇'}</span></div>
           <div className="flex flex-col items-start pr-2">
             <span className="text-[10px] uppercase tracking-[0.2em] opacity-70">Audio System</span>
-            <span className="text-xs font-bold tracking-widest">{!isAudioEnabled ? 'CLICK TO START' : (userMuted ? 'MUTED' : 'PLAYING')}</span>
+            <span className="text-xs font-bold tracking-widest">{!userMuted ? 'PLAYING' : 'MUTED'}</span>
           </div>
         </button>
       </div>
@@ -204,7 +221,7 @@ export default function ScreenVote() {
         <h1 className={`text-6xl font-black text-transparent bg-clip-text font-serif tracking-[0.2em] transition-all duration-1000 mb-2 ${stage === 'reveal' ? 'bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-300 drop-shadow-[0_0_30px_rgba(251,191,36,0.5)] scale-110' : 'bg-gradient-to-b from-amber-200 to-amber-600 drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]'}`}>
           數位聖殿
         </h1>
-        {/* 修正：改成 .jpg，並加寬與特效 */}
+        {/* 使用 .png 裝飾線 */}
         <img 
           src="/images/divider.png" 
           alt="Classical Divider" 
