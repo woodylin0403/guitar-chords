@@ -1,9 +1,21 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
-import { ref, onValue, runTransaction } from 'firebase/database';
+import { 
+  ref, 
+  onValue, 
+  runTransaction, 
+  onDisconnect, 
+  push, 
+  set, 
+  serverTimestamp, 
+  remove 
+} from 'firebase/database';
 // 🌟 引入你的 Firebase
 import { rtdb as db } from '../../../../lib/firebase'; 
 
+// ==========================================
+// 1. 型別定義與常數資料
+// ==========================================
 interface Team {
   id: string;
   name: string;
@@ -12,12 +24,11 @@ interface Team {
   glow: string;
 }
 
-// 🌟 劇本預覽資料 (帶有防呆比對用的簡稱)
 const PREVIEWS = [
   {
     id: '1',
     title: '《劃破夜空的雞啼》',
-    shortName: '雞啼', // 用來做名稱模糊比對的關鍵字
+    shortName: '雞啼',
     desc: '感人短劇描繪彼得軟弱。因恐懼三次認主，雞鳴崩潰痛哭。復活耶穌柔聲挽回，完全洗淨背叛並再次呼召牧養羊群。',
     image: '/images/play1.jpg',
   },
@@ -37,29 +48,31 @@ const PREVIEWS = [
   }
 ];
 
-// 無限循環用的擴展陣列 [3, 1, 2, 3, 1]
+// 無限循環用的擴展陣列
 const EXTENDED_PREVIEWS = [
   PREVIEWS[PREVIEWS.length - 1],
   ...PREVIEWS,
   PREVIEWS[0]
 ];
 
+// ==========================================
+// 2. 主元件 MobileVote
+// ==========================================
 export default function MobileVote() {
+  // --- 狀態管理 ---
   const [teams, setTeams] = useState<Team[]>([]);
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [hasVoted, setHasVoted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStage, setCurrentStage] = useState<'waiting' | 'voting' | 'reveal'>('waiting');
   
-  // 輪播狀態
+  // --- 輪播狀態 ---
   const [currentIndex, setCurrentIndex] = useState(1);
   const [isTransitioning, setIsTransitioning] = useState(true);
-
-  // 滑鼠與手勢追蹤
   const [startX, setStartX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
-  // 音樂播放器設定
+  // --- 音效管理 ---
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isAudioEnabled, setIsAudioEnabled] = useState(false);
   const [userMuted, setUserMuted] = useState(false);
@@ -70,21 +83,47 @@ export default function MobileVote() {
     reveal: '/music/reveal.mp3'
   };
 
-  // Firebase 監聽 & 音樂切換
+  // ==========================================
+  // 3. Effects (生命週期與資料監聽)
+  // ==========================================
+
+  // Effect A: 註冊即時在線人數 (大螢幕計數用)
   useEffect(() => {
     if (!db) return;
     
+    // 建立一個專屬的在線節點
+    const myPresenceRef = push(ref(db, 'activeUsers'));
+    
+    // 當使用者斷線或關閉網頁時，Firebase 自動刪除此節點
+    onDisconnect(myPresenceRef).remove();
+    
+    // 寫入上線時間戳記
+    set(myPresenceRef, { joinedAt: serverTimestamp() });
+
+    // 正常離開網頁時手動清除
+    return () => {
+      remove(myPresenceRef).catch(console.error);
+    };
+  }, []); // 空陣列代表只在進入網頁時執行一次
+
+  // Effect B: 監聽 Firebase 投票階段與隊伍資料
+  useEffect(() => {
+    if (!db) return;
+    
+    // 1. 監聽階段
     const stageRef = ref(db, 'voteState/stage');
     const unsubscribeStage = onValue(stageRef, (snapshot) => {
       const stage = snapshot.val();
       if (stage) {
         setCurrentStage(stage);
         
+        // 階段改變時自動換音樂
         if (audioRef.current && isAudioEnabled && !userMuted) {
           audioRef.current.src = musicTracks[stage as keyof typeof musicTracks];
           audioRef.current.play().catch(e => console.log("播放失敗", e));
         }
 
+        // 如果回到 waiting，重置投票狀態
         if (stage === 'waiting') {
           setHasVoted(false);
           setSelectedTeam(null);
@@ -93,20 +132,19 @@ export default function MobileVote() {
       }
     });
 
+    // 2. 監聽隊伍資料
     const teamsListRef = ref(db, 'teamsList');
     const unsubscribeTeams = onValue(teamsListRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
-        const teamsArray = Object.keys(data).map(key => ({
-          id: key,
-          ...data[key]
-        }));
+        const teamsArray = Object.keys(data).map(key => ({ id: key, ...data[key] }));
         setTeams(teamsArray);
       } else {
         setTeams([]);
       }
     });
 
+    // 3. 檢查本地投票紀錄
     if (localStorage.getItem('hasVoted_cyberark')) {
       setHasVoted(true);
     }
@@ -117,7 +155,7 @@ export default function MobileVote() {
     };
   }, [isAudioEnabled, userMuted]);
 
-  // 自動輪播計時器
+  // Effect C: 自動輪播計時器
   useEffect(() => {
     if (currentStage !== 'waiting' || hasVoted) return;
     const timer = setTimeout(() => {
@@ -126,6 +164,11 @@ export default function MobileVote() {
     return () => clearTimeout(timer);
   }, [currentIndex, currentStage, hasVoted]);
 
+  // ==========================================
+  // 4. 互動邏輯 (Handlers)
+  // ==========================================
+
+  // --- 輪播控制 ---
   const nextSlide = () => {
     if (currentIndex >= EXTENDED_PREVIEWS.length - 1) return;
     setIsTransitioning(true);
@@ -166,7 +209,7 @@ export default function MobileVote() {
   if (currentIndex === 0) realIndex = PREVIEWS.length - 1;
   if (currentIndex === EXTENDED_PREVIEWS.length - 1) realIndex = 0;
 
-  // 音樂開關
+  // --- 音樂與投票控制 ---
   const toggleAudio = () => {
     if (!isAudioEnabled) {
       setIsAudioEnabled(true);
@@ -208,12 +251,15 @@ export default function MobileVote() {
     }
   };
 
+  // ==========================================
+  // 5. 畫面渲染 (Render)
+  // ==========================================
   return (
     <div className="min-h-screen w-full bg-slate-950 flex flex-col items-center justify-start p-4 relative overflow-hidden font-sans selection:bg-indigo-500/30">
       
       <audio ref={audioRef} loop />
 
-      {/* 音樂控制按鈕 */}
+      {/* 音控按鈕 */}
       <button 
         onClick={toggleAudio}
         className={`absolute top-4 left-4 z-50 px-3 py-1.5 rounded-full backdrop-blur-md transition-all border shadow-lg flex items-center gap-2
@@ -233,6 +279,7 @@ export default function MobileVote() {
       <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-indigo-600/20 rounded-full blur-[100px] pointer-events-none z-0 transition-colors duration-1000" style={{ backgroundColor: currentStage === 'reveal' ? 'rgba(251, 191, 36, 0.1)' : '' }}></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-amber-500/10 rounded-full blur-[100px] pointer-events-none z-0"></div>
 
+      {/* 標題區 */}
       <div className="text-center my-6 z-10 mt-14 transition-all duration-700">
         <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-yellow-500 mb-1 drop-shadow-[0_0_15px_rgba(251,191,36,0.3)] tracking-widest">
           數位聖殿
@@ -318,7 +365,7 @@ export default function MobileVote() {
         </div>
       )}
 
-      {/* 🌟 階段三：投票進行中 (尊爵直式海報 + 防呆圖片對應) */}
+      {/* 🌟 階段三：投票進行中 */}
       {currentStage === 'voting' && !hasVoted && (
         <div className="w-full max-w-sm flex flex-col gap-4 z-10 animate-fade-in mt-6">
           <div className="text-center mb-4">
@@ -338,8 +385,6 @@ export default function MobileVote() {
           
           <div className="flex flex-col gap-3">
             {teams.map((team, index) => {
-              
-              // 🌟 絕對防呆機制：用「短名稱」比對，比對不到才用 ID，再找不到才拿第一張兜底
               const previewData = 
                 PREVIEWS.find(p => team.name.includes(p.shortName)) || 
                 PREVIEWS.find(p => p.id === team.id) || 
@@ -374,12 +419,7 @@ export default function MobileVote() {
                       onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/400x200/1e293b/fbbf24?text=IMAGE+LOADING' }}
                     />
                   </div>
-
-                  <div className={`absolute inset-0 transition-colors duration-700 ${
-                    isSelected 
-                      ? 'bg-gradient-to-t from-slate-950 via-slate-900/60 to-amber-900/20' 
-                      : 'bg-gradient-to-t from-slate-950 via-slate-900/80 to-slate-900/60'
-                  }`}></div>
+                  <div className={`absolute inset-0 transition-colors duration-700 ${isSelected ? 'bg-gradient-to-t from-slate-950 via-slate-900/60 to-amber-900/20' : 'bg-gradient-to-t from-slate-950 via-slate-900/80 to-slate-900/60'}`}></div>
 
                   <div className={`absolute inset-0 p-4 flex flex-col transition-all duration-700 ${isSelected ? 'justify-end' : 'justify-center'}`}>
                     <div className="flex items-center justify-between w-full">
@@ -392,19 +432,12 @@ export default function MobileVote() {
                         </h3>
                       </div>
 
-                      <div className={`
-                        w-10 h-10 rounded-full border-2 border-amber-400 flex items-center justify-center bg-slate-900/80 shadow-[0_0_15px_rgba(251,191,36,0.5)] backdrop-blur-md
-                        transition-all duration-500 transform origin-center
-                        ${isSelected ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-50 -rotate-90 absolute right-4'}
-                      `}>
+                      <div className={`w-10 h-10 rounded-full border-2 border-amber-400 flex items-center justify-center bg-slate-900/80 shadow-[0_0_15px_rgba(251,191,36,0.5)] backdrop-blur-md transition-all duration-500 transform origin-center ${isSelected ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-50 -rotate-90 absolute right-4'}`}>
                         <span className="text-amber-400 font-black text-xl">✓</span>
                       </div>
                     </div>
-
                     <div className={`overflow-hidden transition-all duration-700 ease-out ${isSelected ? 'max-h-[60px] opacity-100 mt-2' : 'max-h-0 opacity-0 mt-0'}`}>
-                       <p className="text-xs text-slate-300/90 leading-relaxed line-clamp-2">
-                         {previewData.desc}
-                       </p>
+                       <p className="text-xs text-slate-300/90 leading-relaxed line-clamp-2">{previewData.desc}</p>
                     </div>
                   </div>
                 </button>
@@ -454,8 +487,6 @@ export default function MobileVote() {
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fade-in 0.6s ease-out forwards; }
-        
-        /* 流光特效 CSS */
         @keyframes shimmer { 100% { transform: translateX(100%); } }
       `}} />
     </div>
